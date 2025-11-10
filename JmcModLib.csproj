@@ -4,20 +4,70 @@
     <TargetFramework>netstandard2.1</TargetFramework>
     <LangVersion>10.0</LangVersion>
     <Nullable>enable</Nullable>
-    <!-- This should be the folder that contains Duckov.exe -->
-    <!-- 下面这行里填写你的鸭科夫安装路径，这样编译器就能找到相关的dll文件 -->
-    <DuckovPath>D:\SteamLibrary\steamapps\common\Escape from Duckov</DuckovPath>
-    <UserSecretsId>f9477a73-4a2b-4aeb-8b14-adb1e9f9c33e</UserSecretsId>
     <OutputType>Library</OutputType>
-    <BaseOutputPath></BaseOutputPath>
+    <ModAuthor>JMC</ModAuthor>
+
+    <!-- 自定义构建参数，默认不开启全量复制 -->
+    <ForceCopy>false</ForceCopy>
+    
+    <!-- 鸭科夫安装路径 -->
+    <DuckovPath>D:\SteamLibrary\steamapps\common\Escape from Duckov</DuckovPath>
+
+    <!-- Managed DLL目录 -->
+    <DuckovManagedPath>$(DuckovPath)\Duckov_Data\Managed</DuckovManagedPath>
+    
+    <!-- Managed DLL目录 -->
+    <DuckovModPath>$(DuckovPath)\Duckov_Data\Mods\</DuckovModPath>
+    <Configurations>Debug;Release</Configurations>
   </PropertyGroup>
+
+  <!-- 依赖引用 -->
   <ItemGroup>
-    <Reference Include="$(DuckovPath)\Duckov_Data\Managed\TeamSoda.*" />
-    <Reference Include="$(DuckovPath)\Duckov_Data\Managed\ItemStatsSystem.dll" />
-    <Reference Include="SodaLocalization">
-      <HintPath>D:\SteamLibrary\steamapps\common\Escape from Duckov\Duckov_Data\Managed\SodaLocalization.dll</HintPath>
-    </Reference>
-    <Reference Include="$(DuckovPath)\Duckov_Data\Managed\Unity*" />
+    <Reference Include="$(DuckovManagedPath)\TeamSoda.*" />
+    <Reference Include="$(DuckovManagedPath)\ItemStatsSystem.dll" />
+    <Reference Include="$(DuckovManagedPath)\SodaLocalization.dll" />
+    <Reference Include="$(DuckovManagedPath)\Unity*" />
   </ItemGroup>
+
+  <!-- 构建后自动复制 DLL -->
+  <Target Name="PostBuild" AfterTargets="Build">
+    <PropertyGroup>
+      <!-- 项目根目录下的 Mods 文件夹 -->
+      <ModLocalDir>$(ProjectDir)$(ProjectName)</ModLocalDir>
+      
+      <!-- 游戏 Mods 文件夹 -->
+      <ModGameDir>$(DuckovModPath)$(ProjectName)</ModGameDir>
+    </PropertyGroup>
+
+    <!-- 确保目标文件夹存在 -->
+    <MakeDir Directories="$(ModLocalDir)" />
+    <MakeDir Directories="$(ModGameDir)" />
+
+    <!-- 复制刚编译的 DLL -->
+    <Copy SourceFiles="$(TargetPath)" DestinationFolder="$(ModLocalDir)" />
+
+    <!-- 根据 ForceCopy 决定 robocopy 参数 -->
+    <PropertyGroup>
+      <!-- 如果 ForceCopy 为 true，不使用 /XO /XN /XC；否则增量复制 -->
+      <RoboArgs Condition="'$(ForceCopy)' == 'true'">/E /R:0 /W:0 /XD bin obj</RoboArgs>
+      <RoboArgs Condition="'$(ForceCopy)' != 'true'">/E /XO /XC /R:0 /W:0 /XD bin obj</RoboArgs>
+    </PropertyGroup>
+
+    <Message Text="开始复制 mod 文件..." Importance="High" />
+    <Message Text="🔧 ForceCopy = $(ForceCopy)" Importance="High" />
+    <Exec Command="robocopy &quot;$(ModLocalDir)&quot; &quot;$(ModGameDir)&quot; $(RoboArgs)" ConsoleToMSBuild="true" IgnoreExitCode="true" StandardOutputImportance="High">
+      <Output TaskParameter="ExitCode" PropertyName="RoboExitCode" />
+    </Exec>
+    
+    <!--  处理 robocopy 的返回码，容忍 0–3 -->
+    <Message Text="Robocopy 退出代码: $(RoboExitCode)" Importance="High" />
+    <Error Condition="$(RoboExitCode) &gt; 3" Text="❌ Robocopy 复制失败（代码 $(RoboExitCode)）！" />
+
+    <!--  成功提示 -->
+    <Message Condition="$(RoboExitCode) == 0" Text="✅ 没有需要更新的文件，一切都是最新的。" Importance="High" />
+    <Message Condition="$(RoboExitCode) == 1" Text="📁 已复制新的文件。" Importance="High" />
+    <Message Condition="$(RoboExitCode) == 2" Text="📝 文件属性已更新。" Importance="High" />
+    <Message Condition="$(RoboExitCode) == 3" Text="🔄 文件和属性都有更新。" Importance="High" />
+  </Target>
 
 </Project>
