@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace JmcDuckovLib
+namespace JmcModLib
 {
     public class ModBehaviour : Duckov.Modding.ModBehaviour
     {
