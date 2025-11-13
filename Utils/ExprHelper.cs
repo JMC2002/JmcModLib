@@ -5,8 +5,12 @@ using System.Linq.Expressions;
 using System.Reflection;
 using System.Reflection.Emit;
 using System.Runtime.CompilerServices;
+using System.Security.Cryptography;
+using Unity.Burst.Intrinsics;
 using UnityEngine;
 using static ExprHelper;
+using static UnityEngine.Rendering.DebugUI;
+
 // 实例成员缓存：Assembly -> target -> (MemberInfo -> Accessors)
 using InsCache = System.Collections.Concurrent.ConcurrentDictionary<System.Reflection.Assembly, System.Runtime.CompilerServices.ConditionalWeakTable<object, System.Collections.Concurrent.ConcurrentDictionary<System.Reflection.MemberInfo, ExprHelper.MemberAccessors>>>;
 using InsDict = System.Runtime.CompilerServices.ConditionalWeakTable<object, System.Collections.Concurrent.ConcurrentDictionary<System.Reflection.MemberInfo, ExprHelper.MemberAccessors>>;
@@ -15,23 +19,68 @@ using StaCache = System.Collections.Concurrent.ConcurrentDictionary<System.Refle
 
 public static class ExprHelper
 {
-    private static bool _enableCache = true;
-    /// <summary>
-    /// 是否启用缓存。默认开启。
-    /// 关闭后每次都会重新编译 Expression，不使用任何缓存。
-    /// </summary>
+    // 每个 Assembly 一份配置
+    private class AssemblyConfig
+    {
+        public bool EnableCache { get; set; } = true;
+        public MemberAccessMode Mode { get; set; } = MemberAccessMode.Default;
+    }
+
+    private static readonly ConcurrentDictionary<Assembly, AssemblyConfig> _configs = new();
+
+    private static bool GetEnableCache(Assembly? asm = null)
+    {
+        return _configs.GetOrAdd(asm ?? Assembly.GetCallingAssembly(), _ => new AssemblyConfig()).EnableCache;
+    }
+
+    private static void SetEnableCache(bool value, Assembly? asm = null)
+    {
+        asm ??= Assembly.GetCallingAssembly();
+        var cfg = _configs.GetOrAdd(asm, _ => new AssemblyConfig());
+
+        if (cfg.EnableCache != value)
+        {
+            cfg.EnableCache = value;
+            ClearAssemblyCache(asm);
+            ModLogger.Debug($"[{asm.GetName().Name}] 缓存已{(value ? "开启" : "关闭")}");
+        }
+    }
+
     public static bool EnableCache
     {
-        get { return _enableCache; }
-        set
+        get => GetEnableCache(Assembly.GetCallingAssembly());
+        set => SetEnableCache(value, Assembly.GetCallingAssembly());
+    }
+
+    private static MemberAccessMode GetAccessMode(Assembly? asm = null)
+    {
+        return _configs.GetOrAdd(asm ?? Assembly.GetCallingAssembly(), _ => new AssemblyConfig()).Mode;
+    }
+
+    private static void SetAccessMode(MemberAccessMode mode, Assembly? asm = null)
+    {
+        asm ??= Assembly.GetCallingAssembly();
+        var cfg = _configs.GetOrAdd(asm, _ => new AssemblyConfig());
+
+        if (cfg.Mode != mode)
         {
-            if (_enableCache != value)
+            cfg.Mode = mode;
+            string modeText = mode switch
             {
-                _enableCache = value;
-                ClearAll();
-                ModLogger.Debug($"缓存已经{(value ? "开启" : "关闭")}");
-            }
+                MemberAccessMode.Reflection => "反射",
+                MemberAccessMode.ExpressionTree => "表达式树",
+                MemberAccessMode.Emit => "Emit",
+                _ => "未知"
+            };
+            ModLogger.Info($"[{asm.GetName().Name}] MemberAccessor 切换为 {modeText} 模式");
+            ClearAssemblyCache(asm);
         }
+    }
+
+    public static MemberAccessMode AccessMode
+    {
+        get => GetAccessMode(Assembly.GetCallingAssembly());
+        set => SetAccessMode(value, Assembly.GetCallingAssembly());
     }
 
 
@@ -42,30 +91,7 @@ public static class ExprHelper
         Emit,
         Default = Emit,
     }
-    private static MemberAccessMode _mode = MemberAccessMode.Default;
 
-    public static MemberAccessMode AccessMode
-    {
-        get => _mode;
-        set
-        {
-            if (_mode != value)
-            {
-                _mode = value;
-
-                string modeText = _mode switch
-                {
-                    MemberAccessMode.Reflection => "反射",
-                    MemberAccessMode.ExpressionTree => "表达式树",
-                    MemberAccessMode.Emit => "Emit",
-                    _ => "未知"
-                };
-
-                ModLogger.Info($"MemberAccessor 切换为 {modeText} 模式");
-                ClearAll(); // 清空缓存，防止跨模式混用
-            }
-        }
-    }
     static void Expect<T>(T? _) { }
     static void Check()
     {
@@ -82,7 +108,7 @@ public static class ExprHelper
 
     public static (Func<T> getter, Action<T> setter) GetOrCreateAccessors<T>
         (Expression<Func<T>> expr, Assembly? assembly = null)
-        => GetOrCreateAccessors(expr, out _,assembly);
+        => GetOrCreateAccessors(expr, out _,assembly ?? Assembly.GetCallingAssembly());
 
     /// <summary>
     /// 获取或创建 getter/setter
@@ -115,10 +141,10 @@ public static class ExprHelper
         }
 
 
-        if (!EnableCache)
+        if (!GetEnableCache(asm))
         {
             // 缓存关闭：直接创建新的访问器
-            var accessors = CreateAccessors<T>(member, target);
+            var accessors = CreateAccessors<T>(member, target, asm);
             cacheHit = false;
             return ((Func<T>)accessors.Getter, (Action<T>)accessors.Setter);
         }
@@ -131,7 +157,7 @@ public static class ExprHelper
             var accessors = memDict.GetOrAdd(member, _ =>
             {
                 created = true;
-                return CreateAccessors<T>(member, target);
+                return CreateAccessors<T>(member, target, asm);
             });
 
             cacheHit = !created;
@@ -139,10 +165,11 @@ public static class ExprHelper
         }
     }
 
-    private static MemberAccessors CreateAccessors<T>(MemberInfo member, object? target)
+    private static MemberAccessors CreateAccessors<T>(MemberInfo member, object? target, Assembly assembly)
     {
+        // ModLogger.Debug($"为{assembly.GetName().Name}选择模式，值为{GetAccessMode(assembly)}");
         // 根据 AccessMode 选择后端
-        return AccessMode switch
+        return GetAccessMode(assembly) switch
         {
             MemberAccessMode.Emit => CreateAccessorsByEmit<T>(member, target),
             MemberAccessMode.Reflection => CreateAccessorsByReflection<T>(member, target),
@@ -156,6 +183,7 @@ public static class ExprHelper
     /// </summary>
     private static MemberAccessors CreateAccessorsByExpressionTree<T>(MemberInfo member, object? target)
     {
+        // ModLogger.Debug("CreateAccessorsByExpressionTree");
         var valueParam = Expression.Parameter(typeof(T), "value");
 
         switch (member)
@@ -197,6 +225,7 @@ public static class ExprHelper
     /// </summary>
     private static MemberAccessors CreateAccessorsByEmit<T>(MemberInfo member, object? target)
     {
+        // ModLogger.Debug("CreateAccessorsByEmit");
         switch (member)
         {
             case FieldInfo fi:
@@ -294,20 +323,26 @@ public static class ExprHelper
                     if (!pi.CanRead && !pi.CanWrite)
                         throw new ArgumentException($"属性 {pi.Name} 没有 getter/setter");
 
-                    var getter = pi.CanRead && pi.GetMethod != null
-                        ? (Func<T>)(pi.GetMethod.IsStatic
-                            ? Delegate.CreateDelegate(typeof(Func<T>), pi.GetMethod)
-                            : new Func<T>(() => (T)pi.GetValue(target)!))
-                        : new Func<T>(() => throw new InvalidOperationException($"属性 {pi.Name} 没有 getter"));
+                    if (!pi.GetMethod!.IsStatic && target == null)
+                        throw new ArgumentNullException(nameof(target), $"实例属性 {pi.Name} 的 target 不能为 null");
 
-                    var setter = pi.CanWrite && pi.SetMethod != null
-                        ? (Action<T>)(pi.SetMethod.IsStatic
-                            ? Delegate.CreateDelegate(typeof(Action<T>), pi.SetMethod)
-                            : new Action<T>(v => pi.SetValue(target, v)))
-                        : new Action<T>(_ => throw new InvalidOperationException($"属性 {pi.Name} 没有 setter"));
+                    // --- Getter ---
+                    Func<T> getter = pi.CanRead
+                        ? (pi.GetMethod!.IsStatic
+                            ? (Func<T>)Delegate.CreateDelegate(typeof(Func<T>), pi.GetMethod!)
+                            : (Func<T>)Delegate.CreateDelegate(typeof(Func<T>), target!, pi.GetMethod!))
+                        : (() => throw new InvalidOperationException($"属性 {pi.Name} 没有 getter"));
+
+                    // --- Setter ---
+                    Action<T> setter = pi.CanWrite
+                        ? (pi.SetMethod!.IsStatic
+                            ? (Action<T>)Delegate.CreateDelegate(typeof(Action<T>), pi.SetMethod!)
+                            : (Action<T>)Delegate.CreateDelegate(typeof(Action<T>), target!, pi.SetMethod!))
+                        : (_ => throw new InvalidOperationException($"属性 {pi.Name} 没有 setter"));
 
                     return new MemberAccessors(getter, setter);
                 }
+
 
             default:
                 throw new ArgumentException($"成员 {member.Name} 不是字段或属性");
@@ -316,6 +351,7 @@ public static class ExprHelper
 
     private static MemberAccessors CreateAccessorsByReflection<T>(MemberInfo member, object? target)
     {
+        // ModLogger.Debug("CreateAccessorsByReflection");
         switch (member)
         {
             case FieldInfo fi:
@@ -346,18 +382,21 @@ public static class ExprHelper
     /// <summary>
     /// 清理某个 Assembly 的缓存
     /// </summary>
-    public static void ClearAssemblyCache(Assembly? assembly)
+    public static void ClearAssemblyCache(Assembly? assembly = null)
     {
-        _insCache.TryRemove(assembly ?? Assembly.GetCallingAssembly(), out _);
-        _staCache.TryRemove(assembly ?? Assembly.GetCallingAssembly(), out _);
+        assembly ??= Assembly.GetCallingAssembly();
+        _insCache.TryRemove(assembly, out _);
+        _staCache.TryRemove(assembly, out _);
+        ModLogger.Info($"[{assembly.GetName().Name}] 缓存已清空");
     }
 
     /// <summary>
     /// 清理所有缓存
     /// </summary>
-    public static void ClearAll()
+    private static void ClearAll()
     {
         _insCache.Clear();
         _staCache.Clear();
+        ModLogger.Info($"已清空所有缓存");
     }
 }
