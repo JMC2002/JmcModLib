@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
@@ -25,7 +26,7 @@ namespace JmcModLib.Reflection
         /// </summary>
         public string Name => Method.Name;
         /// <summary>
-        /// 
+        /// Method.DeclaringType
         /// </summary>
         public Type DeclaringType => Method.DeclaringType!;
         /// <summary>
@@ -57,6 +58,33 @@ namespace JmcModLib.Reflection
 
         }
 
+
+
+        // ============================================================
+        //   获取类型的所有方法（含私有 / 实例 / 静态）
+        // ============================================================
+
+        /// <summary>
+        /// 默认搜索所有静态、实例、公有、私有，不搜索继承
+        /// </summary>
+        public const BindingFlags DefaultFlags = BindingFlags.Instance | BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic;
+
+        /// <summary>
+        /// 获取某类型的所有方法（可选择包含继承方法）
+        /// </summary>
+        public static IEnumerable<MethodAccessor> GetAll(Type type, BindingFlags flags = DefaultFlags)
+        {
+            return type.GetMethods(flags)
+                       .Select(Get);
+        }
+
+        /// <summary>
+        /// 泛型版本
+        /// </summary>
+        public static IEnumerable<MethodAccessor> GetAll<T>(BindingFlags flags = DefaultFlags)
+            => GetAll(typeof(T), flags);
+
+
         /// <summary>
         /// 获取类型下方法的 MethodAccessor（可匹配参数类型）
         /// </summary>
@@ -67,8 +95,9 @@ namespace JmcModLib.Reflection
         /// <exception cref="MissingMethodException"></exception>
         public static MethodAccessor Get(Type type, string methodName, Type[]? parameterTypes = null)
         {
-            var methods = type.GetMethods(BindingFlags.Instance | BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic)
-                              .Where(m => m.Name == methodName);
+            var methods = GetAll(type)
+                         .Select(ma => ma.Method)
+                         .Where(m => m.Name == methodName);
 
             if (parameterTypes != null)
             {
