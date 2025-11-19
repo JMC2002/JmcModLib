@@ -1,3 +1,11 @@
 <Solution>
-  <Project Path="JmcModLib.csproj" />
+  <Configurations>
+    <BuildType Name="Debug" />
+    <BuildType Name="Release" />
+    <BuildType Name="全量复制" />
+  </Configurations>
+  <Project Path="JmcModLib.csproj">
+    <BuildType Solution="全量复制|*" Project="Release" />
+    <Build Solution="全量复制|*" Project="false" />
+  </Project>
 </Solution>

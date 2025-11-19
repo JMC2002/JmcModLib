@@ -29,6 +29,13 @@ class MemberAccessor
 
     # 诊断
     static int CacheCount;
+
+    # Attribute
+    T? GetAttribute<T>() where T : Attribute
+    bool HasAttribute<T>() where T : Attribute
+    // 获取指定类型的所有 Attribute。如果 type 为 null，返回所有 Attribute。
+    Attribute[] GetAttributes(Type? type = null)
+    Attribute[] GetAllAttributes()
 }
 ```
 

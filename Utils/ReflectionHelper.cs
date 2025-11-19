@@ -5,6 +5,9 @@ using System.Reflection.Emit;
 
 namespace JmcModLib.Utils
 {
+    /// <summary>
+    /// Emit实现带缓存的反射辅助库
+    /// </summary>
     public static class ReflectionHelper
     {
         // 缓存区（线程安全）
@@ -14,6 +17,16 @@ namespace JmcModLib.Utils
 
         // ================== 字段操作 ==================
 
+        /// <summary>
+        /// 获取obj名为fieldName的字段
+        /// </summary>
+        /// <typeparam name="T">字段的类型</typeparam>
+        /// <param name="obj">目标对象</param>
+        /// <param name="fieldName">字段名称</param>
+        /// <returns>返回被获取的字段</returns>
+        /// <exception cref="ArgumentNullException">传入obj为空</exception>
+        /// <exception cref="MissingFieldException">不存在字段</exception>
+        /// <exception cref="InvalidCastException">字段类型不匹配</exception>
         public static T GetFieldValue<T>(object obj, string fieldName)
         {
             if (obj == null)
@@ -44,11 +57,7 @@ namespace JmcModLib.Utils
                 il.Emit(OpCodes.Ret);
 
                 return dm.CreateDelegate(typeof(Func<object, object?>));
-            });
-
-            if (getter == null)
-                throw new MissingFieldException($"在 {type.Name} 中找不到字段 {fieldName}");
-
+            }) ?? throw new MissingFieldException($"在 {type.Name} 中找不到字段 {fieldName}");
             var value = getter(obj);
             if (value is T t)
                 return t;
@@ -56,6 +65,15 @@ namespace JmcModLib.Utils
             throw new InvalidCastException($"字段 {fieldName} 的类型与预期的 {typeof(T).Name} 不匹配");
         }
 
+        /// <summary>
+        /// 设置字段的值为value
+        /// </summary>
+        /// <typeparam name="T">字段类型</typeparam>
+        /// <param name="obj">目标对象</param>
+        /// <param name="fieldName">字段名称</param>
+        /// <param name="value">待设置的值</param>
+        /// <exception cref="ArgumentNullException">传入obj为空</exception>
+        /// <exception cref="MissingFieldException">不存在字段</exception>
         public static void SetFieldValue<T>(object obj, string fieldName, T value)
         {
             if (obj == null)
@@ -88,16 +106,23 @@ namespace JmcModLib.Utils
                 il.Emit(OpCodes.Ret);
 
                 return dm.CreateDelegate(typeof(Action<object, object?>));
-            });
-
-            if (setter == null)
-                throw new MissingFieldException($"在 {type.Name} 中找不到字段 {fieldName}");
-
+            }) ?? throw new MissingFieldException($"在 {type.Name} 中找不到字段 {fieldName}");
             setter(obj, value);
         }
 
         // ================== 方法操作 ==================
 
+        /// <summary>
+        /// 获取一个有返回值的Method
+        /// </summary>
+        /// <typeparam name="T">返回值类型</typeparam>
+        /// <param name="obj">目标对象</param>
+        /// <param name="methodName">方法名</param>
+        /// <param name="args">传入的参数</param>
+        /// <returns></returns>
+        /// <exception cref="ArgumentNullException">obj为空</exception>
+        /// <exception cref="MissingMethodException">方法不存在</exception>
+        /// <exception cref="InvalidCastException">返回值类型不匹配</exception>
         public static T CallMethod<T>(object obj, string methodName, params object[] args)
         {
             var type = obj?.GetType() ?? throw new ArgumentNullException(nameof(obj));
@@ -120,6 +145,14 @@ namespace JmcModLib.Utils
             throw new InvalidCastException($"方法 {methodName} 的返回值类型与预期的 {typeof(T).Name} 不匹配");
         }
 
+        /// <summary>
+        /// 获取一个void返回值的方法
+        /// </summary>
+        /// <param name="obj">目标对象</param>
+        /// <param name="methodName">方法名</param>
+        /// <param name="args">传入的参数</param>
+        /// <exception cref="ArgumentNullException">obj为空</exception>
+        /// <exception cref="MissingMethodException">方法不存在</exception>
         public static void CallVoidMethod(object obj, string methodName, params object[] args)
         {
             var type = obj?.GetType() ?? throw new ArgumentNullException(nameof(obj));
@@ -135,6 +168,16 @@ namespace JmcModLib.Utils
             invoker(obj, args);
         }
 
+        /// <summary>
+        /// 调用一个带有返回值的静态方法
+        /// </summary>
+        /// <typeparam name="T">返回值类型</typeparam>
+        /// <param name="type">类型</param>
+        /// <param name="methodName">方法名称</param>
+        /// <param name="args">参数列表</param>
+        /// <returns></returns>
+        /// <exception cref="MissingMethodException">找不到静态方法</exception>
+        /// <exception cref="InvalidCastException">返回值不正确</exception>
         public static T CallStaticMethod<T>(Type type, string methodName, params object[] args)
         {
             var invoker = (Func<object?[], object?>?)_methodCache.GetOrAdd((type, methodName + "_static"), key =>
@@ -156,6 +199,17 @@ namespace JmcModLib.Utils
             throw new InvalidCastException($"方法 {methodName} 的返回值类型与预期的 {typeof(T).Name} 不匹配");
         }
 
+        /// <summary>
+        /// 调用一个带out参数的静态方法
+        /// </summary>
+        /// <typeparam name="TOut"></typeparam>
+        /// <param name="type"></param>
+        /// <param name="methodName"></param>
+        /// <param name="args"></param>
+        /// <param name="outValue"></param>
+        /// <returns></returns>
+        /// <exception cref="MissingMethodException"></exception>
+        /// <exception cref="InvalidCastException"></exception>
         public static bool CallStaticMethodWithOut<TOut>(
             Type type, string methodName,
             object?[] args,
