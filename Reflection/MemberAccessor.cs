@@ -335,7 +335,7 @@ namespace JmcModLib.Reflection
         /// <summary>
         /// 获取所有 Attribute（等价于 GetAttributes(null)）
         /// </summary>
-        public IEnumerable<Attribute> GetAllAttributes() =>
+        public Attribute[] GetAllAttributes() =>
             GetAttributes(null);
 
     }
