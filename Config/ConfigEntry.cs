@@ -1,57 +1,65 @@
-﻿using System;
-using System.Reflection;
-using JmcModLib.Reflection;
+﻿using JmcModLib.Reflection;
 using JmcModLib.Utils;
+using System;
+using System.Reflection;
+using Unity.VisualScripting;
 namespace JmcModLib.Config
 {
     public sealed class ConfigEntry
     {
+        public string Key => GetKey(DeclaringType, Accessor.Name);
+        public string Group { get; }
         public Type DeclaringType { get; }
         public MemberAccessor Accessor { get; }
         public ConfigAttribute Attribute { get; }
 
-        // 对于 instance 字段，需要一个实例
-        private readonly object? _instance;
+        /// <summary>
+        /// 字段/属性最初的默认值，用于 Reset。
+        /// </summary>
+        public object? DefaultValue { get; }
 
-        public ConfigEntry(Type declaringType, MemberAccessor accessor, ConfigAttribute attr)
+        /// <summary>
+        /// 通过 DeclaringType 和 Name 生成唯一 Key（当前asm下唯一）
+        /// </summary>
+        /// <param name="declaringType">变量所在的类的类型</param>
+        /// <param name="Name">变量的名称</param>
+        /// <returns>返回一个形如{declaringType.FullName}.{Name}的唯一Key</returns>
+        public static string GetKey(Type declaringType, string Name) =>
+            $"{declaringType.FullName}.{Name}";
+
+        public ConfigEntry(Type declaringType, MemberAccessor accessor, ConfigAttribute attr, object? defaultValue)
         {
             DeclaringType = declaringType;
             Accessor = accessor;
             Attribute = attr;
-
-            // static 字段/属性：instance = null
-            // instance 字段：创建一个实例
-            if (!Accessor.IsStatic)
-            {
-                _instance = Activator.CreateInstance(declaringType);
-            }
-            else
-            {
-                _instance = null;
-            }
+            Group = NormalizeGroup(attr?.Group);
+            DefaultValue = defaultValue;
         }
 
-        public object? GetValue() => Accessor.GetValue(_instance);
+        private static string NormalizeGroup(string? g) =>
+            string.IsNullOrWhiteSpace(g) ? "__default" : g!;
 
-        public void SetValue(object? value)
-        {
-            Accessor.SetValue(_instance, value);
+        //public object? GetValue() => Accessor.GetValue(_instance);
 
-            // 如果声明了 OnChanged 方法，就调它
-            if (!string.IsNullOrEmpty(Attribute.OnChanged))
-            {
-                var m = MethodAccessor.Get(
-                    DeclaringType,
-                    Attribute.OnChanged,
-                    null
-                );
-                ModLogger.Debug("调用OnChanged");
-                m.Invoke(_instance, value);
-            }
-            else
-            {
-                ModLogger.Debug("未注册OnChanged");
-            }
-        }
+        //public void SetValue(object? value)
+        //{
+        //    Accessor.SetValue(_instance, value);
+
+        //    // 如果声明了 OnChanged 方法，就调它
+        //    if (!string.IsNullOrEmpty(Attribute.OnChanged))
+        //    {
+        //        var m = MethodAccessor.GetValue(
+        //            DeclaringType,
+        //            Attribute.OnChanged,
+        //            null
+        //        );
+        //        ModLogger.Debug("调用OnChanged");
+        //        m.Invoke(_instance, value);
+        //    }
+        //    else
+        //    {
+        //        ModLogger.Debug("未注册OnChanged");
+        //    }
+        //}
     }
 }

@@ -9,15 +9,18 @@ namespace JmcModLib.Config
         public string? Description { get; }
         public string? OnChanged { get; }
 
-        public ConfigAttribute(string displayName, string? description = null, string? onChanged = null)
+        // 新增 Group 可选参数（来自你的选择 5:B）
+        public string? Group { get; }
+
+        public ConfigAttribute(string displayName,
+                               string? description = null,
+                               string? onChanged = null,
+                               string? group = null)
         {
             DisplayName = displayName;
             Description = description;
             OnChanged = onChanged;
+            Group = group;
         }
     }
-
-    /// <summary>是否需要持久化保存</summary>
-    [AttributeUsage(AttributeTargets.Class)]
-    public sealed class PreserveConfigAttribute : Attribute { }
 }
