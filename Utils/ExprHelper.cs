@@ -1,22 +1,21 @@
 ﻿using JmcModLib.Utils;
 using System;
 using System.Collections.Concurrent;
+using System.Diagnostics;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Reflection.Emit;
 using System.Runtime.CompilerServices;
-using System.Security.Cryptography;
-using Unity.Burst.Intrinsics;
-using UnityEngine;
-using static ExprHelper;
-using static UnityEngine.Rendering.DebugUI;
 
 // 实例成员缓存：Assembly -> target -> (MemberInfo -> Accessors)
-using InsCache = System.Collections.Concurrent.ConcurrentDictionary<System.Reflection.Assembly, System.Runtime.CompilerServices.ConditionalWeakTable<object, System.Collections.Concurrent.ConcurrentDictionary<System.Reflection.MemberInfo, ExprHelper.MemberAccessors>>>;
-using InsDict = System.Runtime.CompilerServices.ConditionalWeakTable<object, System.Collections.Concurrent.ConcurrentDictionary<System.Reflection.MemberInfo, ExprHelper.MemberAccessors>>;
 using MemDict = System.Collections.Concurrent.ConcurrentDictionary<System.Reflection.MemberInfo, ExprHelper.MemberAccessors>;
+using InsDict = System.Runtime.CompilerServices.ConditionalWeakTable<object, System.Collections.Concurrent.ConcurrentDictionary<System.Reflection.MemberInfo, ExprHelper.MemberAccessors>>;
+using InsCache = System.Collections.Concurrent.ConcurrentDictionary<System.Reflection.Assembly, System.Runtime.CompilerServices.ConditionalWeakTable<object, System.Collections.Concurrent.ConcurrentDictionary<System.Reflection.MemberInfo, ExprHelper.MemberAccessors>>>;
 using StaCache = System.Collections.Concurrent.ConcurrentDictionary<System.Reflection.Assembly, System.Collections.Concurrent.ConcurrentDictionary<System.Reflection.MemberInfo, ExprHelper.MemberAccessors>>;
 
+/// <summary>
+/// 解析表达式的一些库
+/// </summary>
 public static class ExprHelper
 {
     // 每个 Assembly 一份配置
@@ -46,6 +45,9 @@ public static class ExprHelper
         }
     }
 
+    /// <summary>
+    /// 是否开启缓存，不建议修改
+    /// </summary>
     public static bool EnableCache
     {
         get => GetEnableCache(Assembly.GetCallingAssembly());
@@ -77,42 +79,100 @@ public static class ExprHelper
         }
     }
 
+    /// <summary>
+    /// 生成Accessor的后端，不建议修改，默认为Emit
+    /// </summary>
     public static MemberAccessMode AccessMode
     {
         get => GetAccessMode(Assembly.GetCallingAssembly());
         set => SetAccessMode(value, Assembly.GetCallingAssembly());
     }
 
-
+    /// <summary>
+    /// 生成Accessor的后端模式
+    /// </summary>
     public enum MemberAccessMode
     {
+        /// <summary>
+        /// 直接反射
+        /// </summary>
         Reflection,
+
+        /// <summary>
+        /// 表达式树实现
+        /// </summary>
         ExpressionTree,
+
+        /// <summary>
+        /// Emit实现
+        /// </summary>
         Emit,
+
+        /// <summary>
+        /// 默认值，默认为Emit
+        /// </summary>
         Default = Emit,
     }
 
-    static void Expect<T>(T? _) { }
+    /// <summary>
+    /// 仅供检查类型别名嵌套关系是否正确的辅助函数
+    /// </summary>
+    [Conditional("NEVER")]
+    static void Expect<T1, T2>() where T1 : T2 { }
+
+    [Conditional("NEVER")]
     static void Check()
     {
         // 检查类型别名的嵌套关系是否正确，不正确将报错，静态检查，不运行
-        Expect<ConditionalWeakTable<object, MemDict>>(default(InsDict));
-        Expect<ConcurrentDictionary<Assembly, InsDict>>(default(InsCache));
-        Expect<ConcurrentDictionary<Assembly, MemDict>>(default(StaCache));
+        Expect<ConditionalWeakTable<object, MemDict>, InsDict>();
+        Expect<InsDict, ConditionalWeakTable<object, MemDict>>();
+        Expect<ConcurrentDictionary<Assembly, InsDict>, InsCache>();
+        Expect<InsCache, ConcurrentDictionary<Assembly, InsDict>>();
+        Expect<ConcurrentDictionary<Assembly, MemDict>, StaCache>();
+        Expect<StaCache, ConcurrentDictionary<Assembly, MemDict>>();
     }
 
     private static readonly InsCache _insCache = new();
     private static readonly StaCache _staCache = new();
 
+    /// <summary>
+    /// 类型访问器辅助类
+    /// </summary>
     public record MemberAccessors(Delegate Getter, Delegate Setter);
 
+    /// <summary>
+    /// 从一个变量自动构造getter函数与setter函数，调用形式形如：
+    /// <example>
+    /// <code>
+    ///  var (gf, sf) = ExprHelper.GetOrCreateAccessors(() => obj.Field)
+    /// </code>
+    /// </example>
+    /// </summary>
+    /// <typeparam name="T">变量的类型</typeparam>
+    /// <param name="expr">构造表达式，形如<c>() => obj.field </c></param>
+    /// <param name="assembly">程序集，默认为调用者</param>
+    /// <returns>返回由getter和setter组成的对，若目标为只读或者只写，在调用错误访问器时会抛出InvalidOperationException异常</returns>
+    /// <exception cref="ArgumentException">表达式格式不正确、目标字段或属性不正确</exception>
+    /// <exception cref="InvalidOperationException">实例对象为空、模式选择不正确</exception>
     public static (Func<T> getter, Action<T> setter) GetOrCreateAccessors<T>
         (Expression<Func<T>> expr, Assembly? assembly = null)
         => GetOrCreateAccessors(expr, out _,assembly ?? Assembly.GetCallingAssembly());
 
     /// <summary>
-    /// 获取或创建 getter/setter
+    /// 从一个变量自动构造getter函数与setter函数，并检查是否命中缓存，调用形式形如：
+    /// <example>
+    /// <code>
+    /// var (g, s) = ExprHelper.GetOrCreateAccessors(() => a.Field, out bool hit);
+    /// </code>
+    /// </example>
     /// </summary>
+    /// <typeparam name="T">变量的类型</typeparam>
+    /// <param name="expr">构造表达式，形如<c>() => obj.field </c></param>
+    /// <param name="cacheHit">是否命中缓存</param>
+    /// <param name="assembly">程序集，默认为调用者</param>
+    /// <returns>返回由getter和setter组成的对，若目标为只读或者只写，在调用错误访问器时会抛出InvalidOperationException异常</returns>
+    /// <exception cref="ArgumentException">表达式格式不正确、目标字段或属性不正确</exception>
+    /// <exception cref="InvalidOperationException">实例对象为空、模式选择不正确</exception>
     public static (Func<T> getter, Action<T> setter) GetOrCreateAccessors<T>
         (Expression<Func<T>> expr, out bool cacheHit, Assembly? assembly = null)
     {
@@ -342,7 +402,6 @@ public static class ExprHelper
 
                     return new MemberAccessors(getter, setter);
                 }
-
 
             default:
                 throw new ArgumentException($"成员 {member.Name} 不是字段或属性");
