@@ -37,7 +37,7 @@ namespace JmcModLib.Config
         }
 
         private static string NormalizeGroup(string? g) =>
-            string.IsNullOrWhiteSpace(g) ? "__default" : g!;
+            string.IsNullOrWhiteSpace(g) ? IConfigStorage.DefaultGroup : g!;
 
         //public object? GetValue() => Accessor.GetValue(_instance);
 
