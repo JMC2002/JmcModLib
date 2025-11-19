@@ -1,5 +1,4 @@
 ﻿using JmcModLib.Reflection;
-using JmcModLib.Utils;
 using System;
 namespace JmcModLib.Config
 {

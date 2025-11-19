@@ -7,7 +7,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using Unity.Burst.Intrinsics;
 using UnityEngine;
 
 namespace JmcModLib.Config

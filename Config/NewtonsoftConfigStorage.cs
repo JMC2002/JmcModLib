@@ -1,12 +1,11 @@
 ﻿using JmcModLib.Core;
 using JmcModLib.Utils;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
-using UnityEngine; // JsonUtility
-using Newtonsoft.Json;
 
 namespace JmcModLib.Config
 {
