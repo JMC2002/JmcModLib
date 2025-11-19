@@ -47,7 +47,7 @@
             </summary>
             <param name="key">需要查询的key</param>
             <param name="asm">当前Assembly</param>
-            <returns>返回与key对应的group，如果未分组返回IConfigStorage.DefaultGroup，如果没有找到对应的key则返回null</returns>
+            <returns>返回与key对应的group，如果没有找到对应的key则返回null</returns>
         </member>
         <member name="M:JmcModLib.Config.ConfigManager.GetGroups(System.Reflection.Assembly)">
             <summary>
@@ -149,21 +149,6 @@
         <member name="T:JmcModLib.ModBehaviour">
             <summary>
             入口类
-            </summary>
-        </member>
-        <member name="M:JmcModLib.Reflection.AttributeAccessor.Get(System.Reflection.MemberInfo,System.Type)">
-            <summary>
-            获取指定成员上的某种 attribute（缓存）
-            </summary>
-        </member>
-        <member name="M:JmcModLib.Reflection.AttributeAccessor.Get``1(System.Reflection.MemberInfo)">
-            <summary>
-            泛型版本：获取 attribute 实例
-            </summary>
-        </member>
-        <member name="P:JmcModLib.Reflection.AttributeAccessor.Exists">
-            <summary>
-            当前成员是否包含此 attribute
             </summary>
         </member>
         <member name="T:JmcModLib.Reflection.MemberAccessor">

@@ -9,13 +9,13 @@ namespace JmcModLib.Config
         public string? Description { get; }
         public string? OnChanged { get; }
 
-        // 新增 Group 可选参数（来自你的选择 5:B）
-        public string? Group { get; }
+        public string Group { get; }
+        public const string DefaultGroup = "DefaultGroup";
 
         public ConfigAttribute(string displayName,
                                string? description = null,
                                string? onChanged = null,
-                               string? group = null)
+                               string group = DefaultGroup)
         {
             DisplayName = displayName;
             Description = description;

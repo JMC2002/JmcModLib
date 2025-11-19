@@ -145,7 +145,7 @@ namespace JmcModLib.Config
         /// </summary>
         /// <param name="key">需要查询的key</param>
         /// <param name="asm">当前Assembly</param>
-        /// <returns>返回与key对应的group，如果未分组返回IConfigStorage.DefaultGroup，如果没有找到对应的key则返回null</returns>
+        /// <returns>返回与key对应的group，如果没有找到对应的key则返回null</returns>
         public static string? TryGetGroupForKey(string key, Assembly asm)
         {
             if (asm == null) return null;
@@ -156,7 +156,7 @@ namespace JmcModLib.Config
                 if (gkv.Value.ContainsKey(key))
                     return gkv.Key;
             }
-            return IConfigStorage.DefaultGroup;
+            return null;
         }
 
         /// <summary>
