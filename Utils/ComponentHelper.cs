@@ -1,10 +1,11 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
 using UnityEngine;
 
 namespace JmcModLib.Utils
 {
+    /// <summary>
+    /// 一些用来往GameObject里加Component的方法
+    /// </summary>
     public static class ComponentHelper
     {
         /// <summary>
@@ -41,6 +42,14 @@ namespace JmcModLib.Utils
             return true;
         }
 
+        /// <summary>
+        /// 若GameObject中已存在component，删除后再添加，否则直接添加
+        /// </summary>
+        /// <typeparam name="T">组件类型</typeparam>
+        /// <param name="instance">目标 GameObject</param>
+        /// <param name="initializeMethod">初始化方法，接受该组件的实例作为参数</param>
+        /// <param name="info">可选的参数，成功添加的日志信息，如果有传递，会打印到Debug日志中</param>
+        /// <returns>如果是新增的，返回true，否则返回false</returns>
         public static bool AddComponentAlways<T>(GameObject instance, Action<T> initializeMethod, string? info = null) where T : Component
         {
             bool flg = true;
@@ -58,6 +67,15 @@ namespace JmcModLib.Utils
             return flg;
         }
 
+        /// <summary>
+        /// 如果GameObject中已存在component组件，执行onComponentFound，否则添加
+        /// </summary>
+        /// <typeparam name="T">组件类型</typeparam>
+        /// <param name="instance">目标 GameObject</param>
+        /// <param name="initializeMethod">初始化方法，接受该组件的实例作为参数</param>
+        /// <param name="onComponentFound">待执行的函数</param>
+        /// <param name="info">可选的参数，成功添加的日志信息，如果有传递，会打印到Debug日志中</param>
+        /// <returns></returns>
         public static bool AddComponentOr<T>(GameObject instance, Action<T> initializeMethod, Action<T> onComponentFound, string? info = null) where T : Component
         {
             var component = instance.GetComponent<T>();
