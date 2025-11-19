@@ -10,7 +10,7 @@ using Newtonsoft.Json;
 
 namespace JmcModLib.Config
 {
-    public sealed class UnityJsonConfigStorage : IConfigStorage
+    public sealed class NewtonsoftConfigStorage : IConfigStorage
     {
         private readonly string _rootFolder;
         private readonly object _globalLock = new();
@@ -25,7 +25,7 @@ namespace JmcModLib.Config
         private readonly ConcurrentDictionary<Assembly, bool> _dirty = new();
 
 
-        public UnityJsonConfigStorage(string rootFolder)
+        public NewtonsoftConfigStorage(string rootFolder)
         {
             _rootFolder = rootFolder;
             if (!Directory.Exists(_rootFolder))
@@ -185,21 +185,18 @@ namespace JmcModLib.Config
             return File.Exists(GetFilePath(asm));
         }
 
-        public bool TryLoad(string key, Type type, out object? value, Assembly? asm)
+        public bool TryLoad(ConfigEntry entry, out object? value, Assembly? asm)
         {
             asm ??= Assembly.GetCallingAssembly();
 
-            var group = ConfigManager.TryGetGroupForKey(key, asm);
-            if (group == null)
-            {
-                value = null;
-                return false;
-            }
+            var group = entry.Group;
             group = NormalizeGroup(group);
+            var key = entry.Attribute.DisplayName;
+            Type type = entry.Accessor.MemberType;
 
             var cache = GetOrLoadCache(asm);
 
-            // 如果 group 不存在或 key 不存在，直接返回 false
+            // 如果 group 不存在或 DisplayName 不存在，直接返回 false
             if (!cache.TryGetValue(group, out var inner) || !inner.TryGetValue(key, out var jsonStr))
             {
                 value = null;
@@ -213,19 +210,17 @@ namespace JmcModLib.Config
             }
             catch (Exception ex)
             {
-                ModLogger.Error($"{ModRegistry.GetTag(asm)} 尝试加载配置项{key}时反序列化出现异常", ex);
+                ModLogger.Error($"{ModRegistry.GetTag(asm)} 尝试加载配置项'{key}'时反序列化出现异常", ex);
                 value = null;
                 return false;
             }
         }
 
-        public void Save(string key, object? value, Assembly? asm)
+        public void Save(ConfigEntry entry, object? value, Assembly? asm)
         {
             asm ??= Assembly.GetCallingAssembly();
 
-            var group = ConfigManager.TryGetGroupForKey(key, asm) 
-                ?? throw new InvalidOperationException($"{ModRegistry.GetTag(asm)} Key '{key}' 未注册.");
-
+            var group = entry.Group;
             group = NormalizeGroup(group);
 
             var cache = GetOrLoadCache(asm);
@@ -236,6 +231,7 @@ namespace JmcModLib.Config
                 cache[group] = inner;
             }
 
+            var key = entry.Attribute.DisplayName;
             inner[key] = SerializeValue(value);
 
             _dirty[asm] = true;    // 标记为需要写回

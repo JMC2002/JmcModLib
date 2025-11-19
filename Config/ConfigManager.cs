@@ -35,7 +35,7 @@ namespace JmcModLib.Config
 
         // 默认存储后端（支持子 MOD 覆盖）
         private static readonly IConfigStorage _defaultStorage =
-            new UnityJsonConfigStorage(ConfigDir);
+            new NewtonsoftConfigStorage(ConfigDir);
 
         // -------------- Storage 设置 API ----------------
         /// <summary>
@@ -229,7 +229,7 @@ namespace JmcModLib.Config
                 {
                     var entry = kv.Value;
                     // 获取已保存的值
-                    if (storage.TryLoad(entry.Key, entry.Accessor.MemberType, out var loaded, asm))
+                    if (storage.TryLoad(entry, out var loaded, asm))
                         entry.Accessor.SetValue(GetInstance(entry, asm), loaded);
                 }
             }
@@ -313,7 +313,7 @@ namespace JmcModLib.Config
 
             // 在设置值后调用 Save 方法以保持数据一致性
             var storage = GetStorage(asm);
-            storage.Save(entry.Key, value, asm);
+            storage.Save(entry, value, asm);
         }
     }
 }
