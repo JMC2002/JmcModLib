@@ -1,105 +1,111 @@
 ﻿using JmcModLib.Core;
 using System;
-
-// using System.Diagnostics;
+using System.Reflection;
 using System.Runtime.CompilerServices;
 
 namespace JmcModLib.Utils
 {
+    /// <summary>
+    /// 打印级别
+    /// </summary>
     public enum LogLevel
     {
+        /// <summary>
+        /// 主要用于打印出函数入函数
+        /// </summary>
+        Trace = -1,
+        /// <summary>
+        /// Debug
+        /// </summary>
         Debug = 0,
-        Info  = 1,
-        Warn  = 2,
+        /// <summary>
+        /// Info
+        /// </summary>
+        Info = 1,
+        /// <summary>
+        /// Warn
+        /// </summary>
+        Warn = 2,
+        /// <summary>
+        /// Error
+        /// </summary>
         Error = 3,
-        None  = 4
-    }
-
-    public static class ModLogger
-    {
-        // === Debug 模式开关 ===
-        public static bool EnableDebug => ModConfig.EnableDebugLogs;
-
-        public static void Debug(string message,
-            [CallerMemberName] string caller = "",
-            [CallerFilePath] string file = "",
-            [CallerLineNumber] int line = 0)
-        {
-            if (!EnableDebug)
-                return;
-
-            UnityEngine.Debug.Log(Format("DEBUG", message, caller, file, line));
-        }
-
-        // 输出普通信息日志。
-        public static void Info(string message,
-            [CallerMemberName] string caller = "",
-            [CallerFilePath] string file = "",
-            [CallerLineNumber] int line = 0)
-        {
-            UnityEngine.Debug.Log(Format("INFO", message, caller, file, line));
-        }
-
-        // 输出警告日志。
-        public static void Warn(string message,
-            [CallerMemberName] string caller = "",
-            [CallerFilePath] string file = "",
-            [CallerLineNumber] int line = 0)
-        {
-            UnityEngine.Debug.LogWarning(Format("WARN", message, caller, file, line));
-        }
-
-        // 输出错误日志。
-        public static void Error(string message, Exception? ex = null,
-            [CallerMemberName] string caller = "",
-            [CallerFilePath] string file = "",
-            [CallerLineNumber] int line = 0)
-        {
-            UnityEngine.Debug.LogError(Format("ERROR", message + (ex != null ? $"\n{ex}" : ""), caller, file, line));
-        }
-
-        // 格式化输出文本，包含时间、版本信息。
-        private static string Format(string level, string message,
-            string caller, string file, int line)
-        {
-            string timestamp = DateTime.Now.ToString("HH:mm:ss");
-            return $"{VersionInfo.Tag} [{timestamp}] [{level}] {caller} (L{line}): {message}";
-        }
+        /// <summary>
+        /// None
+        /// </summary>
+        None = 4
     }
 
     /// <summary>
-    /// 用于测量代码块执行时间的辅助类。
-    /// 
-    /// <example>
-    /// 使用示例：
-    /// <code>
-    /// void SortInventory(Inventory inventory, Comparison&lt;Item> comparison)
-    /// {
-    ///     using (new ScopedTimer("SortInventory"))
-    ///     {
-    ///         var items = inventory.GetItems();
-    ///         items.Sort(comparison);
-    ///         // ...
-    ///     }
-    /// }
-    /// </code>
-    /// </example>
+    /// 一个打印类
     /// </summary>
-    public sealed class ScopedTimer : System.IDisposable
+    public static class ModLogger
     {
-        private readonly string _label;
-        private readonly System.Diagnostics.Stopwatch _watch;
 
-        public ScopedTimer(string label)
+        private static bool ShouldLog(Assembly asm, LogLevel level)
         {
-            _label = label;
-            _watch = System.Diagnostics.Stopwatch.StartNew();
+            var info = ModRegistry.GetModInfo(asm);
+            if (info is null) return true; // 未注册的库默认输出
+            return level >= info.Level;
         }
 
-        public void Dispose()
+        private static string Format(Assembly asm, string level, string message, string caller, string file, int line)
         {
-            _watch.Stop();
-            ModLogger.Debug($"[Timer] {_label} 耗时: {_watch.Elapsed.TotalMilliseconds:F2} ms");
+            string tag = ModRegistry.GetTag(asm) ?? "[UnknownMod]";
+            string timestamp = DateTime.Now.ToString("HH:mm:ss");
+            return $"{tag} [{timestamp}] [{level}] {caller} (L{line}): {message}";
         }
+
+        private static void Log(LogLevel level, string message,
+            Assembly asm,
+            [CallerMemberName] string caller = "",
+            [CallerFilePath] string file = "",
+            [CallerLineNumber] int line = 0)
+        {
+            if (!ShouldLog(asm, level)) return;
+
+            string text = Format(asm, level.ToString().ToUpper(), message, caller, file, line);
+            switch (level)
+            {
+                case LogLevel.Trace:
+                case LogLevel.Debug:
+                case LogLevel.Info:
+                    UnityEngine.Debug.Log(text);
+                    break;
+                case LogLevel.Warn:
+                    UnityEngine.Debug.LogWarning(text);
+                    break;
+                case LogLevel.Error:
+                    UnityEngine.Debug.LogError(text);
+                    break;
+            }
+        }
+
+        /// <summary>
+        /// 使用Trace输出
+        /// </summary>
+        public static void Trace(string msg, Assembly? asm = null, [CallerMemberName] string caller = "", [CallerFilePath] string file = "", [CallerLineNumber] int line = 0)
+            => Log(LogLevel.Trace, msg, asm ?? Assembly.GetCallingAssembly(), caller, file, line);
+
+        /// <summary>
+        /// 使用Debug输出
+        /// </summary>
+        public static void Debug(string msg, Assembly? asm = null, [CallerMemberName] string caller = "", [CallerFilePath] string file = "", [CallerLineNumber] int line = 0)
+            => Log(LogLevel.Debug, msg, asm ?? Assembly.GetCallingAssembly(), caller, file, line);
+        /// <summary>
+        /// Info输出
+        /// </summary>
+        public static void Info(string msg, Assembly? asm = null, [CallerMemberName] string caller = "", [CallerFilePath] string file = "", [CallerLineNumber] int line = 0)
+            => Log(LogLevel.Info, msg, asm ?? Assembly.GetCallingAssembly(), caller, file, line);
+        /// <summary>
+        /// Warn输出
+        /// </summary>
+        public static void Warn(string msg, Exception? ex = null, Assembly? asm = null, [CallerMemberName] string caller = "", [CallerFilePath] string file = "", [CallerLineNumber] int line = 0)
+            => Log(LogLevel.Warn, msg + (ex != null ? $"\n{ex}" : ""), asm ?? Assembly.GetCallingAssembly(), caller, file, line);
+        /// <summary>
+        /// Error输出，其中若传递异常，会换行并输出异常
+        /// </summary>
+        public static void Error(string msg, Exception? ex = null, Assembly? asm = null, [CallerMemberName] string caller = "", [CallerFilePath] string file = "", [CallerLineNumber] int line = 0)
+            => Log(LogLevel.Error, msg + (ex != null ? $"\n{ex}" : ""), asm ?? Assembly.GetCallingAssembly(), caller, file, line);
     }
 }
