@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
 using UnityEngine; // JsonUtility
+using Newtonsoft.Json;
 
 namespace JmcModLib.Config
 {
@@ -91,7 +92,7 @@ namespace JmcModLib.Config
                 if (string.IsNullOrWhiteSpace(raw))
                     return new Dictionary<string, Dictionary<string, string>>();
 
-                var wrapper = JsonUtility.FromJson<FileWrapper>(raw);
+                var wrapper = JsonConvert.DeserializeObject<FileWrapper>(raw);
                 var dict = new Dictionary<string, Dictionary<string, string>>();
 
                 if (wrapper?.groups != null)
@@ -134,7 +135,7 @@ namespace JmcModLib.Config
             wrapper.groups = groups.ToArray();
             ModLogger.Trace($"wrapper.groups.count = {wrapper.groups.Length}");
             ModLogger.Trace($"wrapper.groups[0].items.Length = {wrapper.groups[0].items.Length}");
-            var json = JsonUtility.ToJson(wrapper, true);
+            var json = JsonConvert.SerializeObject(wrapper, Formatting.Indented);
             ModLogger.Trace(json);
 
             lock (GetFileLock(asm))
@@ -150,63 +151,7 @@ namespace JmcModLib.Config
             return _cache.GetOrAdd(asm, key => ReadFileRaw(asm));
         }
 
-        private Dictionary<string, Dictionary<string, string>> ReadFile(Assembly asm)
-        {
-            var path = GetFilePath(asm);
-            if (!File.Exists(path))
-                return new Dictionary<string, Dictionary<string, string>>();
-
-            lock (GetFileLock(asm))
-            {
-                var raw = File.ReadAllText(path);
-                if (string.IsNullOrWhiteSpace(raw)) return new Dictionary<string, Dictionary<string, string>>();
-
-                var wrapper = JsonUtility.FromJson<FileWrapper>(raw);
-                var dict = new Dictionary<string, Dictionary<string, string>>();
-                if (wrapper?.groups != null)
-                {
-                    foreach (var g in wrapper.groups)
-                    {
-                        var inner = new Dictionary<string, string>();
-                        if (g.items != null)
-                        {
-                            foreach (var kv in g.items)
-                                inner[kv.key] = kv.json;
-                        }
-                        dict[g.name] = inner;
-                    }
-                }
-                return dict;
-            }
-        }
-
-        private void WriteFile(Assembly asm, Dictionary<string, Dictionary<string, string>> data)
-        {
-            var path = GetFilePath(asm);
-            var wrapper = new FileWrapper();
-            var groups = new List<SerializableGroup>();
-            foreach (var kv in data)
-            {
-                var sg = new SerializableGroup { name = kv.Key };
-                var items = new List<SerializableKV>();
-                foreach (var item in kv.Value)
-                {
-                    items.Add(new SerializableKV { key = item.Key, json = item.Value });
-                }
-                sg.items = items.ToArray();
-                groups.Add(sg);
-            }
-            wrapper.groups = groups.ToArray();
-
-            var json = JsonUtility.ToJson(wrapper, true);
-
-            lock (GetFileLock(asm))
-            {
-                File.WriteAllText(path, json);
-            }
-        }
-
-        // Helper: 用来包装任意类型的值以便 JsonUtility 序列化
+        // Helper: 用来包装任意类型的值以便序列化
         [Serializable]
         private class ValueWrapper<T>
         {
@@ -222,7 +167,7 @@ namespace JmcModLib.Config
             var wrapper = Activator.CreateInstance(wrapperType)!;
             var f = wrapperType.GetField("value")!;
             f.SetValue(wrapper, value);
-            string json = JsonUtility.ToJson(wrapper);
+            string json = JsonConvert.SerializeObject(wrapper);
             return json;
         }
 
@@ -230,7 +175,7 @@ namespace JmcModLib.Config
         {
             if (json == IConfigStorage.NullValue) return null;
             var wrapperType = typeof(ValueWrapper<>).MakeGenericType(targetType);
-            var wrapper = JsonUtility.FromJson(json, wrapperType);
+            var wrapper = JsonConvert.DeserializeObject(json, wrapperType);
             var f = wrapperType.GetField("value")!;
             return f.GetValue(wrapper);
         }
