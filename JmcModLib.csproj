@@ -46,7 +46,7 @@
     <Reference Include="$(DuckovManagedPath)\Unity*" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="FastMember" Version="1.5.0" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
   </ItemGroup>
 
   <!-- 从版本文件提取版本信息并注入DLL -->
