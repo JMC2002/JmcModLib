@@ -45,10 +45,6 @@ namespace JmcModLib.Config
             }
         }
 
-        private string NormalizeGroup(string? g)
-            => string.IsNullOrWhiteSpace(g) ? IConfigStorage.DefaultGroup : g!;
-
-
         private string GetFilePath(Assembly asm)
         {
             var modName = ModRegistry.GetModInfo(asm)?.Name;
@@ -185,14 +181,9 @@ namespace JmcModLib.Config
             return File.Exists(GetFilePath(asm));
         }
 
-        public bool TryLoad(ConfigEntry entry, out object? value, Assembly? asm)
+        public bool TryLoad(string key, string group, Type type, out object? value, Assembly? asm)
         {
             asm ??= Assembly.GetCallingAssembly();
-
-            var group = entry.Group;
-            group = NormalizeGroup(group);
-            var key = entry.Attribute.DisplayName;
-            Type type = entry.Accessor.MemberType;
 
             var cache = GetOrLoadCache(asm);
 
@@ -216,12 +207,9 @@ namespace JmcModLib.Config
             }
         }
 
-        public void Save(ConfigEntry entry, object? value, Assembly? asm)
+        public void Save(string key, string group, object? value, Assembly? asm)
         {
             asm ??= Assembly.GetCallingAssembly();
-
-            var group = entry.Group;
-            group = NormalizeGroup(group);
 
             var cache = GetOrLoadCache(asm);
 
@@ -231,7 +219,6 @@ namespace JmcModLib.Config
                 cache[group] = inner;
             }
 
-            var key = entry.Attribute.DisplayName;
             inner[key] = SerializeValue(value);
 
             _dirty[asm] = true;    // 标记为需要写回
