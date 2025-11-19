@@ -19,7 +19,7 @@ namespace JmcModLib.Config
         // 用作内存缓存，避免频繁读写文件
         // cache: asm -> group -> key -> json-string
         private readonly ConcurrentDictionary<Assembly,
-            Dictionary<string, Dictionary<string, string>>> _cache = new();
+            Dictionary<string, Dictionary<string, object?>>> _cache = new();
 
         // 记录哪些 asm 的缓存是脏的，需要写回文件
         private readonly ConcurrentDictionary<Assembly, bool> _dirty = new();
@@ -58,85 +58,59 @@ namespace JmcModLib.Config
         }
 
         // ------------------ file read/write ------------------
-        [Serializable]
-        private class FileWrapper
+        public class FileWrapper
         {
-            // group -> ( key -> json-string )
-            public SerializableGroup[] groups = Array.Empty<SerializableGroup>();
+            public Dictionary<string, SerializableGroup> groups = new();
         }
 
-        [Serializable]
-        private class SerializableGroup
+        public class SerializableGroup
         {
-            public string name = "";
-            public SerializableKV[] items = Array.Empty<SerializableKV>();
+            public Dictionary<string, object?> items = new();
         }
 
-        [Serializable]
-        private class SerializableKV
-        {
-            public string key = "";
-            public string json = ""; // 序列化后的字符串
-        }
-
-        private Dictionary<string, Dictionary<string, string>> ReadFileRaw(Assembly asm)
+        private Dictionary<string, Dictionary<string, object?>> ReadFileRaw(Assembly asm)
         {
             var file = GetFilePath(asm);
             if (!File.Exists(file))
-                return new Dictionary<string, Dictionary<string, string>>();
+                return new();
 
             lock (GetFileLock(asm))
             {
                 ModLogger.Debug($"{ModRegistry.GetTag(asm)} 读取配置文件 {file}");
                 var raw = File.ReadAllText(file);
                 if (string.IsNullOrWhiteSpace(raw))
-                    return new Dictionary<string, Dictionary<string, string>>();
+                    return new();
 
                 var wrapper = JsonConvert.DeserializeObject<FileWrapper>(raw);
-                var dict = new Dictionary<string, Dictionary<string, string>>();
+                var dict = new Dictionary<string, Dictionary<string, object?>>();
 
-                if (wrapper?.groups != null)
+                foreach (var g in wrapper.groups)
                 {
-                    foreach (var g in wrapper.groups)
-                    {
-                        var inner = new Dictionary<string, string>();
-                        if (g.items != null)
-                        {
-                            foreach (var kv in g.items)
-                                inner[kv.key] = kv.json;
-                        }
-                        dict[g.name] = inner;
-                    }
+                    var inner = new Dictionary<string, object?>(g.Value.items);
+                    dict[g.Key] = inner;
                 }
 
                 return dict;
             }
         }
 
-        private void WriteFileRaw(Assembly asm, Dictionary<string, Dictionary<string, string>> data)
+        private void WriteFileRaw(Assembly asm, Dictionary<string, Dictionary<string, object?>> data)
         {
             var file = GetFilePath(asm);
 
-            var wrapper = new FileWrapper();
-            var groups = new List<SerializableGroup>();
+            var groups = new Dictionary<string, SerializableGroup>();
             ModLogger.Trace($"共有{data.Count}组");
-            foreach (var kv in data)
+            foreach (var g in data)
             {
-                var sg = new SerializableGroup { name = kv.Key };
-                var items = new List<SerializableKV>();
-                ModLogger.Trace($"组 {kv.Key} 有 {kv.Value.Count} 个值");
-                foreach (var item in kv.Value)
-                    items.Add(new SerializableKV { key = item.Key, json = item.Value });
+                var sg = new SerializableGroup();
+                foreach (var kv in g.Value)
+                    sg.items[kv.Key] = kv.Value; // value 是 object?，Newtonsoft 会自己序列化
 
-                sg.items = items.ToArray();
-                groups.Add(sg);
+                groups[g.Key] = sg;
             }
 
-            wrapper.groups = groups.ToArray();
-            ModLogger.Trace($"wrapper.groups.count = {wrapper.groups.Length}");
-            ModLogger.Trace($"wrapper.groups[0].items.Length = {wrapper.groups[0].items.Length}");
+            var wrapper = new FileWrapper { groups = groups };
             var json = JsonConvert.SerializeObject(wrapper, Formatting.Indented);
-            ModLogger.Trace(json);
 
             lock (GetFileLock(asm))
             {
@@ -146,7 +120,7 @@ namespace JmcModLib.Config
             }
         }
 
-        private Dictionary<string, Dictionary<string, string>> GetOrLoadCache(Assembly asm)
+        private Dictionary<string, Dictionary<string, object?>> GetOrLoadCache(Assembly asm)
         {
             return _cache.GetOrAdd(asm, key => ReadFileRaw(asm));
         }
@@ -158,27 +132,50 @@ namespace JmcModLib.Config
             public T value = default!;
         }
 
-        private string SerializeValue(object? value)
+        private object? SerializeValue(object? value)
         {
-            if (value == null) return IConfigStorage.NullValue; // sentinel
-
-            Type t = value.GetType();
-            var wrapperType = typeof(ValueWrapper<>).MakeGenericType(t);
-            var wrapper = Activator.CreateInstance(wrapperType)!;
-            var f = wrapperType.GetField("value")!;
-            f.SetValue(wrapper, value);
-            string json = JsonConvert.SerializeObject(wrapper);
-            return json;
+            return value; // 直接返回
         }
 
-        private object? DeserializeValue(string json, Type targetType)
+        private static object? DeserializeValue(object? raw, Type targetType)
         {
-            if (json == IConfigStorage.NullValue) return null;
-            var wrapperType = typeof(ValueWrapper<>).MakeGenericType(targetType);
-            var wrapper = JsonConvert.DeserializeObject(json, wrapperType);
-            var f = wrapperType.GetField("value")!;
-            return f.GetValue(wrapper);
+            if (raw == null)
+            {
+                // null + 值类型（int/float/bool/struct） → 返回默认值
+                if (targetType.IsValueType)
+                {
+                    // 可空值类型 (int?)
+                    if (Nullable.GetUnderlyingType(targetType) != null)
+                        return null;
+
+                    return Activator.CreateInstance(targetType); // int=0, float=0, bool=false
+                }
+
+                // 引用类型
+                return null;
+            }
+
+            // 如果 raw 已经是目标类型，直接返回
+            if (targetType.IsInstanceOfType(raw))
+                return raw;
+
+            // 枚举处理
+            if (targetType.IsEnum)
+            {
+                return Enum.Parse(targetType, raw.ToString()!);
+            }
+
+            // 可空<T> 处理
+            var underlying = Nullable.GetUnderlyingType(targetType);
+            if (underlying != null)
+            {
+                return Convert.ChangeType(raw, underlying);
+            }
+
+            // 普通值类型转换
+            return Convert.ChangeType(raw, targetType);
         }
+
 
         // -------- IConfigStorage impl --------
 
@@ -235,7 +232,7 @@ namespace JmcModLib.Config
 
             if (!cache.TryGetValue(group, out var inner))
             {
-                inner = new Dictionary<string, string>();
+                inner = new Dictionary<string, object?>();
                 cache[group] = inner;
             }
 
