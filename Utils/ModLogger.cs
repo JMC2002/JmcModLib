@@ -13,27 +13,27 @@ namespace JmcModLib.Utils
         /// <summary>
         /// 主要用于打印出函数入函数
         /// </summary>
-        Trace = -1,
+        Trace = 0,
         /// <summary>
         /// Debug
         /// </summary>
-        Debug = 0,
+        Debug = 1,
         /// <summary>
         /// Info
         /// </summary>
-        Info = 1,
+        Info = 2,
         /// <summary>
         /// Warn
         /// </summary>
-        Warn = 2,
+        Warn = 3,
         /// <summary>
         /// Error
         /// </summary>
-        Error = 3,
+        Error = 4,
         /// <summary>
         /// None
         /// </summary>
-        None = 4
+        None = 5
     }
 
     /// <summary>
