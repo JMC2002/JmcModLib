@@ -9,7 +9,7 @@ using Debug = UnityEngine.Debug;
 
 namespace JmcModLib.Config.UI.ModSetting
 {
-public static class ModSettingAPI
+internal static class ModSettingAPI
 {
     private const string ADD_DROP_DOWN_LIST = "AddDropDownList";
     private const string ADD_SLIDER = "AddSlider";
