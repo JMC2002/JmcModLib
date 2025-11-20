@@ -21,6 +21,7 @@
 /// If not, see <see href="https://www.gnu.org/licenses/lgpl-3.0.html" />.
 /// </remarks>
 
+using JmcModLib.Config.UI.ModSetting;
 using JmcModLib.Core;
 using JmcModLib.Utils;
 
@@ -35,6 +36,7 @@ namespace JmcModLib
         {
             Core.VersionInfo.modInfo = info;
             ModRegistry.Register(Core.VersionInfo.modInfo, VersionInfo.Name, VersionInfo.Version, LogLevel.Trace);
+            
             ModLogger.Info("模组已启用");
         }
 
@@ -48,11 +50,13 @@ namespace JmcModLib
             ModLogger.Info("模组已启用");
             ModConfig.Load();
             Core.VersionInfo.modInfo = info;
+            ModSettingLinker.Init();
         }
 
         protected virtual void OnBeforeDeactivate()
         {
             ModConfig.Save();
+            ModSettingLinker.Dispose();
             ModLogger.Info("Mod 已禁用，配置已保存");
         }
 
