@@ -30,10 +30,16 @@ namespace JmcModLib.Utils
             LocalizationManager.OnSetLanguage += OnLanguageChanged;
         }
 
+        internal static void Init()
+        {
+            _currentLanguage = LocalizationManager.CurrentLanguage;
+            LocalizationManager.OnSetLanguage += OnLanguageChanged;
+        }
+
         /// <summary>
         /// 当 JmcModLib 或宿主 MOD 卸载时调用
         /// </summary>
-        public static void Dispose()
+        internal static void Dispose()
         {
             LocalizationManager.OnSetLanguage -= OnLanguageChanged;
             _basePaths.Clear();
