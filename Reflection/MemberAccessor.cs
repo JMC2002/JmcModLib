@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
+using System.Reflection.Emit;
 
 namespace JmcModLib.Reflection
 {
@@ -189,17 +190,32 @@ namespace JmcModLib.Reflection
         {
             try
             {
-                var target = Expression.Parameter(typeof(object));
-                Expression instance = f.IsStatic
-                    ? null!
-                    : Expression.Convert(target, f.DeclaringType!);
+                var dm = new DynamicMethod(
+                                $"get_{f.Name}",
+                                typeof(object),
+                                new[] { typeof(object) },
+                                f.DeclaringType!,
+                                true);
 
-                var fieldAccess = f.IsStatic
-                    ? Expression.Field(null, f)
-                    : Expression.Field(instance, f);
+                ILGenerator il = dm.GetILGenerator();
 
-                var convert = Expression.Convert(fieldAccess, typeof(object));
-                return Expression.Lambda<Func<object?, object?>>(convert, target).Compile();
+                if (!f.IsStatic)
+                {
+                    il.Emit(OpCodes.Ldarg_0);
+                    il.Emit(OpCodes.Castclass, f.DeclaringType!);
+                    il.Emit(OpCodes.Ldfld, f);
+                }
+                else
+                {
+                    il.Emit(OpCodes.Ldsfld, f);
+                }
+
+                if (f.FieldType.IsValueType)
+                    il.Emit(OpCodes.Box, f.FieldType);
+
+                il.Emit(OpCodes.Ret);
+
+                return (Func<object?, object?>)dm.CreateDelegate(typeof(Func<object?, object?>));
             }
             catch (Exception ex)
             {
@@ -211,20 +227,35 @@ namespace JmcModLib.Reflection
         {
             try
             {
-                var target = Expression.Parameter(typeof(object));
-                var value = Expression.Parameter(typeof(object));
+                var dm = new DynamicMethod(
+                                $"set_{f.Name}",
+                                null,
+                                new[] { typeof(object), typeof(object) },
+                                f.DeclaringType!,
+                                true);
 
-                var instance = f.IsStatic
-                    ? null!
-                    : Expression.Convert(target, f.DeclaringType!);
+                ILGenerator il = dm.GetILGenerator();
 
-                var valueCast = Expression.Convert(value, f.FieldType);
+                if (!f.IsStatic)
+                {
+                    il.Emit(OpCodes.Ldarg_0);
+                    il.Emit(OpCodes.Castclass, f.DeclaringType!);
+                }
 
-                var assign = f.IsStatic
-                    ? Expression.Assign(Expression.Field(null, f), valueCast)
-                    : Expression.Assign(Expression.Field(instance, f), valueCast);
+                il.Emit(OpCodes.Ldarg_1);
+                if (f.FieldType.IsValueType)
+                    il.Emit(OpCodes.Unbox_Any, f.FieldType);
+                else
+                    il.Emit(OpCodes.Castclass, f.FieldType);
 
-                return Expression.Lambda<Action<object?, object?>>(assign, target, value).Compile();
+                if (f.IsStatic)
+                    il.Emit(OpCodes.Stsfld, f);
+                else
+                    il.Emit(OpCodes.Stfld, f);
+
+                il.Emit(OpCodes.Ret);
+
+                return (Action<object?, object?>)dm.CreateDelegate(typeof(Action<object?, object?>));
             }
             catch (Exception ex)
             {
@@ -236,19 +267,34 @@ namespace JmcModLib.Reflection
         {
             try
             {
-                var method = p.GetGetMethod(true)!;
-                var target = Expression.Parameter(typeof(object));
+                var getMethod = p.GetGetMethod(true)!;
 
-                var instance = method.IsStatic
-                    ? null!
-                    : Expression.Convert(target, p.DeclaringType!);
+                var dm = new DynamicMethod(
+                                $"get_{p.Name}",
+                                typeof(object),
+                                new[] { typeof(object) },
+                                p.DeclaringType!,
+                                true);
 
-                var call = method.IsStatic
-                    ? Expression.Call(method)
-                    : Expression.Call(instance, method);
+                ILGenerator il = dm.GetILGenerator();
 
-                var convert = Expression.Convert(call, typeof(object));
-                return Expression.Lambda<Func<object?, object?>>(convert, target).Compile();
+                if (!getMethod.IsStatic)
+                {
+                    il.Emit(OpCodes.Ldarg_0);
+                    il.Emit(OpCodes.Castclass, p.DeclaringType!);
+                    il.EmitCall(OpCodes.Callvirt, getMethod, null);
+                }
+                else
+                {
+                    il.EmitCall(OpCodes.Call, getMethod, null);
+                }
+
+                if (p.PropertyType.IsValueType)
+                    il.Emit(OpCodes.Box, p.PropertyType);
+
+                il.Emit(OpCodes.Ret);
+
+                return (Func<object?, object?>)dm.CreateDelegate(typeof(Func<object?, object?>));
             }
             catch (Exception ex)
             {
@@ -260,21 +306,38 @@ namespace JmcModLib.Reflection
         {
             try
             {
-                var method = p.GetSetMethod(true)!;
-                var target = Expression.Parameter(typeof(object));
-                var value = Expression.Parameter(typeof(object));
+                var setMethod = p.GetSetMethod(true)!;
 
-                var instance = method.IsStatic
-                    ? null!
-                    : Expression.Convert(target, p.DeclaringType!);
+                var dm = new DynamicMethod(
+                                $"set_{p.Name}",
+                                null,
+                                new[] { typeof(object), typeof(object) },
+                                p.DeclaringType!,
+                                true);
 
-                var valueCast = Expression.Convert(value, p.PropertyType);
+                ILGenerator il = dm.GetILGenerator();
 
-                var call = method.IsStatic
-                    ? Expression.Call(method, valueCast)
-                    : Expression.Call(instance, method, valueCast);
+                if (!setMethod.IsStatic)
+                {
+                    il.Emit(OpCodes.Ldarg_0);
+                    il.Emit(OpCodes.Castclass, p.DeclaringType!);
+                }
 
-                return Expression.Lambda<Action<object?, object?>>(call, target, value).Compile();
+                il.Emit(OpCodes.Ldarg_1);
+
+                if (p.PropertyType.IsValueType)
+                    il.Emit(OpCodes.Unbox_Any, p.PropertyType);
+                else
+                    il.Emit(OpCodes.Castclass, p.PropertyType);
+
+                if (setMethod.IsStatic)
+                    il.EmitCall(OpCodes.Call, setMethod, null);
+                else
+                    il.EmitCall(OpCodes.Callvirt, setMethod, null);
+
+                il.Emit(OpCodes.Ret);
+
+                return (Action<object?, object?>)dm.CreateDelegate(typeof(Action<object?, object?>));
             }
             catch (Exception ex)
             {
