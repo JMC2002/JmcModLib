@@ -3,6 +3,9 @@ using UnityEngine;
 
 namespace JmcModLib.Config.UI
 {
+    /// <summary>
+    /// ui 配置属性基类。
+    /// </summary>
     [AttributeUsage(AttributeTargets.Field | AttributeTargets.Property)]
     public abstract class UIConfigAttribute : Attribute
     {
@@ -11,7 +14,10 @@ namespace JmcModLib.Config.UI
         internal abstract void BuildUI(ConfigEntry entry);
     }
 
-    public sealed class UISliderAttribute : UIConfigAttribute
+    /// <summary>
+    /// float 滑动条属性
+    /// </summary>
+    public sealed class UIFloatSliderAttribute : UIConfigAttribute
     {
         internal override Type RequiredType => typeof(float);
 
@@ -26,9 +32,15 @@ namespace JmcModLib.Config.UI
             var v = (float)ConfigManager.GetValue(entry)!;
             return v >= Min && v <= Max;
         }
-            
 
-        public UISliderAttribute(float min, float max, int decimalPlaces = 1, int characterLimit = 5)
+        /// <summary>
+        /// float 滑动条属性
+        /// </summary>
+        /// <param name="min">滑动下限</param>
+        /// <param name="max">滑动上限</param>
+        /// <param name="decimalPlaces">小数位数</param>
+        /// <param name="characterLimit">输入字符限制</param>
+        public UIFloatSliderAttribute(float min, float max, int decimalPlaces = 1, int characterLimit = 5)
         {
             Min = min;
             Max = max;
@@ -41,6 +53,9 @@ namespace JmcModLib.Config.UI
         }
     }
 
+    /// <summary>
+    /// Int 滑动条属性
+    /// </summary>
     public sealed class UIIntSliderAttribute : UIConfigAttribute
     {
         internal override Type RequiredType => typeof(int);
@@ -55,6 +70,12 @@ namespace JmcModLib.Config.UI
             return v >= Min && v <= Max;
         }
 
+        /// <summary>
+        /// Int 滑动条属性
+        /// </summary>
+        /// <param name="min">滑动下限</param>
+        /// <param name="max">滑动上限</param>
+        /// <param name="characterLimit">输入字符限制</param>
         public UIIntSliderAttribute(int min, int max, int characterLimit = 5)
         {
             Min = min;
@@ -68,7 +89,9 @@ namespace JmcModLib.Config.UI
         }
     }
 
-
+    /// <summary>
+    /// 开关属性
+    /// </summary>
     public sealed class UIToggleAttribute : UIConfigAttribute
     {
         internal override Type RequiredType => typeof(bool);
@@ -79,6 +102,9 @@ namespace JmcModLib.Config.UI
         }
     }
 
+    /// <summary>
+    /// 添加一个下拉框属性，仅支持枚举类型
+    /// </summary>
     public sealed class UIDropdownAttribute : UIConfigAttribute
     {
         internal override bool IsValid(ConfigEntry entry)
@@ -89,22 +115,32 @@ namespace JmcModLib.Config.UI
         }
     }
 
+    /// <summary>
+    /// 绑定按键属性
+    /// </summary>
     public sealed class UIKeyBindAttribute : UIConfigAttribute
     {
         internal override Type RequiredType => typeof(KeyCode);
 
         internal override void BuildUI(ConfigEntry entry)
         {
-            ModSetting.ModSettingBuilder.DropdownBuild(entry);
+            ModSetting.ModSettingBuilder.KeyBindBuild(entry);
         }
     }
 
+    /// <summary>
+    /// 输入框属性
+    /// </summary>
     public sealed class UIInputAttribute : UIConfigAttribute
     {
         internal override Type RequiredType => typeof(string);
 
         internal int CharacterLimit { get; }
 
+        /// <summary>
+        /// 初始化一个输入框属性
+        /// </summary>
+        /// <param name="characterLimit">输入字符限制</param>
         public UIInputAttribute(int characterLimit = 5)
         {
             CharacterLimit = characterLimit;
@@ -115,15 +151,6 @@ namespace JmcModLib.Config.UI
             ModSetting.ModSettingBuilder.InputBuild(entry, this);
         }
     }
-
-    //public sealed class UIInputAttribute : UIConfigAttribute
-    //{
-    //    public int CharacterLimit { get; }
-    //    public UIInputAttribute(int characterLimit = 40)
-    //    {
-    //        CharacterLimit = characterLimit;
-    //    }
-    //}
 
     //public sealed class UIButtonAttribute : UIConfigAttribute
     //{

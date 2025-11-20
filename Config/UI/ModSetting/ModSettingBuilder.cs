@@ -13,7 +13,7 @@ namespace JmcModLib.Config.UI.ModSetting
     internal static class ModSettingBuilder
     {
 
-        internal static void FloatSliderBuild(ConfigEntry entry, UISliderAttribute uiAttr)
+        internal static void FloatSliderBuild(ConfigEntry entry, UIFloatSliderAttribute uiAttr)
         {
             var asm = entry.assembly;
             var info = ModRegistry.GetModInfo(asm)?.Info;

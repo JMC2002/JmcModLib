@@ -248,6 +248,64 @@
             负责将 DuckSort 的 ModConfig 注册到 ModSetting。
             </summary>
         </member>
+        <member name="T:JmcModLib.Config.UI.UIConfigAttribute">
+            <summary>
+            ui 配置属性基类。
+            </summary>
+        </member>
+        <member name="T:JmcModLib.Config.UI.UIFloatSliderAttribute">
+            <summary>
+            float 滑动条属性
+            </summary>
+        </member>
+        <member name="M:JmcModLib.Config.UI.UIFloatSliderAttribute.#ctor(System.Single,System.Single,System.Int32,System.Int32)">
+            <summary>
+            float 滑动条属性
+            </summary>
+            <param name="min">滑动下限</param>
+            <param name="max">滑动上限</param>
+            <param name="decimalPlaces">小数位数</param>
+            <param name="characterLimit">输入字符限制</param>
+        </member>
+        <member name="T:JmcModLib.Config.UI.UIIntSliderAttribute">
+            <summary>
+            Int 滑动条属性
+            </summary>
+        </member>
+        <member name="M:JmcModLib.Config.UI.UIIntSliderAttribute.#ctor(System.Int32,System.Int32,System.Int32)">
+            <summary>
+            Int 滑动条属性
+            </summary>
+            <param name="min">滑动下限</param>
+            <param name="max">滑动上限</param>
+            <param name="characterLimit">输入字符限制</param>
+        </member>
+        <member name="T:JmcModLib.Config.UI.UIToggleAttribute">
+            <summary>
+            开关属性
+            </summary>
+        </member>
+        <member name="T:JmcModLib.Config.UI.UIDropdownAttribute">
+            <summary>
+            添加一个下拉框属性，仅支持枚举类型
+            </summary>
+        </member>
+        <member name="T:JmcModLib.Config.UI.UIKeyBindAttribute">
+            <summary>
+            绑定按键属性
+            </summary>
+        </member>
+        <member name="T:JmcModLib.Config.UI.UIInputAttribute">
+            <summary>
+            输入框属性
+            </summary>
+        </member>
+        <member name="M:JmcModLib.Config.UI.UIInputAttribute.#ctor(System.Int32)">
+            <summary>
+            初始化一个输入框属性
+            </summary>
+            <param name="characterLimit">输入字符限制</param>
+        </member>
         <member name="T:JmcModLib.Core.ModRegistry">
             <summary>
             使用前应该先注册类的信息，
