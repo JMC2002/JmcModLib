@@ -1,5 +1,6 @@
 ﻿using Duckov.Modding;
 using JmcModLib.Utils;
+using System;
 using System.Collections.Generic;
 using System.Reflection;
 
@@ -19,6 +20,12 @@ namespace JmcModLib.Core
         private static readonly Dictionary<Assembly, Modinfo> _mods = new();
 
         /// <summary>
+        /// 当一个 MOD 完成注册后触发。
+        /// 参数：Assembly（唯一标识MOD）（该MOD元信息）
+        /// </summary>
+        internal static event Action<Assembly>? OnRegistered;
+
+        /// <summary>
         /// 调用Register注册元信息
         /// </summary>
         /// <param name="name">MOD的名称</param>
@@ -30,7 +37,9 @@ namespace JmcModLib.Core
             
             assembly ??= Assembly.GetCallingAssembly();
             _mods[assembly] = new Modinfo(info, name ?? info.name, version ?? "1.0.0", level);
-            ModLogger.Debug($"[{GetTag(assembly)??"错误"}] 注册成功");
+            ModLogger.Debug($"[{GetTag(assembly)??"错误"}] 注册成功，info.displayName: {info.displayName}, name: {info.name}");
+
+            OnRegistered?.Invoke(assembly);
         }
 
         /// <summary>

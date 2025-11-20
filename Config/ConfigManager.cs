@@ -1,4 +1,5 @@
-﻿using JmcModLib.Core;
+﻿using JmcModLib.Config.UI;
+using JmcModLib.Core;
 using JmcModLib.Reflection;
 using JmcModLib.Utils;
 using System;
@@ -7,6 +8,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using Unity.VisualScripting;
 using UnityEngine;
 
 namespace JmcModLib.Config
@@ -35,6 +37,8 @@ namespace JmcModLib.Config
         // 默认存储后端（支持子 MOD 覆盖）
         private static readonly IConfigStorage _defaultStorage =
             new NewtonsoftConfigStorage(ConfigDir);
+
+        internal static event Action<Assembly>? OnRegistered;
 
         // -------------- Storage 设置 API ----------------
         /// <summary>
@@ -82,17 +86,33 @@ namespace JmcModLib.Config
                     }
 
                     var attr = acc.GetAttribute<ConfigAttribute>()!;
-                    var entry = new ConfigEntry(type, acc, attr, acc.GetValue(instance));
+                    var entry = new ConfigEntry(asm, type, acc, attr, acc.GetValue(instance));
                     var group = entry.Group;
-
                     var groupDict = groups.GetOrAdd(group, _ => new ConcurrentDictionary<string, ConfigEntry>(StringComparer.Ordinal));
                     groupDict[entry.Key] = entry;
+
+                    // 找 UI 属性（如果有）
+                    var uiAttr = acc.GetAttribute<UIConfigAttribute>();
+                    if (uiAttr != null)
+                    {
+                        // 注册任务，等待后续生成
+                        if (!uiAttr.IsValid(entry))
+                        {
+                            ModLogger.Error($"字段/属性 {entry.Key} 类型为 {acc.MemberType} 与 UIAttribute {uiAttr.GetType().Name} 要求不匹配或值不合法");
+                        }
+                        else
+                        {
+                            ConfigUIManager.Register(entry, uiAttr);
+                        }
+                    }
+
                     ModLogger.Debug($"{ModRegistry.GetTag(asm)}发现配置项: {type.FullName}.{acc.Name}, key 为: {entry.Key}");
                 }
             }
 
             // 加载已保存的配置
             LoadAllInAssembly(asm);
+            OnRegistered?.Invoke(asm);
             ModLogger.Info($"{ModRegistry.GetTag(asm)}注册配置成功!");
         }
 
@@ -143,11 +163,11 @@ namespace JmcModLib.Config
         /// 返回某个 key 的 group（public，供 storage 调用）
         /// </summary>
         /// <param name="key">需要查询的key</param>
-        /// <param name="asm">当前Assembly</param>
+        /// <param name="asm">Assembly，留空则为当前</param>
         /// <returns>返回与key对应的group，如果没有找到对应的key则返回null</returns>
-        public static string? TryGetGroupForKey(string key, Assembly asm)
+        public static string? TryGetGroupForKey(string key, Assembly? asm = null)
         {
-            if (asm == null) return null;
+            asm ??= Assembly.GetCallingAssembly();
             if (!_entries.TryGetValue(asm, out var groups)) return null;
 
             foreach (var gkv in groups)
@@ -198,18 +218,18 @@ namespace JmcModLib.Config
         }
 
         // 获取entry对应的实例对象（如果是静态成员则返回null），不检查 entry 是否存在
-        private static object? GetInstance(ConfigEntry entry, Assembly asm)
+        private static object? GetInstance(ConfigEntry entry)
         {
             if (entry.Accessor.IsStatic)
                 return null;
 
-            return entry.Accessor.IsStatic ? null : _typeInstances[asm][entry.DeclaringType];
+            return entry.Accessor.IsStatic ? null : _typeInstances[entry.assembly][entry.DeclaringType];
         }
 
         // 通过 key 获取实例对象（如果是静态成员则返回null），若 key 不存在则抛出异常
         private static object? GetInstance(string Key, Assembly asm)
         {
-            return GetInstance(GetEntry(Key, asm) ?? throw new ArgumentNullException(nameof(Key)), asm);
+            return GetInstance(GetEntry(Key, asm) ?? throw new ArgumentNullException(nameof(Key)));
         }
 
         // -------------------------------------------------------
@@ -229,7 +249,7 @@ namespace JmcModLib.Config
                     var entry = kv.Value;
                     // 获取已保存的值
                     if (storage.TryLoad(entry.Attribute.DisplayName, entry.Group, entry.Accessor.MemberType, out var loaded, asm))
-                        entry.Accessor.SetValue(GetInstance(entry, asm), loaded);
+                        entry.Accessor.SetValue(GetInstance(entry), loaded);
                 }
             }
         }
@@ -246,11 +266,9 @@ namespace JmcModLib.Config
         // -------------- Reset --------------------------
 
         // 重置key对应的值为默认值
-        private static void ResetKey(string key, Assembly asm)
+        private static void ResetKey(ConfigEntry entry)
         {
-            var entry = GetEntry(key, asm);
-            if (entry == null) return;
-            SetValue(key, entry.DefaultValue, asm);
+            SetValue(entry, entry.DefaultValue);
         }
 
         // 重置组内所有entry
@@ -259,7 +277,7 @@ namespace JmcModLib.Config
             if (!_entries.TryGetValue(asm, out var groups)) return;
             if (!groups.TryGetValue(group, out var dict)) return;
             foreach (var kv in dict)
-                ResetKey(kv.Key, asm);
+                ResetKey(kv.Value);
         }
 
         /// <summary>
@@ -274,6 +292,11 @@ namespace JmcModLib.Config
         }
 
         // -------------- Direct GetValue/SetValue ------------------
+        internal static object? GetValue(ConfigEntry modEntry)
+        {
+            return modEntry.Accessor.GetValue(GetInstance(modEntry));
+        }
+
         /// <summary>
         /// 获取Key对应变量的值，如果Key不存在，会输出一条Warn
         /// </summary>
@@ -285,7 +308,23 @@ namespace JmcModLib.Config
             asm ??= Assembly.GetCallingAssembly();
             var entry = GetEntry(key, asm);
             if (entry == null) return null;
-            return entry.Accessor.GetValue(GetInstance(entry, asm));
+            return GetValue(entry);
+        }
+
+        internal static void SetValue(ConfigEntry modEntry, object? value)
+        {
+            modEntry.Accessor.SetValue(GetInstance(modEntry), value);
+            // 如果注册有额外的 OnChanged 回调，调用它
+            if (!string.IsNullOrEmpty(modEntry.Attribute.OnChanged))
+            {
+                var mAcc = MethodAccessor.Get(modEntry.DeclaringType, modEntry.Attribute.OnChanged);
+                mAcc.Invoke(GetInstance(modEntry), value);
+            }
+
+            var asm = modEntry.assembly;
+            // 在设置值后调用 Save 方法以保持数据一致性
+            var storage = GetStorage(asm);
+            storage.Save(modEntry.Attribute.DisplayName, modEntry.Group, value, asm);
         }
 
         /// <summary>
@@ -300,19 +339,8 @@ namespace JmcModLib.Config
             asm ??= Assembly.GetCallingAssembly();
             var entry = GetEntry(key, asm);
             if (entry == null) return;
-
-            entry.Accessor.SetValue(GetInstance(entry, asm), value);
-
-            // 如果注册有额外的 OnChanged 回调，调用它
-            if (!string.IsNullOrEmpty(entry.Attribute.OnChanged))
-            {
-                var mAcc = MethodAccessor.Get(entry.DeclaringType, entry.Attribute.OnChanged);
-                mAcc.Invoke(GetInstance(entry, asm), value);
-            }
-
-            // 在设置值后调用 Save 方法以保持数据一致性
-            var storage = GetStorage(asm);
-            storage.Save(entry.Attribute.DisplayName, entry.Group, value, asm);
+            
+            SetValue(entry, value);
         }
     }
 }

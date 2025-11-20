@@ -1,9 +1,11 @@
 ﻿using JmcModLib.Reflection;
 using System;
+using System.Reflection;
 namespace JmcModLib.Config
 {
     public sealed class ConfigEntry
     {
+        internal Assembly assembly { get; }
         internal string Key => GetKey(DeclaringType, Accessor.Name);
         internal string Group { get; }
         internal Type DeclaringType { get; }
@@ -24,8 +26,9 @@ namespace JmcModLib.Config
         public static string GetKey(Type declaringType, string Name) =>
             $"{declaringType.FullName}.{Name}";
 
-        internal ConfigEntry(Type declaringType, MemberAccessor accessor, ConfigAttribute attr, object? defaultValue)
+        internal ConfigEntry(Assembly asm, Type declaringType, MemberAccessor accessor, ConfigAttribute attr, object? defaultValue)
         {
+            assembly = asm;
             DeclaringType = declaringType;
             Accessor = accessor;
             Attribute = attr;
