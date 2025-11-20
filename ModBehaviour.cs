@@ -32,33 +32,30 @@ namespace JmcModLib
     /// </summary>
     public class ModBehaviour : Duckov.Modding.ModBehaviour
     {
-        void OnEnable()
+        protected override void OnAfterSetup()
         {
-            Core.VersionInfo.modInfo = info;
-            ModRegistry.Register(Core.VersionInfo.modInfo, VersionInfo.Name, VersionInfo.Version, LogLevel.Trace);
-            
             ModLogger.Info("模组已启用");
+            Core.VersionInfo.modInfo = info;
+            // ModSettingLinker.Init();
+            ModRegistry.Init();
+            ModRegistry.Register(Core.VersionInfo.modInfo, VersionInfo.Name, VersionInfo.Version, ModConfig.logLevel);
+
+        }
+
+        protected override void OnBeforeDeactivate()
+        {
+            ModLogger.Info("Mod 即将禁用，配置已保存");
         }
 
         void OnDisable()
         {
+            ModRegistry.Dispose();
             ModLogger.Info("Mod 已禁用，配置已保存");
         }
 
-        protected override void OnAfterSetup()
+        void OnEnable()
         {
             ModLogger.Info("模组已启用");
-            ModConfig.Load();
-            Core.VersionInfo.modInfo = info;
-            ModSettingLinker.Init();
         }
-
-        protected virtual void OnBeforeDeactivate()
-        {
-            ModConfig.Save();
-            ModSettingLinker.Dispose();
-            ModLogger.Info("Mod 已禁用，配置已保存");
-        }
-
     }
 }
