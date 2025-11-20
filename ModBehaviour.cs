@@ -33,6 +33,9 @@ namespace JmcModLib
     /// </summary>
     public class ModBehaviour : Duckov.Modding.ModBehaviour
     {
+        /// <summary>
+        /// 在模组设置完成后调用
+        /// </summary>
         protected override void OnAfterSetup()
         {
             Core.VersionInfo.modInfo = info;
@@ -41,11 +44,6 @@ namespace JmcModLib
             ModRegistry.Register(Core.VersionInfo.modInfo, VersionInfo.Name, VersionInfo.Version, ModConfig.logLevel);
             ConfigManager.RegisterAllInAssembly();
             ModLogger.Info("模组已启用");
-        }
-
-        protected override void OnBeforeDeactivate()
-        {
-            ModLogger.Info("Mod 即将禁用，配置已保存");
         }
 
         void OnDisable()
