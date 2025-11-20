@@ -46,7 +46,7 @@
             返回某个 key 的 group（public，供 storage 调用）
             </summary>
             <param name="key">需要查询的key</param>
-            <param name="asm">当前Assembly</param>
+            <param name="asm">Assembly，留空则为当前</param>
             <returns>返回与key对应的group，如果没有找到对应的key则返回null</returns>
         </member>
         <member name="M:JmcModLib.Config.ConfigManager.GetGroups(System.Reflection.Assembly)">
@@ -86,6 +86,168 @@
             <param name="asm">指定程序集，留空则为调用者</param>
             <returns>如果Key不存在，会输出一条Warn并返回空，否则返回对应值</returns>
         </member>
+        <member name="M:JmcModLib.Config.UI.ModSetting.ModSettingAPI.Init(Duckov.Modding.ModInfo)">
+            <summary>
+            初始化API
+            </summary>
+            <param name="modInfo">mod信息</param>
+            <returns>是否成功初始化</returns>
+        </member>
+        <member name="M:JmcModLib.Config.UI.ModSetting.ModSettingAPI.AddDropdownList(Duckov.Modding.ModInfo,System.String,System.String,System.Collections.Generic.List{System.String},System.String,System.Action{System.String})">
+            <summary>
+            添加一个下拉列表控件
+            </summary>
+            <param name="key">控件key</param>
+            <param name="description">描述文本</param>
+            <param name="options">选项列表</param>
+            <param name="defaultValue">当前值</param>
+            <param name="onValueChange">值改变时的回调函数</param>
+            <returns></returns>
+        </member>
+        <member name="M:JmcModLib.Config.UI.ModSetting.ModSettingAPI.AddSlider(Duckov.Modding.ModInfo,System.String,System.String,System.Single,UnityEngine.Vector2,System.Action{System.Single},System.Int32,System.Int32)">
+            <summary>
+            添加一个浮点数滑块控件
+            </summary>
+            <param name="key">控件key</param>
+            <param name="description">描述文本</param>
+            <param name="defaultValue">当前值</param>
+            <param name="sliderRange">滑块范围</param>
+            <param name="onValueChange">值改变时的回调函数</param>
+            <param name="decimalPlaces">小数位数</param>
+            <param name="characterLimit">输入字符限制</param>
+            <returns></returns>
+        </member>
+        <member name="M:JmcModLib.Config.UI.ModSetting.ModSettingAPI.AddSlider(Duckov.Modding.ModInfo,System.String,System.String,System.Int32,System.Int32,System.Int32,System.Action{System.Int32},System.Int32)">
+            <summary>
+            添加一个整数滑块控件
+            </summary>
+            <param name="key">控件key</param>
+            <param name="description">描述文本</param>
+            <param name="defaultValue">当前值</param>
+            <param name="minValue">最小值</param>
+            <param name="maxValue">最大值</param>
+            <param name="onValueChange">值改变时的回调函数</param>
+            <param name="characterLimit">输入字符限制</param>
+            <returns></returns>
+        </member>
+        <member name="M:JmcModLib.Config.UI.ModSetting.ModSettingAPI.AddToggle(Duckov.Modding.ModInfo,System.String,System.String,System.Boolean,System.Action{System.Boolean})">
+            <summary>
+            添加一个开关控件
+            </summary>
+            <param name="key">控件key</param>
+            <param name="description">描述文本</param>
+            <param name="enable">当前值</param>
+            <param name="onValueChange">值改变时的回调函数</param>
+            <returns></returns>
+        </member>
+        <member name="M:JmcModLib.Config.UI.ModSetting.ModSettingAPI.AddKeybinding(Duckov.Modding.ModInfo,System.String,System.String,UnityEngine.KeyCode,System.Action{UnityEngine.KeyCode})">
+            <summary>
+            添加一个按键绑定控件，默认值None
+            </summary>
+            <param name="key">控件key</param>
+            <param name="description">描述文本</param>
+            <param name="keyCode">当前值</param>
+            <param name="onValueChange">值改变时的回调函数</param>
+            <returns></returns>
+        </member>
+        <member name="M:JmcModLib.Config.UI.ModSetting.ModSettingAPI.AddKeybinding(Duckov.Modding.ModInfo,System.String,System.String,UnityEngine.KeyCode,UnityEngine.KeyCode,System.Action{UnityEngine.KeyCode})">
+            <summary>
+            添加一个带默认值的按键绑定控件
+            </summary>
+            <param name="key">控件key</param>
+            <param name="description">描述文本</param>
+            <param name="keyCode">当前值</param>
+            <param name="defaultKeyCode">默认值</param>
+            <param name="onValueChange">值改变时的回调函数</param>
+            <returns></returns>
+        </member>
+        <member name="M:JmcModLib.Config.UI.ModSetting.ModSettingAPI.AddInput(Duckov.Modding.ModInfo,System.String,System.String,System.String,System.Int32,System.Action{System.String})">
+            <summary>
+            添加一个输入框控件
+            </summary>
+            <param name="key">控件key</param>
+            <param name="description">描述文本</param>
+            <param name="defaultValue">当前值</param>
+            <param name="characterLimit">输入字符限制</param>
+            <param name="onValueChange">值改变时的回调函数</param>
+            <returns></returns>
+        </member>
+        <member name="M:JmcModLib.Config.UI.ModSetting.ModSettingAPI.AddButton(Duckov.Modding.ModInfo,System.String,System.String,System.String,System.Action)">
+            <summary>
+            添加一个按钮控件
+            </summary>
+            <param name="key">控件key</param>
+            <param name="description">描述文本</param>
+            <param name="buttonText">按钮文本</param>
+            <param name="onClickButton">点击时的回调函数</param>
+            <returns></returns>
+        </member>
+        <member name="M:JmcModLib.Config.UI.ModSetting.ModSettingAPI.AddGroup(Duckov.Modding.ModInfo,System.String,System.String,System.Collections.Generic.List{System.String},System.Single,System.Boolean,System.Boolean)">
+            <summary>
+            添加一个分组控件，用于将多个控件组织在一起
+            </summary>
+            <param name="key">控件key</param>
+            <param name="description">描述文本</param>
+            <param name="keys">包含的控件键列表(暂不支持嵌套Group)</param>
+            <param name="scale">缩放比例(相对于mod标题)，最大0.9f</param>
+            <param name="topInsert">是否插入到顶部</param>
+            <param name="open">是否默认展开</param>
+            <returns></returns>
+        </member>
+        <member name="M:JmcModLib.Config.UI.ModSetting.ModSettingAPI.GetValue``1(Duckov.Modding.ModInfo,System.String,System.Action{``0})">
+            <summary>
+            获取指定key的配置值
+            </summary>
+            <param name="key">控件key</param>
+            <param name="callback">回调函数返回结果</param>
+            <typeparam name="T">值类型</typeparam>
+            <returns></returns>
+        </member>
+        <member name="M:JmcModLib.Config.UI.ModSetting.ModSettingAPI.SetValue``1(Duckov.Modding.ModInfo,System.String,``0,System.Action{System.Boolean})">
+            <summary>
+            设置指定key的配置值，单方面通知控件更新
+            </summary>
+            <param name="key">控件key</param>
+            <param name="value">设置值</param>
+            <param name="callback">回调函数返回是否成功</param>
+            <typeparam name="T">值类型</typeparam>
+            <returns></returns>
+        </member>
+        <member name="M:JmcModLib.Config.UI.ModSetting.ModSettingAPI.HasConfig(Duckov.Modding.ModInfo)">
+            <summary>
+            检查是否存在此mod的配置文件
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:JmcModLib.Config.UI.ModSetting.ModSettingAPI.GetSavedValue``1(Duckov.Modding.ModInfo,System.String,``0@)">
+            <summary>
+            获取已保存的配置值
+            </summary>
+            <param name="key">控件key</param>
+            <param name="value">保存的值</param>
+            <typeparam name="T">值类型</typeparam>
+            <returns></returns>
+        </member>
+        <member name="M:JmcModLib.Config.UI.ModSetting.ModSettingAPI.RemoveUI(Duckov.Modding.ModInfo,System.String,System.Action{System.Boolean})">
+            <summary>
+            移除指定键对应的UI控件
+            </summary>
+            <param name="key">控件key</param>
+            <param name="callback">回调函数返回操作结果</param>
+            <returns></returns>
+        </member>
+        <member name="M:JmcModLib.Config.UI.ModSetting.ModSettingAPI.RemoveMod(Duckov.Modding.ModInfo,System.Action{System.Boolean})">
+            <summary>
+            移除整个模组的UI配置,当禁用此mod时，ModSetting会自动移除相对应的UI，一般来说不需要调用，除非想要主动移除mod所有UI
+            </summary>
+            <param name="callback">回调函数返回操作结果</param>
+            <returns></returns>
+        </member>
+        <member name="T:JmcModLib.Config.UI.ModSetting.ModSettingLinker">
+            <summary>
+            负责将 DuckSort 的 ModConfig 注册到 ModSetting。
+            </summary>
+        </member>
         <member name="T:JmcModLib.Core.ModRegistry">
             <summary>
             使用前应该先注册类的信息，
@@ -95,6 +257,12 @@
             ModRegistry.Register(VersionInfo.Name, VersionInfo.Version);
             </code>
             </example>
+            </summary>
+        </member>
+        <member name="E:JmcModLib.Core.ModRegistry.OnRegistered">
+            <summary>
+            当一个 MOD 完成注册后触发。
+            参数：Assembly（唯一标识MOD）（该MOD元信息）
             </summary>
         </member>
         <member name="M:JmcModLib.Core.ModRegistry.Register(Duckov.Modding.ModInfo,System.String,System.String,JmcModLib.Utils.LogLevel,System.Reflection.Assembly)">
@@ -392,11 +560,6 @@
             翻译当前程序集的键值
             </summary>
         </member>
-        <member name="M:JmcModLib.Utils.L10n.GetFrom(System.String,System.Reflection.Assembly)">
-            <summary>
-            跨Mod翻译
-            </summary>
-        </member>
         <member name="M:JmcModLib.Utils.L10n.Unregister(System.Reflection.Assembly)">
             <summary>
             卸载当前程序集的本地化
@@ -426,6 +589,13 @@
             <summary>
             使用游戏自带的 CSV 工具加载
             </summary>
+        </member>
+        <member name="M:JmcModLib.Utils.L10n.Exist(System.Reflection.Assembly)">
+            <summary>
+            返回程序集是否注册了本地化文本
+            </summary>
+            <param name="asm"></param>
+            <returns></returns>
         </member>
         <member name="T:JmcModLib.Utils.LogLevel">
             <summary>

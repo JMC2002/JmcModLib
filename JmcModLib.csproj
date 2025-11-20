@@ -48,6 +48,9 @@
   <ItemGroup>
     <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
   </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Config\UI\Linker\" />
+  </ItemGroup>
 
   <!-- 从版本文件提取版本信息并注入DLL -->
   <Target Name="ExtractVersion" BeforeTargets="BeforeBuild">
