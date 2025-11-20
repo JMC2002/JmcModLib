@@ -29,7 +29,7 @@ internal static class ModSettingAPI
     private static readonly Version VERSION = new Version(0, 4, 0);
     public const string MOD_NAME = "ModSetting";
     private const string TYPE_NAME = "ModSetting.ModBehaviour";
-    private static Type modBehaviour;
+    private static Type? modBehaviour;
     private static ModInfo modInfo;
 
     public static bool IsInit { get; private set; }
@@ -87,17 +87,18 @@ internal static class ModSettingAPI
         return true;
     }
 
-    /// <summary>
-    /// 添加一个下拉列表控件
-    /// </summary>
-    /// <param name="key">控件key</param>
-    /// <param name="description">描述文本</param>
-    /// <param name="options">选项列表</param>
-    /// <param name="defaultValue">当前值</param>
-    /// <param name="onValueChange">值改变时的回调函数</param>
-    /// <returns></returns>
-    public static bool AddDropdownList(ModInfo modInfo, string key, string description,
-        List<string> options, string defaultValue, Action<string> onValueChange = null)
+        /// <summary>
+        /// 添加一个下拉列表控件
+        /// </summary>
+        /// <param name="modInfo">对应的MOD</param>
+        /// <param name="key">控件key</param>
+        /// <param name="description">描述文本</param>
+        /// <param name="options">选项列表</param>
+        /// <param name="defaultValue">当前值</param>
+        /// <param name="onValueChange">值改变时的回调函数</param>
+        /// <returns></returns>
+        public static bool AddDropdownList(ModInfo modInfo, string key, string description,
+        List<string> options, string defaultValue, Action<string> onValueChange)
     {
         if (!Available(modInfo, key)) return false;
         Type delegateType = typeof(Action<ModInfo, string, string, List<string>, string, Action<string>>);
@@ -107,19 +108,20 @@ internal static class ModSettingAPI
             delegateType);
     }
 
-    /// <summary>
-    /// 添加一个浮点数滑块控件
-    /// </summary>
-    /// <param name="key">控件key</param>
-    /// <param name="description">描述文本</param>
-    /// <param name="defaultValue">当前值</param>
-    /// <param name="sliderRange">滑块范围</param>
-    /// <param name="onValueChange">值改变时的回调函数</param>
-    /// <param name="decimalPlaces">小数位数</param>
-    /// <param name="characterLimit">输入字符限制</param>
-    /// <returns></returns>
-    public static bool AddSlider(ModInfo modInfo, string key, string description,
-        float defaultValue, Vector2 sliderRange, Action<float> onValueChange = null, int decimalPlaces = 1,
+        /// <summary>
+        /// 添加一个浮点数滑块控件
+        /// </summary>
+        /// <param name="modInfo">对应的MOD</param>
+        /// <param name="key">控件key</param>
+        /// <param name="description">描述文本</param>
+        /// <param name="defaultValue">当前值</param>
+        /// <param name="sliderRange">滑块范围</param>
+        /// <param name="onValueChange">值改变时的回调函数</param>
+        /// <param name="decimalPlaces">小数位数</param>
+        /// <param name="characterLimit">输入字符限制</param>
+        /// <returns></returns>
+        public static bool AddSlider(ModInfo modInfo, string key, string description,
+        float defaultValue, Vector2 sliderRange, Action<float> onValueChange, int decimalPlaces = 1,
         int characterLimit = 5)
     {
         if (!Available(modInfo, key)) return false;
@@ -136,19 +138,20 @@ internal static class ModSettingAPI
             paramTypes);
     }
 
-    /// <summary>
-    /// 添加一个整数滑块控件
-    /// </summary>
-    /// <param name="key">控件key</param>
-    /// <param name="description">描述文本</param>
-    /// <param name="defaultValue">当前值</param>
-    /// <param name="minValue">最小值</param>
-    /// <param name="maxValue">最大值</param>
-    /// <param name="onValueChange">值改变时的回调函数</param>
-    /// <param name="characterLimit">输入字符限制</param>
-    /// <returns></returns>
-    public static bool AddSlider(ModInfo modInfo, string key, string description,
-        int defaultValue, int minValue, int maxValue, Action<int> onValueChange = null, int characterLimit = 5)
+        /// <summary>
+        /// 添加一个整数滑块控件
+        /// </summary>
+        /// <param name="modInfo">对应的MOD</param>
+        /// <param name="key">控件key</param>
+        /// <param name="description">描述文本</param>
+        /// <param name="defaultValue">当前值</param>
+        /// <param name="minValue">最小值</param>
+        /// <param name="maxValue">最大值</param>
+        /// <param name="onValueChange">值改变时的回调函数</param>
+        /// <param name="characterLimit">输入字符限制</param>
+        /// <returns></returns>
+        public static bool AddSlider(ModInfo modInfo, string key, string description,
+        int defaultValue, int minValue, int maxValue, Action<int>? onValueChange = null, int characterLimit = 5)
     {
         if (!Available(modInfo, key)) return false;
         Type[] paramTypes = {
@@ -158,21 +161,22 @@ internal static class ModSettingAPI
         Type delegateType = typeof(Action<ModInfo, string, string, int, int, int, Action<int>, int>);
         return InvokeMethod(ADD_SLIDER + "Int", ADD_SLIDER,
             new object[]
-                { modInfo, key, description, defaultValue, minValue, maxValue, onValueChange, characterLimit },
+                { modInfo, key, description, defaultValue, minValue, maxValue, onValueChange!, characterLimit },
             delegateType,
             paramTypes);
     }
 
-    /// <summary>
-    /// 添加一个开关控件
-    /// </summary>
-    /// <param name="key">控件key</param>
-    /// <param name="description">描述文本</param>
-    /// <param name="enable">当前值</param>
-    /// <param name="onValueChange">值改变时的回调函数</param>
-    /// <returns></returns>
-    public static bool AddToggle(ModInfo modInfo, string key, string description,
-        bool enable, Action<bool> onValueChange = null)
+        /// <summary>
+        /// 添加一个开关控件
+        /// </summary>
+        /// <param name="modInfo">对应的MOD</param>
+        /// <param name="key">控件key</param>
+        /// <param name="description">描述文本</param>
+        /// <param name="enable">当前值</param>
+        /// <param name="onValueChange">值改变时的回调函数</param>
+        /// <returns></returns>
+        public static bool AddToggle(ModInfo modInfo, string key, string description,
+        bool enable, Action<bool> onValueChange)
     {
         if (!Available(modInfo, key)) return false;
         Type delegateType = typeof(Action<ModInfo, string, string, bool, Action<bool>>);
@@ -182,16 +186,17 @@ internal static class ModSettingAPI
             delegateType);
     }
 
-    /// <summary>
-    /// 添加一个按键绑定控件，默认值None
-    /// </summary>
-    /// <param name="key">控件key</param>
-    /// <param name="description">描述文本</param>
-    /// <param name="keyCode">当前值</param>
-    /// <param name="onValueChange">值改变时的回调函数</param>
-    /// <returns></returns>
-    public static bool AddKeybinding(ModInfo modInfo, string key, string description,
-        KeyCode keyCode, Action<KeyCode> onValueChange = null)
+        /// <summary>
+        /// 添加一个按键绑定控件，默认值None
+        /// </summary>
+        /// <param name="modInfo">对应的MOD</param>
+        /// <param name="key">控件key</param>
+        /// <param name="description">描述文本</param>
+        /// <param name="keyCode">当前值</param>
+        /// <param name="onValueChange">值改变时的回调函数</param>
+        /// <returns></returns>
+        public static bool AddKeybinding(ModInfo modInfo, string key, string description,
+        KeyCode keyCode, Action<KeyCode> onValueChange)
     {
         if (!Available(modInfo, key)) return false;
         return InvokeMethod(ADD_KEYBINDING,
@@ -200,17 +205,18 @@ internal static class ModSettingAPI
             typeof(Action<ModInfo, string, string, KeyCode, Action<KeyCode>>));
     }
 
-    /// <summary>
-    /// 添加一个带默认值的按键绑定控件
-    /// </summary>
-    /// <param name="key">控件key</param>
-    /// <param name="description">描述文本</param>
-    /// <param name="keyCode">当前值</param>
-    /// <param name="defaultKeyCode">默认值</param>
-    /// <param name="onValueChange">值改变时的回调函数</param>
-    /// <returns></returns>
-    public static bool AddKeybinding(ModInfo modInfo, string key, string description,
-        KeyCode keyCode, KeyCode defaultKeyCode, Action<KeyCode> onValueChange = null)
+        /// <summary>
+        /// 添加一个带默认值的按键绑定控件
+        /// </summary>
+        /// <param name="modInfo">对应的MOD</param>
+        /// <param name="key">控件key</param>
+        /// <param name="description">描述文本</param>
+        /// <param name="keyCode">当前值</param>
+        /// <param name="defaultKeyCode">默认值</param>
+        /// <param name="onValueChange">值改变时的回调函数</param>
+        /// <returns></returns>
+        public static bool AddKeybinding(ModInfo modInfo, string key, string description,
+        KeyCode keyCode, KeyCode defaultKeyCode, Action<KeyCode> onValueChange)
     {
         if (!Available(modInfo, key)) return false;
         return InvokeMethod(ADD_KEYBINDING_WITH_DEFAULT,
@@ -219,54 +225,57 @@ internal static class ModSettingAPI
             typeof(Action<ModInfo, string, string, KeyCode, KeyCode, Action<KeyCode>>));
     }
 
-    /// <summary>
-    /// 添加一个输入框控件
-    /// </summary>
-    /// <param name="key">控件key</param>
-    /// <param name="description">描述文本</param>
-    /// <param name="defaultValue">当前值</param>
-    /// <param name="characterLimit">输入字符限制</param>
-    /// <param name="onValueChange">值改变时的回调函数</param>
-    /// <returns></returns>
-    public static bool AddInput(ModInfo modInfo, string key, string description,
-        string defaultValue, int characterLimit = 40, Action<string> onValueChange = null)
+        /// <summary>
+        /// 添加一个输入框控件
+        /// </summary>
+        /// <param name="modInfo">对应的MOD</param>
+        /// <param name="key">控件key</param>
+        /// <param name="description">描述文本</param>
+        /// <param name="defaultValue">当前值</param>
+        /// <param name="characterLimit">输入字符限制</param>
+        /// <param name="onValueChange">值改变时的回调函数</param>
+        /// <returns></returns>
+        public static bool AddInput(ModInfo modInfo, string key, string description,
+        string defaultValue, int characterLimit = 40, Action<string>? onValueChange = null)
     {
         if (!Available(modInfo, key)) return false;
         return InvokeMethod(ADD_INPUT,
             ADD_INPUT,
-            new object[] { modInfo, key, description, defaultValue, characterLimit, onValueChange },
+            new object[] { modInfo, key, description, defaultValue, characterLimit, onValueChange! },
             typeof(Action<ModInfo, string, string, string, int, Action<string>>));
     }
 
-    /// <summary>
-    /// 添加一个按钮控件
-    /// </summary>
-    /// <param name="key">控件key</param>
-    /// <param name="description">描述文本</param>
-    /// <param name="buttonText">按钮文本</param>
-    /// <param name="onClickButton">点击时的回调函数</param>
-    /// <returns></returns>
-    public static bool AddButton(ModInfo modInfo, string key, string description,
-        string buttonText = "按钮", Action onClickButton = null)
+        /// <summary>
+        /// 添加一个按钮控件
+        /// </summary>
+        /// <param name="modInfo">对应的MOD</param>
+        /// <param name="key">控件key</param>
+        /// <param name="description">描述文本</param>
+        /// <param name="buttonText">按钮文本</param>
+        /// <param name="onClickButton">点击时的回调函数</param>
+        /// <returns></returns>
+        public static bool AddButton(ModInfo modInfo, string key, string description,
+        string buttonText = "按钮", Action? onClickButton = null)
     {
         if (!Available(modInfo, key)) return false;
         return InvokeMethod(ADD_BUTTON,
             ADD_BUTTON,
-            new object[] { modInfo, key, description, buttonText, onClickButton },
+            new object[] { modInfo, key, description, buttonText, onClickButton! },
             typeof(Action<ModInfo, string, string, string, Action>));
     }
 
-    /// <summary>
-    /// 添加一个分组控件，用于将多个控件组织在一起
-    /// </summary>
-    /// <param name="key">控件key</param>
-    /// <param name="description">描述文本</param>
-    /// <param name="keys">包含的控件键列表(暂不支持嵌套Group)</param>
-    /// <param name="scale">缩放比例(相对于mod标题)，最大0.9f</param>
-    /// <param name="topInsert">是否插入到顶部</param>
-    /// <param name="open">是否默认展开</param>
-    /// <returns></returns>
-    public static bool AddGroup(ModInfo modInfo, string key, string description, List<string> keys,
+        /// <summary>
+        /// 添加一个分组控件，用于将多个控件组织在一起
+        /// </summary>
+        /// <param name="modInfo">对应的MOD</param>
+        /// <param name="key">控件key</param>
+        /// <param name="description">描述文本</param>
+        /// <param name="keys">包含的控件键列表(暂不支持嵌套Group)</param>
+        /// <param name="scale">缩放比例(相对于mod标题)，最大0.9f</param>
+        /// <param name="topInsert">是否插入到顶部</param>
+        /// <param name="open">是否默认展开</param>
+        /// <returns></returns>
+        public static bool AddGroup(ModInfo modInfo, string key, string description, List<string> keys,
         float scale = 0.7f, bool topInsert = false, bool open = false)
     {
         if (!Available(modInfo, key)) return false;
@@ -276,38 +285,40 @@ internal static class ModSettingAPI
             typeof(Action<ModInfo, string, string, List<string>, float, bool, bool>));
     }
 
-    /// <summary>
-    /// 获取指定key的配置值
-    /// </summary>
-    /// <param name="key">控件key</param>
-    /// <param name="callback">回调函数返回结果</param>
-    /// <typeparam name="T">值类型</typeparam>
-    /// <returns></returns>
-    public static bool GetValue<T>(ModInfo modInfo, string key, Action<T> callback = null)
+        /// <summary>
+        /// 获取指定key的配置值
+        /// </summary>
+        /// <param name="modInfo">对应的MOD</param>
+        /// <param name="key">控件key</param>
+        /// <param name="callback">回调函数返回结果</param>
+        /// <typeparam name="T">值类型</typeparam>
+        /// <returns></returns>
+        public static bool GetValue<T>(ModInfo modInfo, string key, Action<T>? callback = null)
     {
         if (!Available(modInfo, key)) return false;
-        MethodInfo methodInfo = GetStaticPublicMethodInfo(GET_VALUE);
+        MethodInfo? methodInfo = GetStaticPublicMethodInfo(GET_VALUE);
         if (methodInfo == null) return false;
         MethodInfo genericMethod = methodInfo.MakeGenericMethod(typeof(T));
-        genericMethod.Invoke(null, new object[] { modInfo, key, callback });
+        genericMethod.Invoke(null, new object[] { modInfo, key, callback! });
         return true;
     }
 
-    /// <summary>
-    /// 设置指定key的配置值，单方面通知控件更新
-    /// </summary>
-    /// <param name="key">控件key</param>
-    /// <param name="value">设置值</param>
-    /// <param name="callback">回调函数返回是否成功</param>
-    /// <typeparam name="T">值类型</typeparam>
-    /// <returns></returns>
-    public static bool SetValue<T>(ModInfo modInfo, string key, T value, Action<bool> callback = null)
+        /// <summary>
+        /// 设置指定key的配置值，单方面通知控件更新
+        /// </summary>
+        /// <param name="modInfo">对应的MOD</param>
+        /// <param name="key">控件key</param>
+        /// <param name="value">设置值</param>
+        /// <param name="callback">回调函数返回是否成功</param>
+        /// <typeparam name="T">值类型</typeparam>
+        /// <returns></returns>
+        public static bool SetValue<T>(ModInfo modInfo, string key, T value, Action<bool>? callback = null)
     {
         if (!Available(modInfo, key)) return false;
-        MethodInfo methodInfo = GetStaticPublicMethodInfo(SET_VALUE);
+        MethodInfo? methodInfo = GetStaticPublicMethodInfo(SET_VALUE);
         if (methodInfo == null) return false;
         MethodInfo genericMethod = methodInfo.MakeGenericMethod(typeof(T));
-        genericMethod.Invoke(null, new object[] { modInfo, key, value, callback });
+        genericMethod.Invoke(null, new object[] { modInfo, key, value!, callback! });
         return true;
     }
 
@@ -318,58 +329,61 @@ internal static class ModSettingAPI
     public static bool HasConfig(ModInfo modInfo)
     {
         if (!Available(modInfo)) return false;
-        MethodInfo methodInfo = GetStaticPublicMethodInfo(HAS_CONFIG);
+        MethodInfo? methodInfo = GetStaticPublicMethodInfo(HAS_CONFIG);
         if (methodInfo == null) return false;
         return (bool)methodInfo.Invoke(null, new object[] { modInfo });
     }
 
-    /// <summary>
-    /// 获取已保存的配置值
-    /// </summary>
-    /// <param name="key">控件key</param>
-    /// <param name="value">保存的值</param>
-    /// <typeparam name="T">值类型</typeparam>
-    /// <returns></returns>
-    public static bool GetSavedValue<T>(ModInfo modInfo, string key, out T value)
+        /// <summary>
+        /// 获取已保存的配置值
+        /// </summary>
+        /// <param name="modInfo">对应的MOD</param>
+        /// <param name="key">控件key</param>
+        /// <param name="value">保存的值</param>
+        /// <typeparam name="T">值类型</typeparam>
+        /// <returns></returns>
+        public static bool GetSavedValue<T>(ModInfo modInfo, string key, out T value)
     {
-        value = default;
+        value = default!;
         if (!Available(modInfo, key)) return false;
-        MethodInfo methodInfo = GetStaticPublicMethodInfo(GET_SAVED_VALUE);
+        MethodInfo? methodInfo = GetStaticPublicMethodInfo(GET_SAVED_VALUE);
         if (methodInfo == null) return false;
         MethodInfo genericMethod = methodInfo.MakeGenericMethod(typeof(T));
         // 准备参数数组（注意：out 参数需要特殊处理）
-        object[] parameters = new object[] { modInfo, key, null };
+        object?[] parameters = new object?[] { modInfo, key, null };
         bool result = (bool)genericMethod.Invoke(null, parameters);
         // 获取 out 参数的值
-        value = (T)parameters[2];
+        value = (T)parameters[2]!;
         return result;
     }
 
-    /// <summary>
-    /// 移除指定键对应的UI控件
-    /// </summary>
-    /// <param name="key">控件key</param>
-    /// <param name="callback">回调函数返回操作结果</param>
-    /// <returns></returns>
-    public static bool RemoveUI(ModInfo modInfo, string key, Action<bool> callback = null)
+        /// <summary>
+        /// 移除指定键对应的UI控件
+        /// </summary>
+        /// <param name="modInfo">对应的MOD</param>
+        /// <param name="key">控件key</param>
+        /// <param name="callback">回调函数返回操作结果</param>
+        /// <returns></returns>
+        public static bool RemoveUI(ModInfo modInfo, string key, Action<bool>? callback = null)
     {
         if (!Available(modInfo, key)) return false;
         return InvokeMethod(REMOVE_UI,
             REMOVE_UI,
-            new object[] { modInfo, key, callback },
+            new object[] { modInfo, key, callback! },
             typeof(Action<ModInfo, string, Action<bool>>));
     }
 
-    /// <summary>
-    /// 移除整个模组的UI配置,当禁用此mod时，ModSetting会自动移除相对应的UI，一般来说不需要调用，除非想要主动移除mod所有UI
-    /// </summary>
-    /// <param name="callback">回调函数返回操作结果</param>
-    /// <returns></returns>
-    public static bool RemoveMod(ModInfo modInfo, Action<bool> callback = null)
+        /// <summary>
+        /// 移除整个模组的UI配置,当禁用此mod时，ModSetting会自动移除相对应的UI，一般来说不需要调用，除非想要主动移除mod所有UI
+        /// </summary>
+        /// <param name="modInfo">对应的MOD</param>
+        /// <param name="callback">回调函数返回操作结果</param>
+        /// <returns></returns>
+        public static bool RemoveMod(ModInfo modInfo, Action<bool>? callback = null)
     {
         if (!Available(modInfo)) return false;
         Type delegateType = typeof(Action<ModInfo, Action<bool>>);
-        return InvokeMethod(REMOVE_MOD, REMOVE_MOD, new object[] { modInfo, callback }, delegateType);
+        return InvokeMethod(REMOVE_MOD, REMOVE_MOD, new object[] { modInfo, callback! }, delegateType);
     }
 
     private static bool Available(ModInfo modInfo)
@@ -384,7 +398,7 @@ internal static class ModSettingAPI
 
     private static bool VersionAvailable()
     {
-        FieldInfo versionField = modBehaviour.GetField("VERSION", BindingFlags.Public | BindingFlags.Static);
+        FieldInfo? versionField = modBehaviour?.GetField("VERSION", BindingFlags.Public | BindingFlags.Static);
         if (versionField != null && versionField.FieldType == typeof(float))
         {
             Version modSettingVersion = (Version)versionField.GetValue(null);
@@ -399,7 +413,7 @@ internal static class ModSettingAPI
         return false;
     }
 
-    private static Type FindTypeInAssemblies(string typeName)
+    private static Type? FindTypeInAssemblies(string typeName)
     {
         Assembly[] assemblies = AppDomain.CurrentDomain.GetAssemblies();
         foreach (Assembly assembly in assemblies)
@@ -417,13 +431,13 @@ internal static class ModSettingAPI
         return null;
     }
 
-    private static MethodInfo GetStaticPublicMethodInfo(string methodName, Type[] parameterTypes = null)
+    private static MethodInfo? GetStaticPublicMethodInfo(string methodName, Type[]? parameterTypes = null)
     {
         if (!IsInit) return null;
         BindingFlags bindingFlags = BindingFlags.Public | BindingFlags.Static;
         if (parameterTypes != null)
         {
-            MethodInfo[] methodInfos = modBehaviour.GetMethods(bindingFlags).Where(m => m.Name == methodName).ToArray();
+            MethodInfo[]? methodInfos = modBehaviour?.GetMethods(bindingFlags).Where(m => m.Name == methodName).ToArray();
             return methodInfos.Where(methodInfo => {
                 ParameterInfo[] parameters = methodInfo.GetParameters();
                 if (parameters.Length != parameterTypes.Length) return false;
@@ -439,7 +453,7 @@ internal static class ModSettingAPI
         }
         else
         {
-            MethodInfo methodInfo = modBehaviour.GetMethod(methodName, bindingFlags);
+            MethodInfo? methodInfo = modBehaviour?.GetMethod(methodName, bindingFlags);
             return methodInfo;
         }
     }
@@ -459,11 +473,11 @@ internal static class ModSettingAPI
     }
 
     private static bool InvokeMethod(string cacheKey, string methodName, object[] parameters, Type delegateType,
-        Type[] paramTypes = null)
+        Type[]? paramTypes = null)
     {
         if (!methodCache.ContainsKey(cacheKey))
         {
-            MethodInfo method = GetStaticPublicMethodInfo(methodName, paramTypes);
+            MethodInfo? method = GetStaticPublicMethodInfo(methodName, paramTypes);
             if (method == null) return false;
             // 创建委托
             methodCache[cacheKey] = Delegate.CreateDelegate(delegateType, method);
