@@ -219,7 +219,7 @@ namespace JmcModLib.Config
             }
 
             inner[key] = SerializeValue(value);
-
+            ModLogger.Trace($"{ModRegistry.GetTag(asm)} 保存配置项 '{group}/{key}'");
             _dirty[asm] = true;    // 标记为需要写回
         }
 
