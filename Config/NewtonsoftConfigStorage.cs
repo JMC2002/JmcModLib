@@ -77,6 +77,8 @@ namespace JmcModLib.Config
                     return new();
 
                 var wrapper = JsonConvert.DeserializeObject<FileWrapper>(raw);
+                if (wrapper == null || wrapper.groups == null)
+                    return new();
                 var dict = new Dictionary<string, Dictionary<string, object?>>();
 
                 foreach (var g in wrapper.groups)
