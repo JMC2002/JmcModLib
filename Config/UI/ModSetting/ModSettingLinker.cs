@@ -16,7 +16,7 @@ namespace JmcModLib.Config.UI.ModSetting
     /// <summary>
     /// 负责将 DuckSort 的 ModConfig 注册到 ModSetting。
     /// </summary>
-    public static class ModSettingLinker
+    internal static class ModSettingLinker
     {
         private static bool _initialized = false;
         private static bool SettingInit => ModSetting.ModSettingAPI.IsInit;
@@ -33,7 +33,7 @@ namespace JmcModLib.Config.UI.ModSetting
             _initialized = true;
         }
 
-        public static void Dispose()
+        internal static void Dispose()
         {
             L10n.LanguageChanged -= OnLangChanged;
             ModManager.OnModActivated -= TryInitModSetting;
@@ -42,7 +42,7 @@ namespace JmcModLib.Config.UI.ModSetting
             _initialized = false;
         }
 
-        private static void RemoveMod(Assembly asm)
+        internal static void RemoveMod(Assembly asm)
         {
             if (initialized.ContainsKey(asm) && initialized[asm])
             {
@@ -50,7 +50,6 @@ namespace JmcModLib.Config.UI.ModSetting
             }
             if (initialized.ContainsKey(asm))
                 initialized.Remove(asm);
-            }
         }
 
         private static void RemoveAllMod()
