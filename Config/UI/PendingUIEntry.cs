@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace JmcModLib.Config.UI
+﻿namespace JmcModLib.Config.UI
 {
     public sealed class PendingUIEntry
     {
