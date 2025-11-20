@@ -57,6 +57,17 @@ namespace JmcModLib.Config
 
         // -------------- Registration --------------------
 
+        internal static void Init()
+        {
+            ConfigUIManager.Init();
+        }
+
+        internal static void Dispose()
+        {
+            ConfigUIManager.Dispose();
+            UnregisterAll();
+        }
+
         /// <summary>
         /// 自动扫描当前 Assembly 内标记了 [Config] 的字段/属性
         /// </summary>
@@ -126,6 +137,7 @@ namespace JmcModLib.Config
             if  (!_entries.ContainsKey(asm))
                 return; // 未注册
 
+            ConfigUIManager.UnregisterAsm(asm);
             SaveAllInAssembly(asm);
             ClearAssemblyCache(asm);
 
@@ -134,10 +146,9 @@ namespace JmcModLib.Config
 
         internal static void UnregisterAll()
         {
-            foreach (var asm in _entries.Keys.ToArray())
+            foreach (var asm in _entries.Keys.ToList())
             {
-                SaveAllInAssembly(asm);
-                ClearAssemblyCache(asm);
+                Unregister(asm);
             }
             ModLogger.Info($"卸载所有配置成功!");
         }

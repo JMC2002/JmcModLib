@@ -12,6 +12,16 @@ namespace JmcModLib.Config.UI
         private static readonly Dictionary<Assembly, Dictionary<string, List<PendingUIEntry>>> _pending
             = new();
 
+        internal static void Init()
+        {
+            ModSettingLinker.Init();
+        }
+
+        internal static void Dispose()
+        {
+            ModSettingLinker.Dispose();
+        }
+
         public static void Register(ConfigEntry entry, UIConfigAttribute ui)
         {
             var asm = entry.assembly;
@@ -34,6 +44,14 @@ namespace JmcModLib.Config.UI
             ModSettingLinker.initialized.TryAdd(asm, false);
         }
 
+        internal static void UnregisterAsm(Assembly asm)
+        {
+            ModSettingLinker.RemoveMod(asm);
+            if (_pending.ContainsKey(asm))
+            {
+                _pending.Remove(asm);
+            }
+        }
 
         internal static Dictionary<Assembly, Dictionary<string, List<PendingUIEntry>>> GetPending()
             => _pending;

@@ -1,4 +1,5 @@
 ﻿using Duckov.Modding;
+using JmcModLib.Config;
 using JmcModLib.Utils;
 using System;
 using System.Collections.Generic;
@@ -25,6 +26,20 @@ namespace JmcModLib.Core
         /// </summary>
         internal static event Action<Assembly>? OnRegistered;
 
+        internal static void Init()
+        {
+            ConfigManager.Init();
+            L10n.Init();
+        }
+
+        internal static void Dispose()
+        {
+            ConfigManager.Dispose();
+            L10n.Dispose();
+            _mods.Clear();
+            OnRegistered = null;
+        }
+
         /// <summary>
         /// 调用Register注册元信息
         /// </summary>
@@ -37,8 +52,9 @@ namespace JmcModLib.Core
             
             assembly ??= Assembly.GetCallingAssembly();
             _mods[assembly] = new Modinfo(info, name ?? info.name, version ?? "1.0.0", level);
-            ModLogger.Debug($"[{GetTag(assembly)??"错误"}] 注册成功，info.displayName: {info.displayName}, name: {info.name}");
+            // ConfigManager.RegisterAllInAssembly(assembly);
 
+            ModLogger.Debug($"[{GetTag(assembly)??"错误"}] 注册成功，info.displayName: {info.displayName}, name: {info.name}");
             OnRegistered?.Invoke(assembly);
         }
 
