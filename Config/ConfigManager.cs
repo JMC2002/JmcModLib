@@ -346,7 +346,16 @@ namespace JmcModLib.Config
             if (!string.IsNullOrEmpty(modEntry.Attribute.OnChanged))
             {
                 var mAcc = MethodAccessor.Get(modEntry.DeclaringType, modEntry.Attribute.OnChanged);
-                mAcc.Invoke(GetInstance(modEntry), value);
+                if (mAcc.IsStatic == modEntry.Accessor.IsStatic)
+                    mAcc.Invoke(GetInstance(modEntry), value);
+                else if (mAcc.IsStatic)
+                    mAcc.Invoke(null, value);
+                else
+                {
+                    var perAsm = _typeInstances.GetOrAdd(modEntry.assembly, _ => new ConcurrentDictionary<Type, object>());
+                    var instance = perAsm.GetOrAdd(modEntry.DeclaringType, t => Activator.CreateInstance(t)!);
+                    mAcc.Invoke(instance, value);
+                }
             }
 
             var asm = modEntry.assembly;
