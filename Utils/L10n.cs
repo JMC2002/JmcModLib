@@ -113,8 +113,11 @@ namespace JmcModLib.Utils
         /// </summary>
         public static string Get(string key, Assembly? assembly = null)
         {
-            ModLogger.Debug($"开始寻找{key}");
             assembly ??= Assembly.GetCallingAssembly();
+            if (!Exist(assembly))
+                return key;     // 若未注册，直接返回
+
+            ModLogger.Debug($"开始寻找{key}");
             if (_localizedTables.TryGetValue(assembly, out var dict) &&
                 dict.TryGetValue(key, out var value))
             {
@@ -134,19 +137,6 @@ namespace JmcModLib.Utils
             ModLogger.Warn($"{tag}: 未找到 key = \"{key}\" 对应的本地化文本，返回 key 本身。");
 
             return key; // fallback to key
-        }
-
-        /// <summary>
-        /// 跨Mod翻译
-        /// </summary>
-        public static string GetFrom(string key, Assembly modAssembly)
-        {
-            if (_localizedTables.TryGetValue(modAssembly, out var dict) &&
-                dict.TryGetValue(key, out var value))
-            {
-                return value;
-            }
-            return key;
         }
 
         /// <summary>
@@ -233,6 +223,17 @@ namespace JmcModLib.Utils
                 }
             }
             return result;
+        }
+
+        /// <summary>
+        /// 返回程序集是否注册了本地化文本
+        /// </summary>
+        /// <param name="asm"></param>
+        /// <returns></returns>
+        public static bool Exist(Assembly? asm = null)
+        {
+            asm ??= Assembly.GetCallingAssembly();
+            return _basePaths.ContainsKey(asm);
         }
     }
 }
