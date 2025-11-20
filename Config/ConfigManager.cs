@@ -250,6 +250,11 @@ namespace JmcModLib.Config
                     // 获取已保存的值
                     if (storage.TryLoad(entry.Attribute.DisplayName, entry.Group, entry.Accessor.MemberType, out var loaded, asm))
                         entry.Accessor.SetValue(GetInstance(entry), loaded);
+                    else
+                    {
+                        // 如果没有保存的值，则保存当前值
+                        storage.Save(entry.Attribute.DisplayName, entry.Group, GetValue(entry), asm);
+                    }
                 }
             }
         }
