@@ -9,6 +9,9 @@ using System.Reflection;
 
 namespace JmcModLib.Config
 {
+    /// <summary>
+    /// 以 Newtonsoft.Json 作为序列化工具的配置存储实现
+    /// </summary>
     public sealed class NewtonsoftConfigStorage : IConfigStorage
     {
         private readonly string _rootFolder;
@@ -24,6 +27,10 @@ namespace JmcModLib.Config
         private readonly ConcurrentDictionary<Assembly, bool> _dirty = new();
 
 
+        /// <summary>
+        /// 初始化一个 NewtonsoftConfigStorage 实例
+        /// </summary>
+        /// <param name="rootFolder">根目录</param>
         public NewtonsoftConfigStorage(string rootFolder)
         {
             _rootFolder = rootFolder;
@@ -53,12 +60,12 @@ namespace JmcModLib.Config
         }
 
         // ------------------ file read/write ------------------
-        public class FileWrapper
+        private class FileWrapper
         {
             public Dictionary<string, SerializableGroup> groups = new();
         }
 
-        public class SerializableGroup
+        private class SerializableGroup
         {
             public Dictionary<string, object?> items = new();
         }
@@ -176,12 +183,26 @@ namespace JmcModLib.Config
 
         // -------- IConfigStorage impl --------
 
+        /// <summary>
+        /// 是否存在assembly对应的配置文件
+        /// </summary>
+        /// <param name="asm">默认则为调用者</param>
+        /// <returns>返回结果对应的bool</returns>
         public bool Exists(Assembly? asm)
         {
             asm ??= Assembly.GetCallingAssembly();
             return File.Exists(GetFilePath(asm));
         }
 
+        /// <summary>
+        /// 尝试读取配置项
+        /// </summary>
+        /// <param name="key">json文件中的key</param>
+        /// <param name="group">配置项所属的组名</param>
+        /// <param name="type">期望的值类型</param>
+        /// <param name="value">返回的配置项值</param>
+        /// <param name="asm">调用的程序集，默认是调用者</param>
+        /// <returns>如果加载成功，则返回true</returns>
         public bool TryLoad(string key, string group, Type type, out object? value, Assembly? asm)
         {
             asm ??= Assembly.GetCallingAssembly();
@@ -208,6 +229,13 @@ namespace JmcModLib.Config
             }
         }
 
+        /// <summary>
+        /// 保存配置项到缓存
+        /// </summary>
+        /// <param name="key">json文件中的key</param>
+        /// <param name="group">配置项所属的组名</param>
+        /// <param name="value">返回的配置项值</param>
+        /// <param name="asm">调用的程序集，默认是调用者</param>
         public void Save(string key, string group, object? value, Assembly? asm)
         {
             asm ??= Assembly.GetCallingAssembly();
@@ -226,6 +254,10 @@ namespace JmcModLib.Config
         }
 
 
+        /// <summary>
+        /// 真正将缓存写回文件
+        /// </summary>
+        /// <param name="asm">指定asm，默认为调用者</param>
         public void Flush(Assembly? asm)
         {
             asm ??= Assembly.GetCallingAssembly();

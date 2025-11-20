@@ -1,6 +1,9 @@
 ﻿namespace JmcModLib.Config.UI
 {
-    public sealed class PendingUIEntry
+    /// <summary>
+    /// 一个用于存储待处理 UI 配置项的类。
+    /// </summary>
+    internal sealed class PendingUIEntry
     {
         public ConfigEntry Entry { get; }
         public UIConfigAttribute UIAttr { get; }

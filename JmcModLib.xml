@@ -86,6 +86,50 @@
             <param name="asm">指定程序集，留空则为调用者</param>
             <returns>如果Key不存在，会输出一条Warn并返回空，否则返回对应值</returns>
         </member>
+        <member name="T:JmcModLib.Config.NewtonsoftConfigStorage">
+            <summary>
+            以 Newtonsoft.Json 作为序列化工具的配置存储实现
+            </summary>
+        </member>
+        <member name="M:JmcModLib.Config.NewtonsoftConfigStorage.#ctor(System.String)">
+            <summary>
+            初始化一个 NewtonsoftConfigStorage 实例
+            </summary>
+            <param name="rootFolder">根目录</param>
+        </member>
+        <member name="M:JmcModLib.Config.NewtonsoftConfigStorage.Exists(System.Reflection.Assembly)">
+            <summary>
+            是否存在assembly对应的配置文件
+            </summary>
+            <param name="asm">默认则为调用者</param>
+            <returns>返回结果对应的bool</returns>
+        </member>
+        <member name="M:JmcModLib.Config.NewtonsoftConfigStorage.TryLoad(System.String,System.String,System.Type,System.Object@,System.Reflection.Assembly)">
+            <summary>
+            尝试读取配置项
+            </summary>
+            <param name="key">json文件中的key</param>
+            <param name="group">配置项所属的组名</param>
+            <param name="type">期望的值类型</param>
+            <param name="value">返回的配置项值</param>
+            <param name="asm">调用的程序集，默认是调用者</param>
+            <returns>如果加载成功，则返回true</returns>
+        </member>
+        <member name="M:JmcModLib.Config.NewtonsoftConfigStorage.Save(System.String,System.String,System.Object,System.Reflection.Assembly)">
+            <summary>
+            保存配置项到缓存
+            </summary>
+            <param name="key">json文件中的key</param>
+            <param name="group">配置项所属的组名</param>
+            <param name="value">返回的配置项值</param>
+            <param name="asm">调用的程序集，默认是调用者</param>
+        </member>
+        <member name="M:JmcModLib.Config.NewtonsoftConfigStorage.Flush(System.Reflection.Assembly)">
+            <summary>
+            真正将缓存写回文件
+            </summary>
+            <param name="asm">指定asm，默认为调用者</param>
+        </member>
         <member name="M:JmcModLib.Config.UI.ModSetting.ModSettingAPI.Init(Duckov.Modding.ModInfo)">
             <summary>
             初始化API
@@ -246,6 +290,11 @@
         <member name="T:JmcModLib.Config.UI.ModSetting.ModSettingLinker">
             <summary>
             负责将 DuckSort 的 ModConfig 注册到 ModSetting。
+            </summary>
+        </member>
+        <member name="T:JmcModLib.Config.UI.PendingUIEntry">
+            <summary>
+            一个用于存储待处理 UI 配置项的类。
             </summary>
         </member>
         <member name="T:JmcModLib.Config.UI.UIConfigAttribute">
