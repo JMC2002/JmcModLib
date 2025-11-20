@@ -8,6 +8,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using Unity.VisualScripting;
 using UnityEngine;
 
@@ -83,42 +84,53 @@ namespace JmcModLib.Config
 
             foreach (var type in asm.GetTypes())
             {
-                foreach (var acc in MemberAccessor.GetAll(type))
+                try
                 {
-                    if (!acc.HasAttribute<ConfigAttribute>())
+                    if (type.ContainsGenericParameters)                                    // 跳过开放泛型类型
                         continue;
 
-                    // 如果有 instance 需求，创建实例
-                    object? instance = null;
-                    if (!acc.IsStatic)
+                    foreach (var acc in MemberAccessor.GetAll(type))
                     {
-                        var perAsm = _typeInstances.GetOrAdd(asm, _ => new ConcurrentDictionary<Type, object>());
-                        instance = perAsm.GetOrAdd(type, t => Activator.CreateInstance(t)!);
-                    }
+                        if (!acc.HasAttribute<ConfigAttribute>())   // 仅处理标记了 ConfigAttribute 的成员
+                            continue;
 
-                    var attr = acc.GetAttribute<ConfigAttribute>()!;
-                    var entry = new ConfigEntry(asm, type, acc, attr, acc.GetValue(instance));
-                    var group = entry.Group;
-                    var groupDict = groups.GetOrAdd(group, _ => new ConcurrentDictionary<string, ConfigEntry>(StringComparer.Ordinal));
-                    groupDict[entry.Key] = entry;
-
-                    // 找 UI 属性（如果有）
-                    var uiAttr = acc.GetAttribute<UIConfigAttribute>();
-                    if (uiAttr != null)
-                    {
-                        // 注册任务，等待后续生成
-                        if (!uiAttr.IsValid(entry))
+                        // 如果有 instance 需求，创建实例
+                        object? instance = null;
+                        if (!acc.IsStatic)
                         {
-                            ModLogger.Error($"字段/属性 {entry.Key} 类型为 {acc.MemberType} 与 UIAttribute {uiAttr.GetType().Name} 要求不匹配或值不合法");
+                            var perAsm = _typeInstances.GetOrAdd(asm, _ => new ConcurrentDictionary<Type, object>());
+                            instance = perAsm.GetOrAdd(type, t => Activator.CreateInstance(t)!);
                         }
-                        else
-                        {
-                            ConfigUIManager.Register(entry, uiAttr);
-                        }
-                    }
 
-                    ModLogger.Debug($"{ModRegistry.GetTag(asm)}发现配置项: {type.FullName}.{acc.Name}, key 为: {entry.Key}");
+                        var attr = acc.GetAttribute<ConfigAttribute>()!;
+                        var entry = new ConfigEntry(asm, type, acc, attr, acc.GetValue(instance));
+                        var group = entry.Group;
+                        var groupDict = groups.GetOrAdd(group, _ => new ConcurrentDictionary<string, ConfigEntry>(StringComparer.Ordinal));
+                        groupDict[entry.Key] = entry;
+
+                        // 找 UI 属性（如果有）
+                        var uiAttr = acc.GetAttribute<UIConfigAttribute>();
+                        if (uiAttr != null)
+                        {
+                            // 注册任务，等待后续生成
+                            if (!uiAttr.IsValid(entry))
+                            {
+                                ModLogger.Error($"字段/属性 {entry.Key} 类型为 {acc.MemberType} 与 UIAttribute {uiAttr.GetType().Name} 要求不匹配或值不合法");
+                            }
+                            else
+                            {
+                                ConfigUIManager.Register(entry, uiAttr);
+                            }
+                        }
+
+                        ModLogger.Debug($"{ModRegistry.GetTag(asm)}发现配置项: {type.FullName}.{acc.Name}, key 为: {entry.Key}");
+                    }
                 }
+                catch (Exception ex)
+                {
+                    ModLogger.Error($"扫描类型 {type.FullName} 时发生异常", ex);
+                }
+
             }
 
             // 加载已保存的配置
