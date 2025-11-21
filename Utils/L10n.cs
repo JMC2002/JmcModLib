@@ -32,6 +32,7 @@ namespace JmcModLib.Utils
         {
             CurrentLanguage = LocalizationManager.CurrentLanguage;
             LocalizationManager.OnSetLanguage += OnLanguageChanged;
+            ModRegistry.OnUnRegistered += TryUnRegister;
         }
 
         /// <summary>
@@ -40,6 +41,7 @@ namespace JmcModLib.Utils
         internal static void Dispose()
         {
             LocalizationManager.OnSetLanguage -= OnLanguageChanged;
+            ModRegistry.OnUnRegistered -= TryUnRegister;
             _basePaths.Clear();
         }
 
@@ -63,6 +65,12 @@ namespace JmcModLib.Utils
                                   , Assembly? assembly = null)
         {
             assembly ??= Assembly.GetCallingAssembly();
+
+            if (IsRegistered(assembly))
+            {
+                ModLogger.Warn($"尝试重复注册本地化程序集：{assembly.FullName}");
+                return;
+            }
 
             var Tag = Core.ModRegistry.GetTag(assembly);
             if (Tag == null)
@@ -140,7 +148,13 @@ namespace JmcModLib.Utils
             _fallbackTables.Remove(assembly);
         }
 
-
+        private static void TryUnRegister(Assembly assembly)
+        {
+            if (IsRegistered(assembly))
+            {
+                UnRegister(assembly);
+            }
+        }
 
         /// <summary>
         /// 翻译当前程序集的键值
