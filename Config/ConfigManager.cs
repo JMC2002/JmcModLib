@@ -329,9 +329,10 @@ namespace JmcModLib.Config
         // -------------- Reset --------------------------
 
         // 重置key对应的值为默认值
-        private static void ResetKey(ConfigEntry entry)
+        internal static void ResetKey(ConfigEntry entry)
         {
-            SetValue(entry, entry.DefaultValue);
+            if (!object.Equals(GetValue(entry), entry.DefaultValue))
+                SetValue(entry, entry.DefaultValue);    // 仅在值不相等时设置，避免触发不必要的 OnChanged 回调
         }
 
         // 重置组内所有entry
