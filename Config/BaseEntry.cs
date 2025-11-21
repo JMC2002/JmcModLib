@@ -9,7 +9,7 @@ namespace JmcModLib.Config
     /// </summary>
     public abstract class BaseEntry(Assembly asm, string group, Type declaringType)
     {
-        internal Assembly assembly { get; } = asm;
+        internal Assembly Assembly { get; } = asm;
         internal Type DeclaringType { get; } = declaringType;
         internal abstract string Key { get; }
         internal string Group { get; } = group;

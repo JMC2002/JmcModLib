@@ -276,7 +276,7 @@ namespace JmcModLib.Config
             if (entry.Accessor.IsStatic)
                 return null;
 
-            return entry.Accessor.IsStatic ? null : _typeInstances[entry.assembly][entry.DeclaringType];
+            return entry.Accessor.IsStatic ? null : _typeInstances[entry.Assembly][entry.DeclaringType];
         }
 
         // 通过 key 获取实例对象（如果是静态成员则返回null），若 key 不存在则抛出异常
@@ -386,14 +386,14 @@ namespace JmcModLib.Config
                     mAcc.Invoke(null, value);
                 else
                 {
-                    var perAsm = _typeInstances.GetOrAdd(modEntry.assembly, _ => new ConcurrentDictionary<Type, object>());
+                    var perAsm = _typeInstances.GetOrAdd(modEntry.Assembly, _ => new ConcurrentDictionary<Type, object>());
                     var instance = perAsm.GetOrAdd(modEntry.DeclaringType, t => Activator.CreateInstance(t)!);
                     mAcc.Invoke(instance, value);
                 }
             }
 
             modEntry.Accessor.SetValue(GetInstance(modEntry), value);
-            var asm = modEntry.assembly;
+            var asm = modEntry.Assembly;
             // 在设置值后调用 Save 方法以保持数据一致性
             var storage = GetStorage(asm);
             storage.Save(modEntry.Attribute.DisplayName, modEntry.Group, value, asm);

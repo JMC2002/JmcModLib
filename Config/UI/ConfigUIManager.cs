@@ -27,7 +27,7 @@ namespace JmcModLib.Config.UI
 
         public static void RegisterEntry(BaseEntry entry, UIBaseAttribute ui)
         {
-            var asm = entry.assembly;
+            var asm = entry.Assembly;
             if (!_pending.TryGetValue(asm, out var groups))
             {
                 groups = new Dictionary<string, List<PendingUIEntry<BaseEntry, UIBaseAttribute>>>();

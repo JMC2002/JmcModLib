@@ -12,7 +12,7 @@ namespace JmcModLib.Config.UI.ModSetting
     {
         internal static void FloatSliderBuild(ConfigEntry entry, UIFloatSliderAttribute uiAttr)
         {
-            var asm = entry.assembly;
+            var asm = entry.Assembly;
             var info = ModRegistry.GetModInfo(asm)?.Info;
             if (info == null)
             {
@@ -33,7 +33,7 @@ namespace JmcModLib.Config.UI.ModSetting
 
         internal static void IntSliderBuild(ConfigEntry entry, UIIntSliderAttribute uiAttr)
         {
-            var asm = entry.assembly;
+            var asm = entry.Assembly;
             var info = ModRegistry.GetModInfo(asm)?.Info;
             if (info == null)
             {
@@ -53,7 +53,7 @@ namespace JmcModLib.Config.UI.ModSetting
 
         internal static void ToggleBuild(ConfigEntry entry)
         {
-            var asm = entry.assembly;
+            var asm = entry.Assembly;
             var info = ModRegistry.GetModInfo(asm)?.Info;
             if (info == null)
             {
@@ -70,7 +70,7 @@ namespace JmcModLib.Config.UI.ModSetting
 
         internal static void DropdownBuild(ConfigEntry entry)
         {
-            var asm = entry.assembly;
+            var asm = entry.Assembly;
             var info = ModRegistry.GetModInfo(asm)?.Info;
             if (info == null)
             {
@@ -104,7 +104,7 @@ namespace JmcModLib.Config.UI.ModSetting
 
         internal static void KeyBindBuild(ConfigEntry entry)
         {
-            var asm = entry.assembly;
+            var asm = entry.Assembly;
             var info = ModRegistry.GetModInfo(asm)?.Info;
             if (info == null)
             {
@@ -122,7 +122,7 @@ namespace JmcModLib.Config.UI.ModSetting
 
         internal static void InputBuild(ConfigEntry entry, UIInputAttribute uiAttr)
         {
-            var asm = entry.assembly;
+            var asm = entry.Assembly;
             var info = ModRegistry.GetModInfo(asm)?.Info;
             if (info == null)
             {
@@ -140,7 +140,7 @@ namespace JmcModLib.Config.UI.ModSetting
 
         internal static void ButtonBuild(ButtonEntry entry, UIButtonAttribute uiAttr)
         {
-            var asm = entry.assembly;
+            var asm = entry.Assembly;
             var info = ModRegistry.GetModInfo(asm)?.Info;
             if (info == null)
             {

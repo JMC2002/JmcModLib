@@ -47,7 +47,7 @@ namespace JmcModLib.Config.UI.ModSetting
         {
             try
             {
-                var info = ModRegistry.GetModInfo(entry.assembly)?.Info;
+                var info = ModRegistry.GetModInfo(entry.Assembly)?.Info;
                 var t = entry.Accessor.MemberType;
 
                 if (t.IsEnum && t != typeof(KeyCode))   // Enum作为下拉列表时是parse到string的，应该特殊处理
@@ -74,7 +74,7 @@ namespace JmcModLib.Config.UI.ModSetting
             }
             catch (Exception ex)
             {
-                ModLogger.Error($"{ModRegistry.GetTag(entry.assembly)} 在同步 {entry.Key} 条目时抛出异常", ex);
+                ModLogger.Error($"{ModRegistry.GetTag(entry.Assembly)} 在同步 {entry.Key} 条目时抛出异常", ex);
             }
         }
 
