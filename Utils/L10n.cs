@@ -18,7 +18,10 @@ namespace JmcModLib.Utils
         private static readonly TableType _fallbackTables = new();
         private static readonly Dictionary<Assembly, string> _basePaths = new();
 
-        private static SystemLanguage _currentLanguage;
+        /// <summary>
+        /// 当前语言
+        /// </summary>
+        public static SystemLanguage CurrentLanguage { get; private set; }
 
         /// <summary>
         /// 语言变更后的事件，不建议订阅<c>LocalizationManager.CurrentLanguage</c>，不然可能本地化不及时生效
@@ -27,7 +30,7 @@ namespace JmcModLib.Utils
 
         internal static void Init()
         {
-            _currentLanguage = LocalizationManager.CurrentLanguage;
+            CurrentLanguage = LocalizationManager.CurrentLanguage;
             LocalizationManager.OnSetLanguage += OnLanguageChanged;
         }
 
@@ -79,7 +82,7 @@ namespace JmcModLib.Utils
             }
 
             _basePaths[assembly] = langPath;
-            _localizedTables[assembly] = LoadForAssembly(assembly, _currentLanguage);
+            _localizedTables[assembly] = LoadForAssembly(assembly, CurrentLanguage);
 
             // 首先尝试从fallbackLang获取文件
             _fallbackTables[assembly] = LoadForAssembly(assembly, fallbackLang);
@@ -155,8 +158,8 @@ namespace JmcModLib.Utils
         /// </summary>
         private static void OnLanguageChanged(SystemLanguage newLang)
         {
-            ModLogger.Debug($"检测到语言变更：{_currentLanguage} → {newLang}");
-            _currentLanguage = newLang;
+            ModLogger.Debug($"检测到语言变更：{CurrentLanguage} → {newLang}");
+            CurrentLanguage = newLang;
             foreach (var asm in _basePaths.Keys)
                 _localizedTables[asm] = LoadForAssembly(asm, newLang);
             LanguageChanged?.Invoke(newLang);
