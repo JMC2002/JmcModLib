@@ -43,26 +43,29 @@ namespace JmcModLib.Core
         /// <summary>
         /// 调用Register注册元信息，至少需要在OnAfterSetup及以后调用
         /// </summary>
-        /// <param name="info"> MOD的info信息，可以在OnAfterSetup及以后取得，OnEnable阶段该值为空，不可用 </param>
+        /// <param name="info"> MOD的info信息，可以在OnAfterSetup及以后取得，OnEnable阶段该值未初始化，不可用 </param>
         /// <param name="name">MOD的名称，留空将在modinfo中取得，若也为空将在assembly中取得</param>
         /// <param name="version">MOD的版本号，留空或填null则会被默认置为1.0.0</param>
         /// <param name="level">期待显示的默认打印级别，留空则打印Info及以上</param>
         /// <param name="assembly">程序集，留空自动获取</param>
         public static void Register(ModInfo info, string? name = null, string? version = null, LogLevel level = LogLevel.Info, Assembly? assembly = null)
         {
-            
+            if (info.displayName == null)
+            {
+                ModLogger.Warn("ModInfo未初始化，应当在OnAfterSetup及以后注册，而非OnEnable及以前");
+            }
             assembly ??= Assembly.GetCallingAssembly();
-            _mods[assembly] = new Modinfo(info, name ?? info.name, version ?? "1.0.0", level);
+            _mods[assembly] = new Modinfo(info, name ?? info.displayName ?? assembly.FullName, version ?? "1.0.0", level);
             // ConfigManager.RegisterAllInAssembly(assembly);
 
-            ModLogger.Debug($"[{GetTag(assembly)??"错误"}] 注册成功，info.displayName: {info.displayName}, name: {info.name}");
+            ModLogger.Debug($"{GetTag(assembly)??"错误"} 注册成功");
             OnRegistered?.Invoke(assembly);
         }
 
         /// <summary>
         /// 获取程序集的MOD信息，留空则返回调用者的信息
         /// </summary>
-        public static Modinfo? GetModInfo(Assembly? assembly = null)
+        internal static Modinfo? GetModInfo(Assembly? assembly = null)
         {
             assembly ??= Assembly.GetCallingAssembly();
             return _mods.TryGetValue(assembly, out var info) ? info : null;
@@ -93,9 +96,10 @@ namespace JmcModLib.Core
         /// <summary>
         /// Mod的元信息
         /// </summary>
+        /// <param name="Info">Mod的详细信息</param>
         /// <param name="Name">Mod名</param>
         /// <param name="Version">Mod版本号</param>
         /// <param name="Level">Mod打印级别</param>
-        public record Modinfo(ModInfo Info, string Name, string Version, LogLevel Level);
+        internal record Modinfo(ModInfo Info, string Name, string Version, LogLevel Level);
     }
 }
