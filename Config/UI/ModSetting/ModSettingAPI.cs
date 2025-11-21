@@ -25,8 +25,8 @@ internal static class ModSettingAPI
     private const string ADD_KEYBINDING_WITH_DEFAULT = "AddKeybindingWithDefault";
     private const string ADD_BUTTON = "AddButton";
     private const string ADD_GROUP = "AddGroup";
-    private static float Version = 0.4f;
-    private static readonly Version VERSION = new Version(0, 4, 0);
+    // private static readonly float Version = 0.4f;
+    private static readonly Version VERSION = new(0, 4, 0);
     public const string MOD_NAME = "ModSetting";
     private const string TYPE_NAME = "ModSetting.ModBehaviour";
     private static Type? modBehaviour;
