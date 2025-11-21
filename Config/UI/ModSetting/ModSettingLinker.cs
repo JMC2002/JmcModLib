@@ -25,7 +25,7 @@ namespace JmcModLib.Config.UI.ModSetting
         public static void Init()
         {
             if (_initialized) return;
-            if (ModSettingAPI.Init(VersionInfo.modInfo)) BuildAll();
+            if (ModSettingAPI.Init(VersionInfo.modInfo)) InitAllMod();
             // 当任意 Mod 启用时尝试与 ModSetting 连接
             ModManager.OnModActivated += TryInitModSetting;
             ModManager.OnModWillBeDeactivated += TryUnInitModSetting;
@@ -41,7 +41,7 @@ namespace JmcModLib.Config.UI.ModSetting
             L10n.LanguageChanged -= OnLangChanged;
             ModManager.OnModWillBeDeactivated -= TryUnInitModSetting;
             ModManager.OnModActivated -= TryInitModSetting;
-            ConfigManager.OnRegistered -= BuildAsm;
+            ConfigUIManager.OnRegistered -= Register;
             RemoveAllMod();
             _initialized = false;
         }
@@ -99,7 +99,7 @@ namespace JmcModLib.Config.UI.ModSetting
 
         internal static void UnRegister(Assembly asm)
         {
-            if (initialized.ContainsKey(asm) && initialized[asm])
+            if (IsInitialized(asm))
             {
                 var info = ModRegistry.GetModInfo(asm)?.Info;
                 if (info == null)
@@ -112,34 +112,28 @@ namespace JmcModLib.Config.UI.ModSetting
                     ModSettingAPI.RemoveMod((ModInfo)info);
                 }
             }
-            if (initialized.ContainsKey(asm))
+            if (IsRegistered(asm))
                 initialized.Remove(asm);
-        }
-
-        private static void RemoveAllMod()
-        {
-            foreach (var asm in initialized.Keys.ToList())  // ToList 存快照
-            {
-                RemoveMod(asm);
-            }
         }
 
         private static void OnLangChanged(SystemLanguage lang)
         {
             RemoveAllMod();
-            BuildAll();
+            InitAllMod();
         }
 
         private static void TryInitModSetting(ModInfo info, Duckov.Modding.ModBehaviour behaviour)
         {
-            ModLogger.Debug($"检测到Mod {info.name}启用");
+            ModLogger.Trace($"检测到Mod {info.name}启用");
             // 只在 ModSetting 启动时进行初始化
             if (info.name != ModSettingAPI.MOD_NAME || !ModSettingAPI.Init(VersionInfo.modInfo))
                 return;
 
             ModLogger.Info("检测到 ModSetting 启用，尝试注册配置界面");
 
-            BuildAll();
+            InitAllMod();
+        }
+
         private static void TryUnInitModSetting(ModInfo info, Duckov.Modding.ModBehaviour behaviour)
         {
             ModLogger.Trace($"检测到Mod {info.name}停用");
@@ -159,7 +153,10 @@ namespace JmcModLib.Config.UI.ModSetting
             InitMod(asm);
         }
 
-        internal static void BuildAsm(Assembly asm)
+        /// <summary>
+        /// 将指定程序集的 ModSetting 注册到 ModSetting UI。
+        /// </summary>
+        private static void InitMod(Assembly asm)
         {
             if (!SettingInit)
             {
@@ -178,12 +175,20 @@ namespace JmcModLib.Config.UI.ModSetting
             ModLogger.Trace($"注册 {ModRegistry.GetTag(asm)} UI成功");
         }
 
-        internal static void BuildAll()
+        private static void InitAllMod()
         {
             ModLogger.Trace($"进入BuildAll, cnt = {initialized.Count}");
             initialized.Keys
                        .ToList()
-                       .ForEach(BuildAsm);
+                       .ForEach(InitMod);
+        }
+
+        private static void RemoveAllMod()
+        {
+            foreach (var asm in initialized.Keys.ToList())  // ToList 存快照
+            {
+                UnRegister(asm);
+            }
         }
     }
 }

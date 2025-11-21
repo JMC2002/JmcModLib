@@ -37,7 +37,12 @@ namespace JmcModLib.Config
         private static readonly IConfigStorage _defaultStorage =
             new NewtonsoftConfigStorage(ConfigDir);
 
+        /// <summary>
+        /// 某个ASM有配置项并且扫描完毕后广播
+        /// </summary>
         internal static event Action<Assembly>? OnRegistered;
+
+        internal static event Action<ConfigEntry, object?>? OnValueChanged;
 
         // -------------- Storage 设置 API ----------------
         /// <summary>
@@ -59,12 +64,16 @@ namespace JmcModLib.Config
         internal static void Init()
         {
             ConfigUIManager.Init();
+            ModRegistry.OnRegistered += RegisterAllInAssembly; // 尝试自动注册ASM
+            ModRegistry.OnUnRegistered += Unregister; // 尝试自动反注册ASM
         }
 
         internal static void Dispose()
         {
             ConfigUIManager.Dispose();
             UnregisterAll();
+            ModRegistry.OnRegistered -= RegisterAllInAssembly;
+            ModRegistry.OnUnRegistered -= Unregister;
         }
 
         /// <summary>
@@ -147,7 +156,7 @@ namespace JmcModLib.Config
             if  (!_entries.ContainsKey(asm))
                 return; // 未注册
 
-            ConfigUIManager.UnregisterAsm(asm);
+            ConfigUIManager.Unregister(asm);
             SaveAllInAssembly(asm);
             ClearAssemblyCache(asm);
 
