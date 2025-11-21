@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
+using Unity.VisualScripting.Dependencies.NCalc;
 
 namespace JmcModLib.Reflection
 {
@@ -181,22 +182,8 @@ namespace JmcModLib.Reflection
         /// </summary>
         private static Func<object?, object?[], object?> CreateInvoker(MethodInfo method)
         {
-            var owner = method.DeclaringType;
-
-            // 如果 owner 不可用，则退回到模块级别
-            if (owner == null ||
-                owner.IsInterface ||
-                owner.IsArray ||
-                owner.IsByRef ||
-                owner.IsPointer ||
-                owner.ContainsGenericParameters)
-            {
-                owner = null;
-                ModLogger.Trace($"方法{method.Name}宿主不可用，回退到模块级别");
-            }
-
             var parameters = method.GetParameters();
-            var dm = owner != null ?
+            var dm = IsSaveOwner(method.DeclaringType) ?
                 new DynamicMethod($"invoke_{method.DeclaringType!.Name}_{method.Name}",
                                   typeof(object),
                                   [typeof(object), typeof(object?[])],
@@ -216,11 +203,21 @@ namespace JmcModLib.Reflection
                     locals[i] = il.DeclareLocal(parameters[i].ParameterType.GetElementType()!);
             }
 
+            bool isValueType = method.DeclaringType!.IsValueType;
             // 加载实例
             if (!method.IsStatic)
             {
-                il.Emit(OpCodes.Ldarg_0);
-                il.Emit(OpCodes.Castclass, method.DeclaringType);
+                il.Emit(OpCodes.Ldarg_0); 
+                if (isValueType)
+                {
+                    // struct：必须 unbox 得到地址
+                    il.Emit(OpCodes.Unbox, method.DeclaringType!);
+                }
+                else
+                {
+                    // class：正常 castclass
+                    il.Emit(OpCodes.Castclass, method.DeclaringType!);
+                }
             }
 
             // 加载参数
@@ -264,7 +261,17 @@ namespace JmcModLib.Reflection
             }
 
             // 调用方法
-            il.EmitCall(method.IsVirtual && !method.IsFinal && !method.IsStatic ? OpCodes.Callvirt : OpCodes.Call, method, null);
+            if (isValueType && !method.IsStatic)
+            {
+                // struct 实例方法必须用 constrained
+                il.Emit(OpCodes.Constrained, method.DeclaringType!);
+                il.Emit(OpCodes.Callvirt, method);
+            }
+            else
+            {
+                il.EmitCall(method.IsVirtual && !method.IsFinal && !method.IsStatic ? OpCodes.Callvirt : OpCodes.Call, method, null);
+            }
+
 
             // 返回值处理
             if (method.ReturnType == typeof(void))

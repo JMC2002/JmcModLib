@@ -232,7 +232,7 @@ namespace JmcModLib.Reflection
         }
 
         /// <summary>
-        /// 按MemberInfo获取访问去
+        /// 按MemberInfo获取访问器
         /// </summary>
         public static MemberAccessor Get(MemberInfo member)
             => GetOrCreate(member, m => new MemberAccessor(m));
@@ -279,6 +279,10 @@ namespace JmcModLib.Reflection
         /// </summary>
         public static IEnumerable<MemberAccessor> GetAll(Type type, BindingFlags flags = DefaultFlags)
         {
+            // 跳过扫描 enum 定义本身，否则扫描到 value__ 会炸
+            if (type.IsEnum)
+                return [];
+
             return type.GetMembers(flags)
                        .Where(m => m is FieldInfo or PropertyInfo)
                        .Where(IsSupportedMember)
@@ -299,26 +303,63 @@ namespace JmcModLib.Reflection
         {
             try
             {
-                var dm = new DynamicMethod(
-                                $"get_{f.Name}",
-                                typeof(object),
-                                [typeof(object)],
-                                f.DeclaringType!,
-                                true);
+                var dm = IsSaveOwner(f.DeclaringType) ?
+                    new DynamicMethod($"get_{f.Name}",
+                                      typeof(object),
+                                      [typeof(object)],
+                                      f.DeclaringType,
+                                      true) :
+                    new DynamicMethod($"get_{f.Name}",
+                                      typeof(object),
+                                      [typeof(object)],
+                                      f.Module,
+                                      true);
 
                 ILGenerator il = dm.GetILGenerator();
 
                 if (!f.IsStatic)
                 {
-                    il.Emit(OpCodes.Ldarg_0);
-                    il.Emit(OpCodes.Castclass, f.DeclaringType!);
-                    il.Emit(OpCodes.Ldfld, f);
+                    // 非静态字段：
+                    // 特殊处理：如果是在枚举类型内的隐藏字段 value__（即 f.DeclaringType 是 enum 且字段名通常是 "value__"）
+                    bool declaringIsEnum = f.DeclaringType?.IsEnum ?? false;
+                    bool isValueFieldOfEnum = declaringIsEnum && string.Equals(f.Name, "value__", StringComparison.Ordinal);
+                    
+                    if (isValueFieldOfEnum)
+                    {
+                        // 读取 boxed enum 的底层值：unbox.any underlyingType，box 并返回
+                        var underlying = Enum.GetUnderlyingType(f.DeclaringType!);
+                        // 参数 0 是 boxed enum object
+                        il.Emit(OpCodes.Ldarg_0);
+                        // unbox.any underlyingType （直接把 boxed enum -> underlying value）
+                        il.Emit(OpCodes.Unbox_Any, underlying);
+                        // underlying 已经是值类型，box 成 object 用于返回
+                        il.Emit(OpCodes.Box, underlying);
+                        il.Emit(OpCodes.Ret);
+                        return (Func<object?, object?>)dm.CreateDelegate(typeof(Func<object?, object?>));
+                    }
+
+                    // 一般情形：字段属于某类型（class 或 struct），字段类型可能是 enum 或其他 value-type / ref-type
+                    if (f.DeclaringType!.IsValueType)
+                    {
+                        // 值类型：需要 unbox 后 ldobj
+                        il.Emit(OpCodes.Ldarg_0);                     // object
+                        il.Emit(OpCodes.Unbox_Any, f.DeclaringType!);
+                        il.Emit(OpCodes.Ldfld, f);
+                    }
+                    else
+                    {
+                        // 引用类型
+                        il.Emit(OpCodes.Ldarg_0);
+                        il.Emit(OpCodes.Castclass, f.DeclaringType!);
+                        il.Emit(OpCodes.Ldfld, f);
+                    }
                 }
                 else
                 {
                     il.Emit(OpCodes.Ldsfld, f);
                 }
 
+                // 如果字段本身是值类型（包括 enum），box 之后返回
                 if (f.FieldType.IsValueType)
                     il.Emit(OpCodes.Box, f.FieldType);
 
@@ -336,19 +377,52 @@ namespace JmcModLib.Reflection
         {
             try
             {
-                var dm = new DynamicMethod(
-                                $"set_{f.Name}",
-                                null,
-                                [typeof(object), typeof(object)],
-                                f.DeclaringType!,
-                                true);
+                var dm = IsSaveOwner(f.DeclaringType) ?
+                    new DynamicMethod($"set_{f.Name}",
+                                      null,
+                                      [typeof(object), typeof(object)],
+                                      f.DeclaringType,
+                                      true) :
+                    new DynamicMethod($"set_{f.Name}",
+                                      null,
+                                      [typeof(object), typeof(object)],
+                                      f.Module,
+                                      true);
 
                 ILGenerator il = dm.GetILGenerator();
 
+                bool isValueType = f.DeclaringType!.IsValueType;
+
                 if (!f.IsStatic)
                 {
+                    bool declaringIsEnum = f.DeclaringType?.IsEnum ?? false;
+                    bool isValueFieldOfEnum = declaringIsEnum && string.Equals(f.Name, "value__", StringComparison.Ordinal);
+
+                    if (isValueFieldOfEnum)
+                    {
+                        // 设置 boxed enum 的底层值：需要把传入的 value 转为 underlyingType，然后重新装箱为 enum / 或生成一个新的 boxed enum
+                        // 最安全且简单的做法是：
+                        // - 把传入的 object 转为 underlying type (unbox.any)
+                        // - 调用 Enum.ToObject( enumType, underlyingValue ) 得到一个 boxed enum
+                        // - 将结果覆盖原来传入的 boxed object 的内存 —— 但在托管中无法直接写回装箱对象的内容
+                        // 因为直接修改装箱 enum 的内容更复杂（需要 unsafe）,
+                        // 为了安全与简单，这里不为 enum 的隐藏 value__ 生成 setter。
+                        throw new InvalidOperationException($"无法为 enum 的隐藏字段 value__ 生成 setter：{f.DeclaringType}.{f.Name}");
+                    }
+
+
                     il.Emit(OpCodes.Ldarg_0);
-                    il.Emit(OpCodes.Castclass, f.DeclaringType!);
+
+                    if (isValueType)
+                    {
+                        // struct：必须 unbox 得到指针
+                        il.Emit(OpCodes.Unbox, f.DeclaringType!);  // 得到地址 &DemoStruct
+                    }
+                    else
+                    {
+                        // class 维持原逻辑
+                        il.Emit(OpCodes.Castclass, f.DeclaringType!);
+                    }
                 }
 
                 il.Emit(OpCodes.Ldarg_1);
@@ -378,12 +452,20 @@ namespace JmcModLib.Reflection
             {
                 var getMethod = p.GetGetMethod(true)!;
 
-                var dm = new DynamicMethod(
+                var dm = IsSaveOwner(p.DeclaringType) ?
+                    new DynamicMethod(
                                 $"get_{p.Name}",
                                 typeof(object),
                                 [typeof(object)],
                                 p.DeclaringType!,
+                                true) :
+                    new DynamicMethod(
+                                $"get_{p.Name}",
+                                typeof(object),
+                                [typeof(object)],
+                                p.Module,
                                 true);
+
 
                 ILGenerator il = dm.GetILGenerator();
 
@@ -417,11 +499,18 @@ namespace JmcModLib.Reflection
             {
                 var setMethod = p.GetSetMethod(true)!;
 
-                var dm = new DynamicMethod(
+                var dm = IsSaveOwner(p.DeclaringType) ?
+                    new DynamicMethod(
                                 $"set_{p.Name}",
                                 null,
                                 [typeof(object), typeof(object)],
                                 p.DeclaringType!,
+                                true) :
+                    new DynamicMethod(
+                                $"set_{p.Name}",
+                                null,
+                                [typeof(object), typeof(object)],
+                                p.Module,
                                 true);
 
                 ILGenerator il = dm.GetILGenerator();
@@ -456,12 +545,19 @@ namespace JmcModLib.Reflection
 
         private static Func<object?, object?[], object?> CreateIndexerGetter(PropertyInfo p, MethodInfo getMethod)
         {
-            var dm = new DynamicMethod(
-                $"idx_get_{p.Name}",
-                typeof(object),
-                [typeof(object), typeof(object?[])],
-                p.DeclaringType!,
-                true);
+            var dm = IsSaveOwner(p.DeclaringType) ?
+                new DynamicMethod(
+                        $"idx_get_{p.Name}",
+                        typeof(object),
+                        [typeof(object), typeof(object?[])],
+                        p.DeclaringType!,
+                        true):
+                new DynamicMethod(
+                        $"idx_get_{p.Name}",
+                        typeof(object),
+                        [typeof(object), typeof(object?[])],
+                        p.Module,
+                        true);
 
             ILGenerator il = dm.GetILGenerator();
 

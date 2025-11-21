@@ -4,6 +4,16 @@
         <name>JmcModLib</name>
     </assembly>
     <members>
+        <member name="T:JmcModLib.Config.BaseEntry">
+            <summary>
+            所有配置条目的基类
+            </summary>
+        </member>
+        <member name="M:JmcModLib.Config.BaseEntry.#ctor(System.Reflection.Assembly,System.String,System.Type)">
+            <summary>
+            所有配置条目的基类
+            </summary>
+        </member>
         <member name="M:JmcModLib.Config.BaseEntry.GetKey(System.Type,System.String)">
             <summary>
             通过 DeclaringType 和 Name 生成唯一 Key（当前asm下唯一）
@@ -11,6 +21,34 @@
             <param name="declaringType">变量所在的类的类型</param>
             <param name="Name">变量的名称</param>
             <returns>返回一个形如{declaringType.FullName}.{Name}的唯一Key</returns>
+        </member>
+        <member name="T:JmcModLib.Config.BaseEntry`1">
+            <summary>
+            配置条目的派生基类，包含一个访问器
+            </summary>
+        </member>
+        <member name="M:JmcModLib.Config.BaseEntry`1.#ctor(System.Reflection.Assembly,System.String,System.Type,`0)">
+            <summary>
+            配置条目的派生基类，包含一个访问器
+            </summary>
+        </member>
+        <member name="T:JmcModLib.Config.ButtonEntry">
+            <summary>
+            Button 类型的配置项条目
+            </summary>
+            <param name="asm"></param>
+            <param name="declaringType"></param>
+            <param name="accessor"></param>
+            <param name="group"></param>
+        </member>
+        <member name="M:JmcModLib.Config.ButtonEntry.#ctor(System.Reflection.Assembly,System.Type,JmcModLib.Reflection.MethodAccessor,System.String)">
+            <summary>
+            Button 类型的配置项条目
+            </summary>
+            <param name="asm"></param>
+            <param name="declaringType"></param>
+            <param name="accessor"></param>
+            <param name="group"></param>
         </member>
         <member name="T:JmcModLib.Config.ConfigAttribute">
             <summary>
@@ -133,7 +171,7 @@
             <summary>
             获取Key对应变量的值，如果Key不存在，会输出一条Warn
             </summary>
-            <param name="key">目标变量的Key，可以通过ConfigEntry.GetKey构造</param>
+            <param name="key">目标变量的Key，可以通过BaseEntry.GetKey构造</param>
             <param name="asm">指定程序集，留空则为调用者</param>
             <returns>如果Key不存在，会输出一条Warn并返回空，否则返回对应值</returns>
         </member>
@@ -624,6 +662,11 @@
             在模组设置完成后调用
             </summary>
         </member>
+        <member name="T:JmcModLib.Reflection.ReflectionAccessorBase">
+            <summary>
+            所有访问器的基类
+            </summary>
+        </member>
         <member name="F:JmcModLib.Reflection.ReflectionAccessorBase.DefaultFlags">
             <summary>
             默认搜索所有静态、实例、公有、私有，不搜索继承
@@ -642,6 +685,18 @@
         <member name="P:JmcModLib.Reflection.ReflectionAccessorBase.IsStatic">
             <summary>
             该成员是否为静态
+            </summary>
+        </member>
+        <member name="M:JmcModLib.Reflection.ReflectionAccessorBase.IsSaveOwner(System.Type)">
+            <summary>
+            判断指定的类型是否是一个安全的拥有者类型（可作为成员的 DeclaringType）
+            </summary>
+            <param name="declaringType"></param>
+            <returns></returns>
+        </member>
+        <member name="F:JmcModLib.Reflection.ReflectionAccessorBase._attrCache">
+            <summary>
+            访问器缓存
             </summary>
         </member>
         <member name="M:JmcModLib.Reflection.ReflectionAccessorBase.GetAttribute``1">
@@ -666,7 +721,7 @@
         </member>
         <member name="T:JmcModLib.Reflection.ReflectionAccessorBase`2">
             <summary>
-            MemberAccessor 和 MethodAccessor 的公共基类
+            MemberAccessor 和 MethodAccessor 的派生基类
             </summary>
             <remarks>
             构造基类
@@ -676,7 +731,7 @@
         </member>
         <member name="M:JmcModLib.Reflection.ReflectionAccessorBase`2.#ctor(`0)">
             <summary>
-            MemberAccessor 和 MethodAccessor 的公共基类
+            MemberAccessor 和 MethodAccessor 的派生基类
             </summary>
             <remarks>
             构造基类

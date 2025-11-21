@@ -32,6 +32,23 @@ namespace JmcModLib.Reflection
         /// </summary>
         public virtual bool IsStatic { get; protected set; }
 
+        /// <summary>
+        /// 判断指定的类型是否是一个安全的拥有者类型（可作为成员的 DeclaringType）
+        /// </summary>
+        /// <param name="declaringType"></param>
+        /// <returns></returns>
+        public static bool IsSaveOwner(Type? declaringType)
+        {
+            return declaringType != null &&
+                   declaringType.IsVisible &&
+                   !declaringType.IsInterface &&
+                   !declaringType.IsArray &&
+                   !declaringType.IsPointer &&
+                   !declaringType.IsByRef &&
+                   !declaringType.IsByRefLike &&
+                   !declaringType.ContainsGenericParameters;
+        }
+
         // =============================================
         //   Attribute 访问部分（统一实现）
         // =============================================
@@ -120,6 +137,7 @@ namespace JmcModLib.Reflection
         /// 声明该成员的类型
         /// </summary>
         public override Type DeclaringType => Member.DeclaringType!;
+
 
         // =============================================
         //   Attribute 访问部分（统一实现）
