@@ -61,7 +61,13 @@ namespace JmcModLib.Reflection
     /// <summary>
     /// MemberAccessor 和 MethodAccessor 的公共基类
     /// </summary>
-    public abstract class ReflectionAccessorBase<TMemberInfo, TAccessor> : ReflectionAccessorBase
+    /// <remarks>
+    /// 构造基类
+    /// </remarks>
+    /// <param name="member">成员信息</param>
+    /// <exception cref="ArgumentNullException"> 若 member 为 null </exception>
+    public abstract class ReflectionAccessorBase<TMemberInfo, TAccessor>(TMemberInfo member) 
+        : ReflectionAccessorBase
         where TMemberInfo : MemberInfo
         where TAccessor : ReflectionAccessorBase<TMemberInfo, TAccessor>
     {
@@ -96,7 +102,8 @@ namespace JmcModLib.Reflection
         /// <summary>
         /// 底层的 MemberInfo（FieldInfo/PropertyInfo/MethodInfo 等）
         /// </summary>
-        public TMemberInfo Member { get; }
+        public TMemberInfo Member { get; } = member 
+                                          ?? throw new ArgumentNullException(nameof(member), "member 不能为 null");
 
         /// <summary>
         /// 成员名称
@@ -123,32 +130,14 @@ namespace JmcModLib.Reflection
                 if (t == typeof(object))
                 {
                     // 获取所有 attribute
-                    return Member.GetCustomAttributes(inherit: true)
-                                 .Cast<Attribute>()
-                                 .ToArray();
+                    return [.. Member.GetCustomAttributes(inherit: true).Cast<Attribute>()];
                 }
                 else
                 {
                     // 获取特定类型
-                    return Member.GetCustomAttributes(t, inherit: true)
-                                 .Cast<Attribute>()
-                                 .ToArray();
+                    return [.. Member.GetCustomAttributes(t, inherit: true).Cast<Attribute>()];
                 }
             });
-        }
-
-        // =============================================
-        //   构造函数
-        // =============================================
-
-        /// <summary>
-        /// 构造基类
-        /// </summary>
-        /// <param name="member">成员信息</param>
-        /// <exception cref="ArgumentNullException"> 若 member 为 null </exception>
-        protected ReflectionAccessorBase(TMemberInfo member)
-        {
-            Member = member ?? throw new ArgumentNullException(nameof(member), "member 不能为 null");
         }
     }
 }
