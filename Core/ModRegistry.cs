@@ -61,7 +61,7 @@ namespace JmcModLib.Core
             assembly ??= Assembly.GetCallingAssembly();
             if (IsRegistered(assembly))
             {
-                ModLogger.Warn($"{GetTag(assembly) ?? "错误"} 重复注册");
+                ModLogger.Warn($"{GetTag(assembly)} 重复注册");
                 return;
             }
 
@@ -76,7 +76,7 @@ namespace JmcModLib.Core
             _mods[assembly] = new Modinfo(info, name ?? info.displayName ?? assembly.FullName, version ?? "1.0.0", level);
             // ConfigManager.RegisterAllInAssembly(assembly);
 
-            ModLogger.Debug($"{GetTag(assembly) ?? "错误"} 注册成功");
+            ModLogger.Debug($"{GetTag(assembly)} 注册成功");
             OnRegistered?.Invoke(assembly);
         }
 
@@ -141,11 +141,12 @@ namespace JmcModLib.Core
         /// <summary>
         /// 获取由程序集Mod名与版本号拼接成的标签，留空则返回调用者的Tag
         /// </summary>
-        /// <returns> 返回$"[{info.Name} v{info.Version}]"，若未注册，返回空 </returns>
-        public static string? GetTag(Assembly? assembly = null)
+        /// <returns> 返回$"[{info.Name} v{info.Version}]"，若未注册，则由assembly的Name与Version拼接 </returns>
+        public static string GetTag(Assembly? assembly = null)
         {
+            assembly ??= Assembly.GetCallingAssembly();
             var info = GetModInfo(assembly);
-            return info is null ? null : $"[{info.Name} v{info.Version}]";
+            return info is null ? $"[{assembly.GetName().Name} v{assembly.GetName().Version}]" : $"[{info.Name} v{info.Version}]";
         }
 
         /// <summary>

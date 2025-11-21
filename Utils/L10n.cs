@@ -182,7 +182,7 @@ namespace JmcModLib.Utils
             }
 
             // 打印警告，仅在都没找到时提示一次
-            var tag = ModRegistry.GetTag(assembly) ?? "[UnknownMod]";
+            var tag = ModRegistry.GetTag(assembly);
             ModLogger.Warn($"{tag}: 未找到 key = \"{key}\" 对应的本地化文本，返回 key 本身。");
 
             return key; // fallback to key

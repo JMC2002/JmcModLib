@@ -55,7 +55,7 @@ namespace JmcModLib.Utils
 
         private static string Format(Assembly asm, string level, string message, string caller, string file, int line)
         {
-            string tag = ModRegistry.GetTag(asm) ?? "[UnknownMod]";
+            string tag = ModRegistry.GetTag(asm);
             string timestamp = DateTime.Now.ToString("HH:mm:ss");
             return $"{tag} [{timestamp}] [{level}] {caller} (L{line}): {message}";
         }

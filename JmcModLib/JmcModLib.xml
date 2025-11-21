@@ -536,7 +536,7 @@
             <summary>
             获取由程序集Mod名与版本号拼接成的标签，留空则返回调用者的Tag
             </summary>
-            <returns> 返回$"[{info.Name} v{info.Version}]"，若未注册，返回空 </returns>
+            <returns> 返回$"[{info.Name} v{info.Version}]"，若未注册，则由assembly的Name与Version拼接 </returns>
         </member>
         <member name="T:JmcModLib.Core.ModRegistry.Modinfo">
             <summary>
