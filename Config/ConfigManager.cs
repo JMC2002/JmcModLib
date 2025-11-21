@@ -339,7 +339,6 @@ namespace JmcModLib.Config
 
         internal static void SetValue(ConfigEntry modEntry, object? value)
         {
-            modEntry.Accessor.SetValue(GetInstance(modEntry), value);
             // 如果注册有额外的 OnChanged 回调，调用它
             if (!string.IsNullOrEmpty(modEntry.Attribute.OnChanged))
             {
@@ -356,6 +355,7 @@ namespace JmcModLib.Config
                 }
             }
 
+            modEntry.Accessor.SetValue(GetInstance(modEntry), value);
             var asm = modEntry.assembly;
             // 在设置值后调用 Save 方法以保持数据一致性
             var storage = GetStorage(asm);
