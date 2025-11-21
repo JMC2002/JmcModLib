@@ -363,7 +363,7 @@ namespace JmcModLib.Config
         /// <summary>
         /// 获取Key对应变量的值，如果Key不存在，会输出一条Warn
         /// </summary>
-        /// <param name="key">目标变量的Key，可以通过ConfigEntry.GetKey构造</param>
+        /// <param name="key">目标变量的Key，可以通过BaseEntry.GetKey构造</param>
         /// <param name="asm">指定程序集，留空则为调用者</param>
         /// <returns>如果Key不存在，会输出一条Warn并返回空，否则返回对应值</returns>
         public static object? GetValue(string key, Assembly? asm = null)
