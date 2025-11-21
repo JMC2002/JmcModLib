@@ -4,12 +4,15 @@ using System.Reflection;
 
 namespace JmcModLib.Config
 {
-    public abstract class BaseEntry
+    /// <summary>
+    /// 所有配置条目的基类
+    /// </summary>
+    public abstract class BaseEntry(Assembly asm, string group, Type declaringType)
     {
-        internal Assembly assembly { get; }
-        internal Type DeclaringType { get; }
+        internal Assembly assembly { get; } = asm;
+        internal Type DeclaringType { get; } = declaringType;
         internal abstract string Key { get; }
-        internal string Group { get; }
+        internal string Group { get; } = group;
 
         /// <summary>
         /// 通过 DeclaringType 和 Name 生成唯一 Key（当前asm下唯一）
@@ -19,15 +22,11 @@ namespace JmcModLib.Config
         /// <returns>返回一个形如{declaringType.FullName}.{Name}的唯一Key</returns>
         public static string GetKey(Type declaringType, string Name) =>
             $"{declaringType.FullName}.{Name}";
-
-        protected BaseEntry(Assembly asm, string group, Type declaringType)
-        {
-            assembly = asm;
-            Group = group;
-            DeclaringType = declaringType;
-        }
     }
 
+    /// <summary>
+    /// 配置条目的派生基类，包含一个访问器
+    /// </summary>
     public abstract class BaseEntry<TAccessor>(
                                 Assembly asm, 
                                 string group, 

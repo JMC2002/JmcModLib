@@ -5,6 +5,9 @@ using System.Reflection;
 
 namespace JmcModLib.Reflection
 {
+    /// <summary>
+    /// 所有访问器的基类
+    /// </summary>
     public abstract class ReflectionAccessorBase
     {
         /// <summary>
@@ -33,6 +36,9 @@ namespace JmcModLib.Reflection
         //   Attribute 访问部分（统一实现）
         // =============================================
 
+        /// <summary>
+        /// 访问器缓存
+        /// </summary>
         protected readonly ConcurrentDictionary<Type, Attribute[]> _attrCache = new();
 
         /// <summary>
@@ -59,7 +65,7 @@ namespace JmcModLib.Reflection
     }
 
     /// <summary>
-    /// MemberAccessor 和 MethodAccessor 的公共基类
+    /// MemberAccessor 和 MethodAccessor 的派生基类
     /// </summary>
     /// <remarks>
     /// 构造基类
