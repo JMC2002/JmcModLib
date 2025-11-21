@@ -56,6 +56,11 @@
             承载配置信息的类。
             </summary>
         </member>
+        <member name="M:JmcModLib.Config.ConfigEntry.#ctor(System.Reflection.Assembly,System.Type,JmcModLib.Reflection.MemberAccessor,JmcModLib.Config.ConfigAttribute,System.Object)">
+            <summary>
+            承载配置信息的类。
+            </summary>
+        </member>
         <member name="P:JmcModLib.Config.ConfigEntry.DefaultValue">
             <summary>
             字段/属性最初的默认值，用于 Reset。
@@ -453,11 +458,21 @@
             <summary>
             float 滑动条属性
             </summary>
+            <remarks>
+            float 滑动条属性
+            </remarks>
+            <param name="min">滑动下限</param>
+            <param name="max">滑动上限</param>
+            <param name="decimalPlaces">小数位数</param>
+            <param name="characterLimit">输入字符限制</param>
         </member>
         <member name="M:JmcModLib.Config.UI.UIFloatSliderAttribute.#ctor(System.Single,System.Single,System.Int32,System.Int32)">
             <summary>
             float 滑动条属性
             </summary>
+            <remarks>
+            float 滑动条属性
+            </remarks>
             <param name="min">滑动下限</param>
             <param name="max">滑动上限</param>
             <param name="decimalPlaces">小数位数</param>
@@ -467,11 +482,20 @@
             <summary>
             Int 滑动条属性
             </summary>
+            <remarks>
+            Int 滑动条属性
+            </remarks>
+            <param name="min">滑动下限</param>
+            <param name="max">滑动上限</param>
+            <param name="characterLimit">输入字符限制</param>
         </member>
         <member name="M:JmcModLib.Config.UI.UIIntSliderAttribute.#ctor(System.Int32,System.Int32,System.Int32)">
             <summary>
             Int 滑动条属性
             </summary>
+            <remarks>
+            Int 滑动条属性
+            </remarks>
             <param name="min">滑动下限</param>
             <param name="max">滑动上限</param>
             <param name="characterLimit">输入字符限制</param>
@@ -644,6 +668,21 @@
             <summary>
             MemberAccessor 和 MethodAccessor 的公共基类
             </summary>
+            <remarks>
+            构造基类
+            </remarks>
+            <param name="member">成员信息</param>
+            <exception cref="T:System.ArgumentNullException"> 若 member 为 null </exception>
+        </member>
+        <member name="M:JmcModLib.Reflection.ReflectionAccessorBase`2.#ctor(`0)">
+            <summary>
+            MemberAccessor 和 MethodAccessor 的公共基类
+            </summary>
+            <remarks>
+            构造基类
+            </remarks>
+            <param name="member">成员信息</param>
+            <exception cref="T:System.ArgumentNullException"> 若 member 为 null </exception>
         </member>
         <member name="P:JmcModLib.Reflection.ReflectionAccessorBase`2.CacheCount">
             <summary>
@@ -680,13 +719,6 @@
             获取指定类型的所有 Attribute。如果 type 为 null，返回所有 Attribute。
             </summary>
         </member>
-        <member name="M:JmcModLib.Reflection.ReflectionAccessorBase`2.#ctor(`0)">
-            <summary>
-            构造基类
-            </summary>
-            <param name="member">成员信息</param>
-            <exception cref="T:System.ArgumentNullException"> 若 member 为 null </exception>
-        </member>
         <member name="T:JmcModLib.Reflection.MemberAccessor">
             <summary>
             字段 / 属性 的统一高性能访问器。
@@ -701,11 +733,41 @@
             <summary>
             获取值。
             </summary>
+            <param name="target">实例对象，静态则为null</param>
+            <returns>属性值</returns>
+            <exception cref="T:System.InvalidOperationException">如果是索引器属性或成员不可读</exception>
+            <exception cref="T:System.ArgumentNullException">如果非静态情况下 target 为空</exception>
         </member>
         <member name="M:JmcModLib.Reflection.MemberAccessor.SetValue(System.Object,System.Object)">
             <summary>
             设置值。
             </summary>
+            <param name="target"> 实例对象，静态则为null </param>
+            <param name="value"> 待设置的值 </param>
+            <exception cref="T:System.InvalidOperationException">如果是索引器属性或成员不可写</exception>
+            <exception cref="T:System.ArgumentNullException">如果非静态情况下 target 为空</exception>
+        </member>
+        <member name="M:JmcModLib.Reflection.MemberAccessor.GetValue(System.Object,System.Object[])">
+            <summary>
+            为索引器属性获取值。
+            </summary>
+            <param name="target">实例对象，静态则为null</param>
+            <param name="indexArgs">索引参数</param>
+            <returns>属性值</returns>
+            <exception cref="T:System.InvalidOperationException">如果不是索引器属性或成员不可读</exception>
+            <exception cref="T:System.ArgumentNullException">如果非静态情况下 target 为空</exception>
+            <exception cref="T:System.ArgumentException">如果索引器参数数量不匹配</exception>
+        </member>
+        <member name="M:JmcModLib.Reflection.MemberAccessor.SetValue(System.Object,System.Object,System.Object[])">
+            <summary>
+            为索引器属性设置值
+            </summary>
+            <param name="target"> 实例对象，静态则为null </param>
+            <param name="value"> 待设置的值 </param>
+            <param name="indexArgs"> 索引参数 </param>
+            <exception cref="T:System.InvalidOperationException">如果不是索引器属性或成员不可写</exception>
+            <exception cref="T:System.ArgumentNullException">如果非静态情况下 target 为空</exception>
+            <exception cref="T:System.ArgumentException">如果索引器参数数量不匹配</exception>
         </member>
         <member name="M:JmcModLib.Reflection.MemberAccessor.Get(System.Type,System.String)">
             <summary>
@@ -716,6 +778,12 @@
             <summary>
             按MemberInfo获取访问去
             </summary>
+        </member>
+        <member name="M:JmcModLib.Reflection.MemberAccessor.IsSupportedMember(System.Reflection.MemberInfo)">
+            <summary>
+            不处理的成员类型
+            </summary>
+            <returns>若不处理，返回false</returns>
         </member>
         <member name="M:JmcModLib.Reflection.MemberAccessor.GetAll(System.Type,System.Reflection.BindingFlags)">
             <summary>
