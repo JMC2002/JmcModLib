@@ -4,6 +4,14 @@
         <name>JmcModLib</name>
     </assembly>
     <members>
+        <member name="M:JmcModLib.Config.BaseEntry.GetKey(System.Type,System.String)">
+            <summary>
+            通过 DeclaringType 和 Name 生成唯一 Key（当前asm下唯一）
+            </summary>
+            <param name="declaringType">变量所在的类的类型</param>
+            <param name="Name">变量的名称</param>
+            <returns>返回一个形如{declaringType.FullName}.{Name}的唯一Key</returns>
+        </member>
         <member name="T:JmcModLib.Config.ConfigAttribute">
             <summary>
             标记这个变量/字段是一个配置项
@@ -53,17 +61,14 @@
             字段/属性最初的默认值，用于 Reset。
             </summary>
         </member>
-        <member name="M:JmcModLib.Config.ConfigEntry.GetKey(System.Type,System.String)">
-            <summary>
-            通过 DeclaringType 和 Name 生成唯一 Key（当前asm下唯一）
-            </summary>
-            <param name="declaringType">变量所在的类的类型</param>
-            <param name="Name">变量的名称</param>
-            <returns>返回一个形如{declaringType.FullName}.{Name}的唯一Key</returns>
-        </member>
         <member name="T:JmcModLib.Config.ConfigManager">
             <summary>
             Config 管理器，负责注册、加载、保存配置项
+            </summary>
+        </member>
+        <member name="E:JmcModLib.Config.ConfigManager.OnRegistered">
+            <summary>
+            某个ASM有配置项并且扫描完毕后广播
             </summary>
         </member>
         <member name="M:JmcModLib.Config.ConfigManager.SetStorage(JmcModLib.Config.IConfigStorage,System.Reflection.Assembly)">
@@ -107,6 +112,12 @@
             <param name="group">要查询的组名</param>
             <param name="asm">指定程序集，留空则为调用者</param>
             <returns>组内所有 keys 的集合</returns>
+        </member>
+        <member name="M:JmcModLib.Config.ConfigManager.SyncConfigInAssembly(System.Reflection.Assembly)">
+            <summary>
+            将 Assembly 内所有配置项与存储介质同步，若文件中有保存的值则加载，否则保存当前值
+            </summary>
+            <exception cref="T:System.ArgumentNullException">asm为空抛出异常</exception>
         </member>
         <member name="M:JmcModLib.Config.ConfigManager.ResetAsm(System.Reflection.Assembly)">
             <summary>
@@ -204,6 +215,11 @@
             真正将缓存写回文件
             </summary>
             <param name="asm">指定asm，默认为调用者</param>
+        </member>
+        <member name="M:JmcModLib.Config.UI.ConfigUIManager.Register(System.Reflection.Assembly)">
+            <summary>
+            若ASM存在条目，广播此ASM
+            </summary>
         </member>
         <member name="M:JmcModLib.Config.UI.ModSetting.ModSettingAPI.Init(Duckov.Modding.ModInfo)">
             <summary>
@@ -381,9 +397,29 @@
             负责将 DuckSort 的 ModConfig 注册到 ModSetting。
             </summary>
         </member>
-        <member name="T:JmcModLib.Config.UI.PendingUIEntry">
+        <member name="M:JmcModLib.Config.UI.ModSetting.ModSettingLinker.IsRegistered(System.Reflection.Assembly)">
+            <summary>
+            判断有没有注册过 Asm到Linker
+            </summary>
+        </member>
+        <member name="M:JmcModLib.Config.UI.ModSetting.ModSettingLinker.IsInitialized(System.Reflection.Assembly)">
+            <summary>
+            判断有没有将 ASM注册到 ModSetting UI 并且已经初始化完成。
+            </summary>
+        </member>
+        <member name="M:JmcModLib.Config.UI.ModSetting.ModSettingLinker.InitMod(System.Reflection.Assembly)">
+            <summary>
+            将指定程序集的 ModSetting 注册到 ModSetting UI。
+            </summary>
+        </member>
+        <member name="T:JmcModLib.Config.UI.PendingUIEntry`2">
             <summary>
             一个用于存储待处理 UI 配置项的类。
+            </summary>
+        </member>
+        <member name="T:JmcModLib.Config.UI.UIBaseAttribute">
+            <summary>
+            整体标签基类
             </summary>
         </member>
         <member name="T:JmcModLib.Config.UI.UIConfigAttribute">
@@ -450,7 +486,7 @@
             <example>
             示例：
             <code>
-            ModRegistry.Register(VersionInfo.Name, VersionInfo.Version);
+            ModRegistry.InitMod(VersionInfo.Name, VersionInfo.Version);
             </code>
             </example>
             </summary>
@@ -459,6 +495,11 @@
             <summary>
             当一个 MOD 完成注册后触发。
             参数：Assembly（唯一标识MOD）（该MOD元信息）
+            </summary>
+        </member>
+        <member name="E:JmcModLib.Core.ModRegistry.OnUnRegistered">
+            <summary>
+            反注册 MOD 时触发。
             </summary>
         </member>
         <member name="M:JmcModLib.Core.ModRegistry.Register(Duckov.Modding.ModInfo,System.String,System.String,JmcModLib.Utils.LogLevel,System.Reflection.Assembly)">
@@ -470,6 +511,16 @@
             <param name="version">MOD的版本号，留空或填null则会被默认置为1.0.0</param>
             <param name="level">期待显示的默认打印级别，留空则打印Info及以上</param>
             <param name="assembly">程序集，留空自动获取</param>
+        </member>
+        <member name="M:JmcModLib.Core.ModRegistry.IsRegistered(System.Reflection.Assembly)">
+            <summary>
+            判断是否已注册
+            </summary>
+        </member>
+        <member name="M:JmcModLib.Core.ModRegistry.UnRegister(System.Reflection.Assembly)">
+            <summary>
+            反注册程序集的MOD信息，留空则反注册调用者的程序集
+            </summary>
         </member>
         <member name="M:JmcModLib.Core.ModRegistry.GetModInfo(System.Reflection.Assembly)">
             <summary>
@@ -527,34 +578,101 @@
             在模组设置完成后调用
             </summary>
         </member>
+        <member name="F:JmcModLib.Reflection.ReflectionAccessorBase.DefaultFlags">
+            <summary>
+            默认搜索所有静态、实例、公有、私有，不搜索继承
+            </summary>
+        </member>
+        <member name="P:JmcModLib.Reflection.ReflectionAccessorBase.Name">
+            <summary>
+            成员名称
+            </summary>
+        </member>
+        <member name="P:JmcModLib.Reflection.ReflectionAccessorBase.DeclaringType">
+            <summary>
+            声明该成员的类型
+            </summary>
+        </member>
+        <member name="P:JmcModLib.Reflection.ReflectionAccessorBase.IsStatic">
+            <summary>
+            该成员是否为静态
+            </summary>
+        </member>
+        <member name="M:JmcModLib.Reflection.ReflectionAccessorBase.GetAttribute``1">
+            <summary>
+            获取指定类型的第一个 Attribute。如果不存在返回 null。
+            </summary>
+        </member>
+        <member name="M:JmcModLib.Reflection.ReflectionAccessorBase.HasAttribute``1">
+            <summary>
+            判断是否具有某个 Attribute。
+            </summary>
+        </member>
+        <member name="M:JmcModLib.Reflection.ReflectionAccessorBase.GetAttributes(System.Type)">
+            <summary>
+            获取指定类型的所有 Attribute。如果 type 为 null，返回所有 Attribute。
+            </summary>
+        </member>
+        <member name="M:JmcModLib.Reflection.ReflectionAccessorBase.GetAllAttributes">
+            <summary>
+            获取所有 Attribute（等价于 GetAttributes(null)）
+            </summary>
+        </member>
+        <member name="T:JmcModLib.Reflection.ReflectionAccessorBase`2">
+            <summary>
+            MemberAccessor 和 MethodAccessor 的公共基类
+            </summary>
+        </member>
+        <member name="P:JmcModLib.Reflection.ReflectionAccessorBase`2.CacheCount">
+            <summary>
+            获取当前缓存的条目数量
+            </summary>
+        </member>
+        <member name="M:JmcModLib.Reflection.ReflectionAccessorBase`2.GetOrCreate(`0,System.Func{`0,`1})">
+            <summary>
+            从 MemberInfo 获取 TAccessor 并缓存（由子类实现具体的创建逻辑）
+            </summary>
+        </member>
+        <member name="M:JmcModLib.Reflection.ReflectionAccessorBase`2.ClearCache">
+            <summary>
+            清空缓存（用于测试或内存管理）
+            </summary>
+        </member>
+        <member name="P:JmcModLib.Reflection.ReflectionAccessorBase`2.Member">
+            <summary>
+            底层的 MemberInfo（FieldInfo/PropertyInfo/MethodInfo 等）
+            </summary>
+        </member>
+        <member name="P:JmcModLib.Reflection.ReflectionAccessorBase`2.Name">
+            <summary>
+            成员名称
+            </summary>
+        </member>
+        <member name="P:JmcModLib.Reflection.ReflectionAccessorBase`2.DeclaringType">
+            <summary>
+            声明该成员的类型
+            </summary>
+        </member>
+        <member name="M:JmcModLib.Reflection.ReflectionAccessorBase`2.GetAttributes(System.Type)">
+            <summary>
+            获取指定类型的所有 Attribute。如果 type 为 null，返回所有 Attribute。
+            </summary>
+        </member>
+        <member name="M:JmcModLib.Reflection.ReflectionAccessorBase`2.#ctor(`0)">
+            <summary>
+            构造基类
+            </summary>
+            <param name="member">成员信息</param>
+            <exception cref="T:System.ArgumentNullException"> 若 member 为 null </exception>
+        </member>
         <member name="T:JmcModLib.Reflection.MemberAccessor">
             <summary>
             字段 / 属性 的统一高性能访问器。
             </summary>
         </member>
-        <member name="P:JmcModLib.Reflection.MemberAccessor.CacheCount">
-            <summary>
-            目前缓存的条目
-            </summary>
-        </member>
-        <member name="F:JmcModLib.Reflection.MemberAccessor.Member">
-            <summary>
-            Member info
-            </summary>
-        </member>
-        <member name="P:JmcModLib.Reflection.MemberAccessor.Name">
-            <summary>
-            保存的函数名
-            </summary>
-        </member>
         <member name="P:JmcModLib.Reflection.MemberAccessor.MemberType">
             <summary>
             成员数据类型（不是MemberTypes）
-            </summary>
-        </member>
-        <member name="P:JmcModLib.Reflection.MemberAccessor.IsStatic">
-            <summary>
-            该成员是否静态
             </summary>
         </member>
         <member name="M:JmcModLib.Reflection.MemberAccessor.GetValue(System.Object)">
@@ -577,11 +695,6 @@
             按MemberInfo获取访问去
             </summary>
         </member>
-        <member name="F:JmcModLib.Reflection.MemberAccessor.DefaultFlags">
-            <summary>
-            默认搜索所有静态、实例、公有、私有，不搜索继承
-            </summary>
-        </member>
         <member name="M:JmcModLib.Reflection.MemberAccessor.GetAll(System.Type,System.Reflection.BindingFlags)">
             <summary>
             获取某类型的所有方法（可选择包含继承方法）
@@ -592,49 +705,9 @@
             泛型版本
             </summary>
         </member>
-        <member name="M:JmcModLib.Reflection.MemberAccessor.GetAttribute``1">
-            <summary>
-            获取指定类型的 Attribute。如果不存在返回 null。
-            </summary>
-        </member>
-        <member name="M:JmcModLib.Reflection.MemberAccessor.HasAttribute``1">
-            <summary>
-            判断是否具有某个 Attribute。
-            </summary>
-        </member>
-        <member name="M:JmcModLib.Reflection.MemberAccessor.GetAttributes(System.Type)">
-            <summary>
-            获取指定类型的所有 Attribute。如果 type 为 null，返回所有 Attribute。
-            </summary>
-        </member>
-        <member name="M:JmcModLib.Reflection.MemberAccessor.GetAllAttributes">
-            <summary>
-            获取所有 Attribute（等价于 GetAttributes(null)）
-            </summary>
-        </member>
         <member name="T:JmcModLib.Reflection.MethodAccessor">
             <summary>
             用于反射方法
-            </summary>
-        </member>
-        <member name="P:JmcModLib.Reflection.MethodAccessor.CacheCount">
-            <summary>
-            获取当前缓存的条目数量
-            </summary>
-        </member>
-        <member name="P:JmcModLib.Reflection.MethodAccessor.Method">
-            <summary>
-            该方法的MethodInfo
-            </summary>
-        </member>
-        <member name="P:JmcModLib.Reflection.MethodAccessor.Name">
-            <summary>
-            该方法的名字
-            </summary>
-        </member>
-        <member name="P:JmcModLib.Reflection.MethodAccessor.DeclaringType">
-            <summary>
-            Method.DeclaringType
             </summary>
         </member>
         <member name="P:JmcModLib.Reflection.MethodAccessor.IsStatic">
@@ -645,11 +718,6 @@
         <member name="M:JmcModLib.Reflection.MethodAccessor.Get(System.Reflection.MethodInfo)">
             <summary>
             从 MethodInfo 获取 MethodAccessor 并缓存
-            </summary>
-        </member>
-        <member name="F:JmcModLib.Reflection.MethodAccessor.DefaultFlags">
-            <summary>
-            默认搜索所有静态、实例、公有、私有，不搜索继承
             </summary>
         </member>
         <member name="M:JmcModLib.Reflection.MethodAccessor.GetAll(System.Type,System.Reflection.BindingFlags)">
@@ -690,6 +758,13 @@
         <member name="M:JmcModLib.Reflection.MethodAccessor.CreateInvoker(System.Reflection.MethodInfo)">
             <summary>
             创建方法调用委托
+            </summary>
+        </member>
+        <member name="M:JmcModLib.Reflection.MethodAccessor.EmitUnboxWithEnumSupport(System.Reflection.Emit.ILGenerator,System.Type)">
+            <summary>
+            对普通值类型执行 Unbox_Any
+            对 enum 正确执行底层类型转换 + enum 转换
+            对引用类型执行 Castclass
             </summary>
         </member>
         <member name="T:JmcModLib.Utils.ComponentHelper">

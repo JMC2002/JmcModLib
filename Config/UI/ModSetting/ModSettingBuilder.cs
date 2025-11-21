@@ -141,6 +141,22 @@ namespace JmcModLib.Config.UI.ModSetting
                                     v => ConfigManager.SetValue(entry, v));
         }
 
+        internal static void ButtonBuild(ButtonEntry entry, UIButtonAttribute uiAttr)
+        {
+            var asm = entry.assembly;
+            var info = ModRegistry.GetModInfo(asm)?.Info;
+            if (info == null)
+            {
+                ModLogger.Warn($"{ModRegistry.GetTag(asm)} 未初始化modinfo");
+                return;
+            }
+            ModSettingAPI.AddButton((ModInfo)info,
+                                    entry.Key,
+                                    L10n.Get(uiAttr.Description, asm),
+                                    L10n.Get(uiAttr.ButtonText, asm),
+                                    () => entry.Accessor.Invoke(null));
+        }
+
         internal static void BuildGroup(Assembly asm)
         {
             var modInfo = ModRegistry.GetModInfo(asm)?.Info;
