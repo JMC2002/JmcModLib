@@ -7,10 +7,9 @@ using System.Text;
 
 namespace JmcModLib.Config
 {
-    internal sealed class ButtonEntry : BaseEntry<MethodAccessor>
+    public sealed class ButtonEntry : BaseEntry<MethodAccessor>
     {
         internal ButtonEntry(Assembly asm, Type declaringType, MethodAccessor accessor, string group)
                     : base(asm, group, declaringType, accessor) { }
     }
-
 }

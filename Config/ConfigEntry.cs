@@ -6,7 +6,7 @@ namespace JmcModLib.Config
     /// <summary>
     /// 承载配置信息的类。
     /// </summary>
-    internal sealed class ConfigEntry : BaseEntry<MemberAccessor>
+    public sealed class ConfigEntry : BaseEntry<MemberAccessor>
     {
         internal ConfigAttribute Attribute { get; }
 

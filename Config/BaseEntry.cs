@@ -6,15 +6,12 @@ using System.Text;
 
 namespace JmcModLib.Config
 {
-    public abstract class BaseEntry<TAccessor>
-        where TAccessor : ReflectionAccessorBase
+    public abstract class BaseEntry
     {
         internal Assembly assembly { get; }
         internal Type DeclaringType { get; }
-        internal virtual string Key => GetKey(DeclaringType, Accessor.Name);
+        internal abstract string Key { get; }
         internal string Group { get; }
-            
-        internal TAccessor Accessor;
 
         /// <summary>
         /// 通过 DeclaringType 和 Name 生成唯一 Key（当前asm下唯一）
@@ -26,11 +23,23 @@ namespace JmcModLib.Config
             $"{declaringType.FullName}.{Name}";
 
 
-        protected BaseEntry(Assembly asm, string group, Type declaringType, TAccessor accessor)
+        protected BaseEntry(Assembly asm, string group, Type declaringType)
         {
             assembly = asm;
             Group = group;
             DeclaringType = declaringType;
+        }
+    }
+
+    public abstract class BaseEntry<TAccessor> : BaseEntry
+        where TAccessor : ReflectionAccessorBase
+    {
+        internal override string Key => GetKey(DeclaringType, Accessor.Name);
+            
+        internal TAccessor Accessor;
+        protected BaseEntry(Assembly asm, string group, Type declaringType, TAccessor accessor)
+            : base(asm, group, declaringType)
+        {
             Accessor = accessor;
         }
     }
