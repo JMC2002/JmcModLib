@@ -1,16 +1,58 @@
-﻿using System;
+﻿using Duckov.Modding;
+using JmcModLib.Config.UI.ModSetting;
+using System;
+using System.Reflection;
 using UnityEngine;
 
 namespace JmcModLib.Config.UI
 {
     /// <summary>
+    /// 整体标签基类
+    /// </summary>
+    public abstract class UIBaseAttribute : Attribute
+    {
+        internal abstract void BuildUI(BaseEntry entry);
+    }
+
+    public sealed class UIButtonAttribute : UIBaseAttribute
+    {
+        internal string Description { get; }
+        internal string ButtonText { get; }
+        internal string Group { get; }
+
+        public UIButtonAttribute(string description,
+                                 string buttonText = "按钮",
+                                 string group = ConfigAttribute.DefaultGroup)
+        {
+            ButtonText = buttonText;
+            Description = description;
+            Group = group;
+        }
+
+        internal override void BuildUI(BaseEntry bEntry)
+        {
+            if (bEntry is not ButtonEntry entry)
+                throw new ArgumentException("UIButtonAttribute 只适用于 ButtonEntry.");
+            ModSettingBuilder.ButtonBuild(entry, this);
+        }
+    }
+
+    /// <summary>
     /// ui 配置属性基类。
     /// </summary>
     [AttributeUsage(AttributeTargets.Field | AttributeTargets.Property)]
-    public abstract class UIConfigAttribute : Attribute
+    public abstract class UIConfigAttribute : UIBaseAttribute
     {
         internal virtual Type RequiredType => typeof(object);
         internal virtual bool IsValid(ConfigEntry entry) => entry.Accessor.MemberType == RequiredType;
+
+        internal override void BuildUI(BaseEntry bEntry)
+        {
+            if (bEntry is not ConfigEntry entry)
+                throw new ArgumentException("UIConfigAttribute 只适用于 ConfigEntry.");
+            BuildUI(entry);
+        }
+
         internal abstract void BuildUI(ConfigEntry entry);
     }
 
@@ -49,7 +91,7 @@ namespace JmcModLib.Config.UI
         }
         internal override void BuildUI(ConfigEntry entry)
         {
-            ModSetting.ModSettingBuilder.FloatSliderBuild(entry, this);
+            ModSettingBuilder.FloatSliderBuild(entry, this);
         }
     }
 
@@ -85,7 +127,7 @@ namespace JmcModLib.Config.UI
 
         internal override void BuildUI(ConfigEntry entry)
         {
-            ModSetting.ModSettingBuilder.IntSliderBuild(entry, this);
+            ModSettingBuilder.IntSliderBuild(entry, this);
         }
     }
 
@@ -98,7 +140,7 @@ namespace JmcModLib.Config.UI
 
         internal override void BuildUI(ConfigEntry entry)
         {
-            ModSetting.ModSettingBuilder.ToggleBuild(entry);
+            ModSettingBuilder.ToggleBuild(entry);
         }
     }
 
@@ -111,7 +153,7 @@ namespace JmcModLib.Config.UI
             => entry.Accessor.MemberType.IsEnum;
         internal override void BuildUI(ConfigEntry entry)
         {
-            ModSetting.ModSettingBuilder.DropdownBuild(entry);
+            ModSettingBuilder.DropdownBuild(entry);
         }
     }
 
@@ -124,7 +166,7 @@ namespace JmcModLib.Config.UI
 
         internal override void BuildUI(ConfigEntry entry)
         {
-            ModSetting.ModSettingBuilder.KeyBindBuild(entry);
+            ModSettingBuilder.KeyBindBuild(entry);
         }
     }
 
@@ -148,7 +190,7 @@ namespace JmcModLib.Config.UI
 
         internal override void BuildUI(ConfigEntry entry)
         {
-            ModSetting.ModSettingBuilder.InputBuild(entry, this);
+            ModSettingBuilder.InputBuild(entry, this);
         }
     }
 
