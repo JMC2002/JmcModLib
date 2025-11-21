@@ -87,7 +87,7 @@ namespace JmcModLib.Config
                 return; // 已注册
 
             var groups = new ConcurrentDictionary<string, ConcurrentDictionary<string, ConfigEntry>>(StringComparer.Ordinal);
-            _entries[asm] = groups;
+            bool hasEntry = false;
 
             foreach (var type in asm.GetTypes())
             {
@@ -126,11 +126,12 @@ namespace JmcModLib.Config
                             }
                             else
                             {
-                                ConfigUIManager.Register(entry, uiAttr);
+                                ConfigUIManager.RegisterEntry(entry, uiAttr);
                             }
                         }
 
-                        ModLogger.Debug($"{ModRegistry.GetTag(asm)}发现配置项: {type.FullName}.{acc.Name}, key 为: {entry.Key}");
+                        hasEntry = true;
+                        ModLogger.Trace($"{ModRegistry.GetTag(asm)}发现配置项: {type.FullName}.{acc.Name}, key 为: {entry.Key}");
                     }
                 }
                 catch (Exception ex)
