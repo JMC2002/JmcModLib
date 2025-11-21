@@ -253,10 +253,8 @@ namespace JmcModLib.Reflection
                         il.Emit(OpCodes.Ldarg_1);
                         il.Emit(OpCodes.Ldc_I4, i);
                         il.Emit(OpCodes.Ldelem_Ref);
-                        if (elementType.IsValueType)
-                            il.Emit(OpCodes.Unbox_Any, elementType);
-                        else
-                            il.Emit(OpCodes.Castclass, elementType);
+
+                        EmitUnboxWithEnumSupport(il, elementType);
 
                         il.Emit(OpCodes.Stloc, locals[i]);
                         il.Emit(OpCodes.Ldloca_S, locals[i]);
@@ -267,10 +265,8 @@ namespace JmcModLib.Reflection
                     il.Emit(OpCodes.Ldarg_1);
                     il.Emit(OpCodes.Ldc_I4, i);
                     il.Emit(OpCodes.Ldelem_Ref);
-                    if (paramType.IsValueType)
-                        il.Emit(OpCodes.Unbox_Any, paramType);
-                    else
-                        il.Emit(OpCodes.Castclass, paramType);
+
+                    EmitUnboxWithEnumSupport(il, elementType);
                 }
             }
 
@@ -298,6 +294,39 @@ namespace JmcModLib.Reflection
 
             il.Emit(OpCodes.Ret);
             return (Func<object?, object?[], object?>)dm.CreateDelegate(typeof(Func<object?, object?[], object?>));
+        }
+
+        /// <summary>
+        /// 对普通值类型执行 Unbox_Any
+        /// 对 enum 正确执行底层类型转换 + enum 转换
+        /// 对引用类型执行 Castclass
+        /// </summary>
+        private static void EmitUnboxWithEnumSupport(ILGenerator il, Type type)
+        {
+            if (type.IsEnum)
+            {
+                Type underlying = Enum.GetUnderlyingType(type);
+
+                // 反射传来的 object 先按 underlying unbox
+                il.Emit(OpCodes.Unbox_Any, underlying);
+
+                // underlying → enum
+                // 大部分情况 underlying = Int32
+                // IL 不允许直接 conv 到 enum 类型
+                // 所以先 box → unbox enum
+                il.Emit(OpCodes.Box, underlying);
+                il.Emit(OpCodes.Unbox_Any, type);
+                return;
+            }
+
+            if (type.IsValueType)
+            {
+                il.Emit(OpCodes.Unbox_Any, type);
+            }
+            else
+            {
+                il.Emit(OpCodes.Castclass, type);
+            }
         }
     }
 }
