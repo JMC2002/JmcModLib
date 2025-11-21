@@ -1,10 +1,9 @@
-﻿using System;
-using System.Collections.Concurrent;
+﻿using JmcModLib.Utils;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
-using Unity.VisualScripting;
 
 namespace JmcModLib.Reflection
 {
@@ -38,7 +37,9 @@ namespace JmcModLib.Reflection
         {
             // 缓存 key 应当是 method 
             // 当 method.IsGenericMethodDefinition 为 true，构造器不会立即生成 invoker
-            return GetOrCreate(method, m => new MethodAccessor(m, createInvoker: !m.IsGenericMethodDefinition));
+            bool canInvoke =
+                !method.IsGenericMethodDefinition;               // 延迟生成泛型方法
+            return GetOrCreate(method, m => new MethodAccessor(m, createInvoker: canInvoke));
         }
 
 
@@ -183,13 +184,30 @@ namespace JmcModLib.Reflection
         /// </summary>
         private static Func<object?, object?[], object?> CreateInvoker(MethodInfo method)
         {
+            var owner = method.DeclaringType;
+
+            // 如果 owner 不可用，则退回到模块级别
+            if (owner == null ||
+                owner.IsInterface ||
+                owner.IsArray ||
+                owner.IsByRef ||
+                owner.IsPointer ||
+                owner.ContainsGenericParameters)
+            {
+                owner = null;
+                ModLogger.Trace($"方法{method.Name}宿主不可用，回退到模块级别");
+            }
+
             var parameters = method.GetParameters();
-            var dm = new DynamicMethod(
-                $"invoke_{method.DeclaringType!.Name}_{method.Name}",
-                typeof(object),
-                new[] { typeof(object), typeof(object?[]) },
-                method.DeclaringType,
-                true); 
+            var dm = owner != null ?
+                new DynamicMethod($"invoke_{method.DeclaringType!.Name}_{method.Name}", 
+                                  typeof(object), 
+                                  [typeof(object), typeof(object?[])], 
+                                  method.DeclaringType, true) :
+                new DynamicMethod($"invoke_{method.DeclaringType!.Name}_{method.Name}",
+                                  typeof(object),
+                                  [typeof(object), typeof(object?[])],
+                                  method.Module, true);
 
             var il = dm.GetILGenerator();
 
