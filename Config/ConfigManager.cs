@@ -307,9 +307,9 @@ namespace JmcModLib.Config
         }
 
         /// <summary>
-        /// 重置当前 Assembly 内所有配置项为默认值并写回文件
+        /// 重置当前 Assembly 内所有配置项为默认值
         /// </summary>
-        public static void ResetAll(Assembly? asm = null)
+        public static void ResetAsm(Assembly? asm = null)
         {
             asm ??= Assembly.GetCallingAssembly();
             if (!_entries.TryGetValue(asm, out var groups)) return;
