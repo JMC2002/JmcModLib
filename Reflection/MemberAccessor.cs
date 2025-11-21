@@ -2,7 +2,6 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
-using System.Linq.Expressions;
 using System.Reflection;
 using System.Reflection.Emit;
 
@@ -11,40 +10,22 @@ namespace JmcModLib.Reflection
     /// <summary>
     /// 字段 / 属性 的统一高性能访问器。
     /// </summary>
-    public sealed class MemberAccessor
+    public sealed class MemberAccessor : ReflectionAccessorBase<MemberInfo, MemberAccessor>
     {
-        private static readonly ConcurrentDictionary<MemberInfo, MemberAccessor> _memberCache = new();
         // 用于 Name 查找加速（Type, string）→ MemberInfo
         private static readonly ConcurrentDictionary<(Type, string), MemberInfo?> _lookupCache = new();
 
         /// <summary>
-        /// 目前缓存的条目
-        /// </summary>
-        public static int CacheCount => _memberCache.Count;
-
-        /// <summary>
-        /// Member info
-        /// </summary>
-        public readonly MemberInfo Member;
-        /// <summary>
-        /// 保存的函数名
-        /// </summary>
-        public string Name => Member.Name;
-        /// <summary>
         /// 成员数据类型（不是MemberTypes）
         /// </summary>
         public Type MemberType { get; }
-        /// <summary>
-        /// 该成员是否静态
-        /// </summary>
-        public bool IsStatic { get; }
 
         private readonly Func<object?, object?>? getter;
         private readonly Action<object?, object?>? setter;
 
-        private MemberAccessor(MemberInfo member)   
+        private MemberAccessor(MemberInfo member)
+             : base(member)
         {
-            this.Member = member;
             switch (member)
             {
                 case FieldInfo f:
@@ -155,17 +136,11 @@ namespace JmcModLib.Reflection
         /// 按MemberInfo获取访问去
         /// </summary>
         public static MemberAccessor Get(MemberInfo member)
-            => _memberCache.GetOrAdd(member, m => new MemberAccessor(m));
+            => GetOrCreate(member, m => new MemberAccessor(m));
 
         // -------------------------
         //   扫描所有成员
         // -------------------------
-
-        /// <summary>
-        /// 默认搜索所有静态、实例、公有、私有，不搜索继承
-        /// </summary>
-        public const BindingFlags DefaultFlags = BindingFlags.Instance | BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic;
-
         /// <summary>
         /// 获取某类型的所有方法（可选择包含继承方法）
         /// </summary>
@@ -344,62 +319,5 @@ namespace JmcModLib.Reflection
                 throw new InvalidOperationException($"创建属性 {p.Name} 的 Setter 时发生错误", ex);
             }
         }
-
-        // ======================
-        //    Attribute 访问部分
-        // ======================
-
-        private readonly ConcurrentDictionary<Type, Attribute[]> _attrCache = new();
-
-        /// <summary>
-        /// 获取指定类型的 Attribute。如果不存在返回 null。
-        /// </summary>
-        public T? GetAttribute<T>() where T : Attribute =>
-            GetAttributes(typeof(T)).Cast<T>().FirstOrDefault();
-
-        /// <summary>
-        /// 判断是否具有某个 Attribute。
-        /// </summary>
-        public bool HasAttribute<T>() where T : Attribute =>
-            GetAttribute<T>() != null;
-
-        /// <summary>
-        /// 获取指定类型的所有 Attribute。如果 type 为 null，返回所有 Attribute。
-        /// </summary>
-        public Attribute[] GetAttributes(Type? type = null)
-        {
-            type ??= typeof(object); // 用 typeof(object) 表示“获取全部 Attribute”
-
-            return _attrCache.GetOrAdd(type, t =>
-            {
-                if (t == typeof(object))
-                {
-                    // 获取所有 attribute
-                    return Member switch
-                    {
-                        FieldInfo f => f.GetCustomAttributes(inherit: true).Cast<Attribute>().ToArray(),
-                        PropertyInfo p => p.GetCustomAttributes(inherit: true).Cast<Attribute>().ToArray(),
-                        _ => Array.Empty<Attribute>()
-                    };
-                }
-                else
-                {
-                    // 获取特定类型
-                    return Member switch
-                    {
-                        FieldInfo f => f.GetCustomAttributes(t, inherit: true).Cast<Attribute>().ToArray(),
-                        PropertyInfo p => p.GetCustomAttributes(t, inherit: true).Cast<Attribute>().ToArray(),
-                        _ => Array.Empty<Attribute>()
-                    };
-                }
-            });
-        }
-
-        /// <summary>
-        /// 获取所有 Attribute（等价于 GetAttributes(null)）
-        /// </summary>
-        public Attribute[] GetAllAttributes() =>
-            GetAttributes(null);
-
     }
 }

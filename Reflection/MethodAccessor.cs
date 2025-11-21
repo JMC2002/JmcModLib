@@ -4,42 +4,26 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
+using Unity.VisualScripting;
 
 namespace JmcModLib.Reflection
 {
     /// <summary>
     /// 用于反射方法
     /// </summary>
-    public sealed class MethodAccessor
+    public sealed class MethodAccessor : ReflectionAccessorBase<MethodInfo, MethodAccessor>
     {
-        private static readonly ConcurrentDictionary<MethodInfo, MethodAccessor> _cache = new();
-        /// <summary>
-        /// 获取当前缓存的条目数量
-        /// </summary>
-        public static int CacheCount => _cache.Count;
-        /// <summary>
-        /// 该方法的MethodInfo
-        /// </summary>
-        public MethodInfo Method { get; private set; }
-        /// <summary>
-        /// 该方法的名字
-        /// </summary>
-        public string Name => Method.Name;
-        /// <summary>
-        /// Method.DeclaringType
-        /// </summary>
-        public Type DeclaringType => Method.DeclaringType!;
         /// <summary>
         /// 是否为静态
         /// </summary>
-        public bool IsStatic => Method.IsStatic;
+        public override bool IsStatic => Member.IsStatic;
 
         // 允许为 null（当这是一个泛型定义尚未闭包时）
         private readonly Func<object?, object?[], object?>? _invoker;
 
         private MethodAccessor(MethodInfo method, bool createInvoker = true)
+            : base(method)
         {
-            Method = method;
             // 仅在 method 已经是 concrete（非 open generic）并且 caller 希望创建 invoker 时创建
             if (createInvoker && !method.IsGenericMethodDefinition)
                 _invoker = CreateInvoker(method);
@@ -54,8 +38,7 @@ namespace JmcModLib.Reflection
         {
             // 缓存 key 应当是 method 
             // 当 method.IsGenericMethodDefinition 为 true，构造器不会立即生成 invoker
-            return _cache.GetOrAdd(method, m => new MethodAccessor(m, createInvoker: !m.IsGenericMethodDefinition));
-
+            return GetOrCreate(method, m => new MethodAccessor(m, createInvoker: !m.IsGenericMethodDefinition));
         }
 
 
@@ -63,11 +46,6 @@ namespace JmcModLib.Reflection
         // ============================================================
         //   获取类型的所有方法（含私有 / 实例 / 静态）
         // ============================================================
-
-        /// <summary>
-        /// 默认搜索所有静态、实例、公有、私有，不搜索继承
-        /// </summary>
-        public const BindingFlags DefaultFlags = BindingFlags.Instance | BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic;
 
         /// <summary>
         /// 获取某类型的所有方法（可选择包含继承方法）
@@ -96,7 +74,7 @@ namespace JmcModLib.Reflection
         public static MethodAccessor Get(Type type, string methodName, Type[]? parameterTypes = null)
         {
             var methods = GetAll(type)
-                         .Select(ma => ma.Method)
+                         .Select(ma => ma.Member)
                          .Where(m => m.Name == methodName);
 
             if (parameterTypes != null)
@@ -140,10 +118,10 @@ namespace JmcModLib.Reflection
         /// </summary>
         public MethodAccessor MakeGeneric(params Type[] genericTypes)
         {
-            if (!Method.IsGenericMethodDefinition)
+            if (!Member.IsGenericMethodDefinition)
                 throw new InvalidOperationException("该方法不是泛型方法定义");
 
-            var constructed = Method.MakeGenericMethod(genericTypes);
+            var constructed = Member.MakeGenericMethod(genericTypes);
             return Get(constructed);
         }
 
@@ -166,7 +144,7 @@ namespace JmcModLib.Reflection
             // -------------------------
             // 补齐默认参数
             // -------------------------
-            var ps = Method.GetParameters();
+            var ps = Member.GetParameters();
 
             // 如果用户传入的参数不足，则自动补齐默认值
             if (args.Length < ps.Length)
