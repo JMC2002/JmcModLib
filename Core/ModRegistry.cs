@@ -19,7 +19,7 @@ namespace JmcModLib.Core
     public static class ModRegistry
     {
         private static readonly Dictionary<Assembly, Modinfo> _mods = new();
-
+        private static readonly Dictionary<string, Assembly> _pathToAssembly = new();
         /// <summary>
         /// 当一个 MOD 完成注册后触发。
         /// 参数：Assembly（唯一标识MOD）（该MOD元信息）
@@ -54,7 +54,10 @@ namespace JmcModLib.Core
             {
                 ModLogger.Warn("ModInfo未初始化，应当在OnAfterSetup及以后注册，而非OnEnable及以前");
             }
-            assembly ??= Assembly.GetCallingAssembly();
+            else
+            {
+                _pathToAssembly[info.path] = assembly;
+            }
             _mods[assembly] = new Modinfo(info, name ?? info.displayName ?? assembly.FullName, version ?? "1.0.0", level);
             // ConfigManager.RegisterAllInAssembly(assembly);
 
