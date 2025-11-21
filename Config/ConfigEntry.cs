@@ -3,6 +3,9 @@ using System;
 using System.Reflection;
 namespace JmcModLib.Config
 {
+    /// <summary>
+    /// 承载配置信息的类。
+    /// </summary>
     public sealed class ConfigEntry
     {
         internal Assembly assembly { get; }

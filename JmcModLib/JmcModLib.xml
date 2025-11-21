@@ -4,6 +4,50 @@
         <name>JmcModLib</name>
     </assembly>
     <members>
+        <member name="T:JmcModLib.Config.ConfigAttribute">
+            <summary>
+            标记这个变量/字段是一个配置项
+            </summary>
+        </member>
+        <member name="P:JmcModLib.Config.ConfigAttribute.DisplayName">
+            <summary>
+            显示名（用于放在UI上以及作为json中的key）
+            </summary>
+        </member>
+        <member name="P:JmcModLib.Config.ConfigAttribute.Description">
+            <summary>
+            配置项描述（暂时未使用）
+            </summary>
+        </member>
+        <member name="P:JmcModLib.Config.ConfigAttribute.OnChanged">
+            <summary>
+            配置变更时的额外回调方法名称，需要和字段/变量在同一个类中，接受参数为新赋的值（注：不需要写变更变量的操作）
+            </summary>
+        </member>
+        <member name="P:JmcModLib.Config.ConfigAttribute.Group">
+            <summary>
+            配置所在的分组，默认为 DefaultGroup
+            </summary>
+        </member>
+        <member name="F:JmcModLib.Config.ConfigAttribute.DefaultGroup">
+            <summary>
+            默认分组保留字，值为 "DefaultGroup"
+            </summary>
+        </member>
+        <member name="M:JmcModLib.Config.ConfigAttribute.#ctor(System.String,System.String,System.String,System.String)">
+            <summary>
+            标记这个变量/字段是一个配置项
+            </summary>
+            <param name="displayName">显示名（用于放在UI上以及作为json中的key）</param>
+            <param name="description">配置项描述（暂时未使用）</param>
+            <param name="onChanged">配置变更时的额外回调方法名称，需要和字段/变量在同一个类中，接受参数为新赋的值（注：不需要写变更变量的操作）</param>
+            <param name="group"> 配置所在的分组，默认为 DefaultGroup</param>
+        </member>
+        <member name="T:JmcModLib.Config.ConfigEntry">
+            <summary>
+            承载配置信息的类。
+            </summary>
+        </member>
         <member name="P:JmcModLib.Config.ConfigEntry.DefaultValue">
             <summary>
             字段/属性最初的默认值，用于 Reset。
@@ -86,6 +130,37 @@
             <param name="asm">指定程序集，留空则为调用者</param>
             <returns>如果Key不存在，会输出一条Warn并返回空，否则返回对应值</returns>
         </member>
+        <member name="T:JmcModLib.Config.IConfigStorage">
+            <summary>
+            配置存储接口
+            </summary>
+        </member>
+        <member name="M:JmcModLib.Config.IConfigStorage.Save(System.String,System.String,System.Object,System.Reflection.Assembly)">
+            <summary>
+            根据 key 和 group 保存配置值
+            </summary>
+        </member>
+        <member name="M:JmcModLib.Config.IConfigStorage.TryLoad(System.String,System.String,System.Type,System.Object@,System.Reflection.Assembly)">
+            <summary>
+            保存配置值
+            </summary>
+            <param name="key">配置项的key</param>
+            <param name="group">配置项的组</param>
+            <param name="type">值的类型</param>
+            <param name="value">输出的值</param>
+            <param name="asm">相关的程序集</param>
+            <returns>是否成功加载配置</returns>
+        </member>
+        <member name="M:JmcModLib.Config.IConfigStorage.Exists(System.Reflection.Assembly)">
+            <summary>
+            是否存在assembly对应的配置文件
+            </summary>
+        </member>
+        <member name="M:JmcModLib.Config.IConfigStorage.Flush(System.Reflection.Assembly)">
+            <summary>
+            真实地将缓存写入存储介质
+            </summary>
+        </member>
         <member name="T:JmcModLib.Config.NewtonsoftConfigStorage">
             <summary>
             以 Newtonsoft.Json 作为序列化工具的配置存储实现
@@ -141,6 +216,7 @@
             <summary>
             添加一个下拉列表控件
             </summary>
+            <param name="modInfo">对应的MOD</param>
             <param name="key">控件key</param>
             <param name="description">描述文本</param>
             <param name="options">选项列表</param>
@@ -152,6 +228,7 @@
             <summary>
             添加一个浮点数滑块控件
             </summary>
+            <param name="modInfo">对应的MOD</param>
             <param name="key">控件key</param>
             <param name="description">描述文本</param>
             <param name="defaultValue">当前值</param>
@@ -165,6 +242,7 @@
             <summary>
             添加一个整数滑块控件
             </summary>
+            <param name="modInfo">对应的MOD</param>
             <param name="key">控件key</param>
             <param name="description">描述文本</param>
             <param name="defaultValue">当前值</param>
@@ -178,6 +256,7 @@
             <summary>
             添加一个开关控件
             </summary>
+            <param name="modInfo">对应的MOD</param>
             <param name="key">控件key</param>
             <param name="description">描述文本</param>
             <param name="enable">当前值</param>
@@ -188,6 +267,7 @@
             <summary>
             添加一个按键绑定控件，默认值None
             </summary>
+            <param name="modInfo">对应的MOD</param>
             <param name="key">控件key</param>
             <param name="description">描述文本</param>
             <param name="keyCode">当前值</param>
@@ -198,6 +278,7 @@
             <summary>
             添加一个带默认值的按键绑定控件
             </summary>
+            <param name="modInfo">对应的MOD</param>
             <param name="key">控件key</param>
             <param name="description">描述文本</param>
             <param name="keyCode">当前值</param>
@@ -209,6 +290,7 @@
             <summary>
             添加一个输入框控件
             </summary>
+            <param name="modInfo">对应的MOD</param>
             <param name="key">控件key</param>
             <param name="description">描述文本</param>
             <param name="defaultValue">当前值</param>
@@ -220,6 +302,7 @@
             <summary>
             添加一个按钮控件
             </summary>
+            <param name="modInfo">对应的MOD</param>
             <param name="key">控件key</param>
             <param name="description">描述文本</param>
             <param name="buttonText">按钮文本</param>
@@ -230,6 +313,7 @@
             <summary>
             添加一个分组控件，用于将多个控件组织在一起
             </summary>
+            <param name="modInfo">对应的MOD</param>
             <param name="key">控件key</param>
             <param name="description">描述文本</param>
             <param name="keys">包含的控件键列表(暂不支持嵌套Group)</param>
@@ -242,6 +326,7 @@
             <summary>
             获取指定key的配置值
             </summary>
+            <param name="modInfo">对应的MOD</param>
             <param name="key">控件key</param>
             <param name="callback">回调函数返回结果</param>
             <typeparam name="T">值类型</typeparam>
@@ -251,6 +336,7 @@
             <summary>
             设置指定key的配置值，单方面通知控件更新
             </summary>
+            <param name="modInfo">对应的MOD</param>
             <param name="key">控件key</param>
             <param name="value">设置值</param>
             <param name="callback">回调函数返回是否成功</param>
@@ -267,6 +353,7 @@
             <summary>
             获取已保存的配置值
             </summary>
+            <param name="modInfo">对应的MOD</param>
             <param name="key">控件key</param>
             <param name="value">保存的值</param>
             <typeparam name="T">值类型</typeparam>
@@ -276,6 +363,7 @@
             <summary>
             移除指定键对应的UI控件
             </summary>
+            <param name="modInfo">对应的MOD</param>
             <param name="key">控件key</param>
             <param name="callback">回调函数返回操作结果</param>
             <returns></returns>
@@ -284,6 +372,7 @@
             <summary>
             移除整个模组的UI配置,当禁用此mod时，ModSetting会自动移除相对应的UI，一般来说不需要调用，除非想要主动移除mod所有UI
             </summary>
+            <param name="modInfo">对应的MOD</param>
             <param name="callback">回调函数返回操作结果</param>
             <returns></returns>
         </member>
@@ -372,11 +461,12 @@
             参数：Assembly（唯一标识MOD）（该MOD元信息）
             </summary>
         </member>
-        <member name="M:JmcModLib.Core.ModRegistry.Register(Duckov.Modding.ModInfo,System.String,System.String,JmcModLib.Utils.LogLevel,System.Reflection.Assembly)">
+        <member name="M:JmcModLib.Core.ModRegistry.Register(System.Nullable{Duckov.Modding.ModInfo},System.String,System.String,JmcModLib.Utils.LogLevel,System.Reflection.Assembly)">
             <summary>
-            调用Register注册元信息
+            调用Register注册元信息，至少需要在OnAfterSetup及以后调用
             </summary>
-            <param name="name">MOD的名称</param>
+            <param name="info"> MOD的info信息，可以在OnAfterSetup及以后取得，OnEnable阶段该值为空，不可用 </param>
+            <param name="name">MOD的名称，留空将在modinfo中取得，若也为空将在assembly中取得</param>
             <param name="version">MOD的版本号，留空或填null则会被默认置为1.0.0</param>
             <param name="level">期待显示的默认打印级别，留空则打印Info及以上</param>
             <param name="assembly">程序集，留空自动获取</param>
@@ -395,22 +485,28 @@
             <summary>
             获取由程序集Mod名与版本号拼接成的标签，留空则返回调用者的Tag
             </summary>
+            <returns> 返回$"[{info.Name} v{info.Version}]"，若未注册，返回空 </returns>
         </member>
         <member name="T:JmcModLib.Core.ModRegistry.Modinfo">
             <summary>
             Mod的元信息
             </summary>
+            <param name="Info">Mod的详细信息</param>
             <param name="Name">Mod名</param>
             <param name="Version">Mod版本号</param>
             <param name="Level">Mod打印级别</param>
         </member>
-        <member name="M:JmcModLib.Core.ModRegistry.Modinfo.#ctor(Duckov.Modding.ModInfo,System.String,System.String,JmcModLib.Utils.LogLevel)">
+        <member name="M:JmcModLib.Core.ModRegistry.Modinfo.#ctor(System.Nullable{Duckov.Modding.ModInfo},System.String,System.String,JmcModLib.Utils.LogLevel)">
             <summary>
             Mod的元信息
             </summary>
+            <param name="Info">Mod的详细信息</param>
             <param name="Name">Mod名</param>
             <param name="Version">Mod版本号</param>
             <param name="Level">Mod打印级别</param>
+        </member>
+        <member name="P:JmcModLib.Core.ModRegistry.Modinfo.Info">
+            <summary>Mod的详细信息</summary>
         </member>
         <member name="P:JmcModLib.Core.ModRegistry.Modinfo.Name">
             <summary>Mod名</summary>
@@ -424,6 +520,11 @@
         <member name="T:JmcModLib.ModBehaviour">
             <summary>
             入口类
+            </summary>
+        </member>
+        <member name="M:JmcModLib.ModBehaviour.OnAfterSetup">
+            <summary>
+            在模组设置完成后调用
             </summary>
         </member>
         <member name="T:JmcModLib.Reflection.MemberAccessor">

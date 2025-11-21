@@ -41,9 +41,10 @@ namespace JmcModLib.Core
         }
 
         /// <summary>
-        /// 调用Register注册元信息
+        /// 调用Register注册元信息，至少需要在OnAfterSetup及以后调用
         /// </summary>
-        /// <param name="name">MOD的名称</param>
+        /// <param name="info"> MOD的info信息，可以在OnAfterSetup及以后取得，OnEnable阶段该值为空，不可用 </param>
+        /// <param name="name">MOD的名称，留空将在modinfo中取得，若也为空将在assembly中取得</param>
         /// <param name="version">MOD的版本号，留空或填null则会被默认置为1.0.0</param>
         /// <param name="level">期待显示的默认打印级别，留空则打印Info及以上</param>
         /// <param name="assembly">程序集，留空自动获取</param>
@@ -82,6 +83,7 @@ namespace JmcModLib.Core
         /// <summary>
         /// 获取由程序集Mod名与版本号拼接成的标签，留空则返回调用者的Tag
         /// </summary>
+        /// <returns> 返回$"[{info.Name} v{info.Version}]"，若未注册，返回空 </returns>
         public static string? GetTag(Assembly? assembly = null)
         {
             var info = GetModInfo(assembly);
