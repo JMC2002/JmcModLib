@@ -28,17 +28,16 @@ namespace JmcModLib.Config
         }
     }
 
-    public abstract class BaseEntry<TAccessor> : BaseEntry
+    public abstract class BaseEntry<TAccessor>(
+                                Assembly asm, 
+                                string group, 
+                                Type declaringType, 
+                                TAccessor accessor) 
+        : BaseEntry(asm, group, declaringType)
         where TAccessor : ReflectionAccessorBase
     {
         internal override string Key => GetKey(DeclaringType, Accessor.Name);
 
-        internal TAccessor Accessor;
-
-        protected BaseEntry(Assembly asm, string group, Type declaringType, TAccessor accessor)
-            : base(asm, group, declaringType)
-        {
-            Accessor = accessor;
-        }
+        internal TAccessor Accessor = accessor;
     }
 }

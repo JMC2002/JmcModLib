@@ -7,20 +7,18 @@ namespace JmcModLib.Config
     /// <summary>
     /// 承载配置信息的类。
     /// </summary>
-    public sealed class ConfigEntry : BaseEntry<MemberAccessor>
+    public sealed class ConfigEntry(Assembly asm, 
+                                    Type declaringType, 
+                                    MemberAccessor accessor, 
+                                    ConfigAttribute attr, 
+                                    object? defaultValue) 
+        : BaseEntry<MemberAccessor>(asm, attr.Group, declaringType, accessor)
     {
-        internal ConfigAttribute Attribute { get; }
+        internal ConfigAttribute Attribute { get; } = attr;
 
         /// <summary>
         /// 字段/属性最初的默认值，用于 Reset。
         /// </summary>
-        internal object? DefaultValue { get; }
-
-        internal ConfigEntry(Assembly asm, Type declaringType, MemberAccessor accessor, ConfigAttribute attr, object? defaultValue)
-                    : base(asm, attr.Group, declaringType, accessor)
-        {
-            Attribute = attr;
-            DefaultValue = defaultValue;
-        }
+        internal object? DefaultValue { get; } = defaultValue;
     }
 }

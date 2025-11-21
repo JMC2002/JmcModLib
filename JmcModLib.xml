@@ -422,6 +422,28 @@
             整体标签基类
             </summary>
         </member>
+        <member name="T:JmcModLib.Config.UI.UIButtonAttribute">
+            <summary>
+            一个按钮属性
+            </summary>
+            <remarks>
+            
+            </remarks>
+            <param name="description"></param>
+            <param name="buttonText"></param>
+            <param name="group"></param>
+        </member>
+        <member name="M:JmcModLib.Config.UI.UIButtonAttribute.#ctor(System.String,System.String,System.String)">
+            <summary>
+            一个按钮属性
+            </summary>
+            <remarks>
+            
+            </remarks>
+            <param name="description"></param>
+            <param name="buttonText"></param>
+            <param name="group"></param>
+        </member>
         <member name="T:JmcModLib.Config.UI.UIConfigAttribute">
             <summary>
             ui 配置属性基类。

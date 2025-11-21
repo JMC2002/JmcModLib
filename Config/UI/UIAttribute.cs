@@ -12,20 +12,23 @@ namespace JmcModLib.Config.UI
         internal abstract void BuildUI(BaseEntry entry);
     }
 
-    public sealed class UIButtonAttribute : UIBaseAttribute
+    /// <summary>
+    /// 一个按钮属性
+    /// </summary>
+    /// <remarks>
+    /// 
+    /// </remarks>
+    /// <param name="description"></param>
+    /// <param name="buttonText"></param>
+    /// <param name="group"></param>
+    public sealed class UIButtonAttribute(
+                             string description,
+                             string buttonText = "按钮",
+                             string group = ConfigAttribute.DefaultGroup) : UIBaseAttribute
     {
-        internal string Description { get; }
-        internal string ButtonText { get; }
-        internal string Group { get; }
-
-        public UIButtonAttribute(string description,
-                                 string buttonText = "按钮",
-                                 string group = ConfigAttribute.DefaultGroup)
-        {
-            ButtonText = buttonText;
-            Description = description;
-            Group = group;
-        }
+        internal string Description { get; } = description;
+        internal string ButtonText { get; } = buttonText;
+        internal string Group { get; } = group;
 
         internal override void BuildUI(BaseEntry bEntry)
         {
@@ -58,35 +61,31 @@ namespace JmcModLib.Config.UI
     /// <summary>
     /// float 滑动条属性
     /// </summary>
-    public sealed class UIFloatSliderAttribute : UIConfigAttribute
+    /// <remarks>
+    /// float 滑动条属性
+    /// </remarks>
+    /// <param name="min">滑动下限</param>
+    /// <param name="max">滑动上限</param>
+    /// <param name="decimalPlaces">小数位数</param>
+    /// <param name="characterLimit">输入字符限制</param>
+    public sealed class UIFloatSliderAttribute(
+                            float min, 
+                            float max, 
+                            int decimalPlaces = 1, 
+                            int characterLimit = 5) : UIConfigAttribute
     {
         internal override Type RequiredType => typeof(float);
 
-        internal float Min { get; }
-        internal float Max { get; }
-        internal int DecimalPlaces { get; }
-        internal int CharacterLimit { get; }
+        internal float Min { get; } = min;
+        internal float Max { get; } = max;
+        internal int DecimalPlaces { get; } = decimalPlaces;
+        internal int CharacterLimit { get; } = characterLimit;
 
         internal override bool IsValid(ConfigEntry entry)
         {
             if (entry.Accessor.MemberType != RequiredType) return false;
             var v = (float)ConfigManager.GetValue(entry)!;
             return v >= Min && v <= Max;
-        }
-
-        /// <summary>
-        /// float 滑动条属性
-        /// </summary>
-        /// <param name="min">滑动下限</param>
-        /// <param name="max">滑动上限</param>
-        /// <param name="decimalPlaces">小数位数</param>
-        /// <param name="characterLimit">输入字符限制</param>
-        public UIFloatSliderAttribute(float min, float max, int decimalPlaces = 1, int characterLimit = 5)
-        {
-            Min = min;
-            Max = max;
-            DecimalPlaces = decimalPlaces;
-            CharacterLimit = characterLimit;
         }
 
         internal override void BuildUI(ConfigEntry entry)
@@ -98,32 +97,28 @@ namespace JmcModLib.Config.UI
     /// <summary>
     /// Int 滑动条属性
     /// </summary>
-    public sealed class UIIntSliderAttribute : UIConfigAttribute
+    /// <remarks>
+    /// Int 滑动条属性
+    /// </remarks>
+    /// <param name="min">滑动下限</param>
+    /// <param name="max">滑动上限</param>
+    /// <param name="characterLimit">输入字符限制</param>
+    public sealed class UIIntSliderAttribute(
+                            int min, 
+                            int max, 
+                            int characterLimit = 5) : UIConfigAttribute
     {
         internal override Type RequiredType => typeof(int);
 
-        internal int Min { get; }
-        internal int Max { get; }
-        internal int CharacterLimit { get; }
+        internal int Min { get; } = min;
+        internal int Max { get; } = max;
+        internal int CharacterLimit { get; } = characterLimit;
 
         internal override bool IsValid(ConfigEntry entry)
         {
             if (entry.Accessor.MemberType != RequiredType) return false;
             var v = (int)ConfigManager.GetValue(entry)!;
             return v >= Min && v <= Max;
-        }
-
-        /// <summary>
-        /// Int 滑动条属性
-        /// </summary>
-        /// <param name="min">滑动下限</param>
-        /// <param name="max">滑动上限</param>
-        /// <param name="characterLimit">输入字符限制</param>
-        public UIIntSliderAttribute(int min, int max, int characterLimit = 5)
-        {
-            Min = min;
-            Max = max;
-            CharacterLimit = characterLimit;
         }
 
         internal override void BuildUI(ConfigEntry entry)
