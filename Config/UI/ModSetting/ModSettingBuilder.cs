@@ -204,5 +204,20 @@ namespace JmcModLib.Config.UI.ModSetting
             ModLogger.Trace($"{ModRegistry.GetTag(asm)} 退出BuildEntries");
         }
 
+        internal static void BuildReset(Assembly asm)
+        {
+            var modinfo = ModRegistry.GetModInfo(asm);
+            var info = modinfo?.Info;
+            if (info == null)
+            {
+                ModLogger.Warn($"{ModRegistry.GetTag(asm)} 未初始化modinfo");
+                return;
+            }
+            ModSettingAPI.AddButton((ModInfo)info, 
+                                    $"JmcModLibGen.{modinfo!.Name}.Reset", 
+                                    $"重置所有选项到默认值（重启游戏或）", 
+                                    L10n.Get("重置", Assembly.GetExecutingAssembly()),
+                                    () => ConfigUIManager.ResetAsm(asm));   // 只重置注册了UI的Config
+        }
     }
 }

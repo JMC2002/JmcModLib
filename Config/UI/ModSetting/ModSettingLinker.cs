@@ -1,6 +1,7 @@
 ﻿using Duckov.Modding;
 using JmcModLib;
 using JmcModLib.Core;
+using JmcModLib.Reflection;
 using JmcModLib.Utils;
 using SodaCraft.Localizations;
 using System;
@@ -171,6 +172,7 @@ namespace JmcModLib.Config.UI.ModSetting
             }
             ModSettingBuilder.BuildEntries(asm);
             ModSettingBuilder.BuildGroup(asm);
+            ModSettingBuilder.BuildReset(asm);
             initialized[asm] = true;
             ModLogger.Trace($"注册 {ModRegistry.GetTag(asm)} UI成功");
         }
