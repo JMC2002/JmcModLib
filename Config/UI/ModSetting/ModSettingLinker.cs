@@ -46,7 +46,16 @@ namespace JmcModLib.Config.UI.ModSetting
         {
             if (initialized.ContainsKey(asm) && initialized[asm])
             {
-                ModSettingAPI.RemoveMod(ModRegistry.GetModInfo(asm)!.Info);
+                var info = ModRegistry.GetModInfo(asm)?.Info;
+                if (info == null)
+                {
+                    ModLogger.Error($"尝试移除未注册info信息的ModSetting条目，asm：{asm.FullName}");
+                    return;
+                }
+                else
+                {
+                    ModSettingAPI.RemoveMod((ModInfo)info);
+                }
             }
             if (initialized.ContainsKey(asm))
                 initialized.Remove(asm);
