@@ -398,6 +398,7 @@ namespace JmcModLib.Config
             // 在设置值后调用 Save 方法以保持数据一致性
             var storage = GetStorage(asm);
             storage.Save(modEntry.Attribute.DisplayName, modEntry.Group, value, asm);
+            OnValueChanged?.Invoke(modEntry, value);
         }
 
         /// <summary>
