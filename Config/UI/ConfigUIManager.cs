@@ -4,7 +4,7 @@ using System.Reflection;
 
 namespace JmcModLib.Config.UI
 {
-    public static class ConfigUIManager
+    internal static class ConfigUIManager
     {
         // Assembly → Group → UIEntry
         private static readonly Dictionary<Assembly, Dictionary<string, List<PendingUIEntry>>> _pending
