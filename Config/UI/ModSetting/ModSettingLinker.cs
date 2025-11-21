@@ -28,7 +28,8 @@ namespace JmcModLib.Config.UI.ModSetting
             if (ModSettingAPI.Init(VersionInfo.modInfo)) BuildAll();
             // 当任意 Mod 启用时尝试与 ModSetting 连接
             ModManager.OnModActivated += TryInitModSetting;
-            ConfigManager.OnRegistered += BuildAsm;
+            ModManager.OnModWillBeDeactivated += TryUnInitModSetting;
+            ConfigUIManager.OnRegistered += Register;
             L10n.LanguageChanged += OnLangChanged;
             ConfigManager.OnValueChanged += SyncValue;
             _initialized = true;
@@ -38,6 +39,7 @@ namespace JmcModLib.Config.UI.ModSetting
         {
             ConfigManager.OnValueChanged -= SyncValue;
             L10n.LanguageChanged -= OnLangChanged;
+            ModManager.OnModWillBeDeactivated -= TryUnInitModSetting;
             ModManager.OnModActivated -= TryInitModSetting;
             ConfigManager.OnRegistered -= BuildAsm;
             RemoveAllMod();
@@ -138,6 +140,23 @@ namespace JmcModLib.Config.UI.ModSetting
             ModLogger.Info("检测到 ModSetting 启用，尝试注册配置界面");
 
             BuildAll();
+        private static void TryUnInitModSetting(ModInfo info, Duckov.Modding.ModBehaviour behaviour)
+        {
+            ModLogger.Trace($"检测到Mod {info.name}停用");
+            if (info.name != ModSettingAPI.MOD_NAME || !SettingInit) 
+                return;     // 只在 ModSetting 停用且已初始化完毕时进行移除
+            ModLogger.Info("检测到 ModSetting 停用，所有配置恢复为未初始化状态");
+            ModSettingAPI.IsInit = false;
+            foreach (var key in initialized.Keys.ToList())
+            {
+                initialized[key] = false;   // 重置为未初始化状态
+            }
+        }
+
+        private static void Register(Assembly asm)
+        {
+            initialized[asm] = false;
+            InitMod(asm);
         }
 
         internal static void BuildAsm(Assembly asm)
