@@ -486,7 +486,7 @@
             <example>
             示例：
             <code>
-            ModRegistry.InitMod(VersionInfo.Name, VersionInfo.Version);
+            ModRegistry.Register(VersionInfo.Name, VersionInfo.Version);
             </code>
             </example>
             </summary>
@@ -773,24 +773,24 @@
             </summary>
         </member>
         <member name="M:JmcModLib.Utils.ComponentHelper.AddComponentIfNeeded``1(UnityEngine.GameObject,System.Action{``0},System.String)">
-            <summary>
-            确保组件被添加并初始化
-            <example>
-            示例：
-            <code>
-            var ret = Utils.ComponentHelper.AddComponentIfNeeded&lt;UI.ModEntryDragHandler>(__instance.gameObject, handler => handler.Setup(__instance), "ModEntryDragHandler 已添加并初始化");
-            if (!ret)
-            {
-                ModLogger.Debug("ModEntryDragHandler已经被添加过了");
-            }
-            </code>
-            </example>
-            </summary>
-            <typeparam name="T">组件类型</typeparam>
-            <param name="instance">目标 GameObject</param>
-            <param name="initializeMethod">初始化方法，接受该组件的实例作为参数</param>
-            <param name="info">可选的参数，成功添加的日志信息，如果有传递，会打印到Debug日志中</param>
-            <returns>如果组件已存在返回 false，成功添加返回 true</returns>
+             <summary>
+             确保组件被添加并初始化
+             <example>
+             示例：
+             <code>
+             var ret = Utils.ComponentHelper.AddComponentIfNeeded&lt;UI.ModEntryDragHandler>(__instance.gameObject, handler => handler.Setup(__instance), "ModEntryDragHandler 已添加并初始化");
+             if (!ret)
+             {
+                 ModLogger.Debug("ModEntryDragHandler已经被添加过了");
+             }
+             </code>
+             </example>
+             </summary>
+             <typeparam name="T">组件类型</typeparam>
+             <param name="instance">目标 GameObject</param>
+             <param name="initializeMethod">初始化方法，接受该组件的实例作为参数</param>
+             <param name="info">可选的参数，成功添加的日志信息，如果有传递，会打印到Debug日志中</param>
+             <returns>如果组件已存在返回 false，成功添加返回 true</returns>
             
         </member>
         <member name="M:JmcModLib.Utils.ComponentHelper.AddComponentAlways``1(UnityEngine.GameObject,System.Action{``0},System.String)">
@@ -842,7 +842,7 @@
         <member name="M:JmcModLib.Utils.L10n.Register(System.String,UnityEngine.SystemLanguage,System.Reflection.Assembly)">
             <summary>
             注册当前程序集的本地化文件夹路径（例如 "Mods/MyMod/Lang"）。
-            若找不到指定的备用语言对应的文件，会将指定文件夹的第一个 `.csv` 文件作为备用语言文件。       
+            若找不到指定的备用语言对应的文件，会将指定文件夹的第一个 `.csv` 文件作为备用语言文件。
             </summary>
             <param name="langFolderRelative">存放本地化csv的相对路径，默认为“Lang”</param>
             <param name="fallbackLang">指定某语言文件不存在时的备份语言，默认为英语</param>

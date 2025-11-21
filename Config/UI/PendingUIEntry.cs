@@ -1,6 +1,4 @@
-﻿using JmcModLib.Reflection;
-
-namespace JmcModLib.Config.UI
+﻿namespace JmcModLib.Config.UI
 {
     /// <summary>
     /// 一个用于存储待处理 UI 配置项的类。
@@ -18,5 +16,4 @@ namespace JmcModLib.Config.UI
             UIAttr = uiAttr;
         }
     }
-
 }

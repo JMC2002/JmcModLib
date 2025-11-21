@@ -118,10 +118,11 @@ public static class ExprHelper
     /// 仅供检查类型别名嵌套关系是否正确的辅助函数
     /// </summary>
     [Conditional("NEVER")]
-    static void Expect<T1, T2>() where T1 : T2 { }
+    private static void Expect<T1, T2>() where T1 : T2
+    { }
 
     [Conditional("NEVER")]
-    static void Check()
+    private static void Check()
     {
         // 检查类型别名的嵌套关系是否正确，不正确将报错，静态检查，不运行
         Expect<ConditionalWeakTable<object, MemDict>, InsDict>();
@@ -156,7 +157,7 @@ public static class ExprHelper
     /// <exception cref="InvalidOperationException">实例对象为空、模式选择不正确</exception>
     public static (Func<T> getter, Action<T> setter) GetOrCreateAccessors<T>
         (Expression<Func<T>> expr, Assembly? assembly = null)
-        => GetOrCreateAccessors(expr, out _,assembly ?? Assembly.GetCallingAssembly());
+        => GetOrCreateAccessors(expr, out _, assembly ?? Assembly.GetCallingAssembly());
 
     /// <summary>
     /// 从一个变量自动构造getter函数与setter函数，并检查是否命中缓存，调用形式形如：
@@ -199,7 +200,6 @@ public static class ExprHelper
             var targetGetter = Expression.Lambda<Func<object>>(Expression.Convert(targetExpr, typeof(object))).Compile();
             target = targetGetter() ?? throw new InvalidOperationException("实例对象不能为空");
         }
-
 
         if (!GetEnableCache(asm))
         {

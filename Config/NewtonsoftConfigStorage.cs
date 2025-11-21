@@ -26,7 +26,6 @@ namespace JmcModLib.Config
         // 记录哪些 asm 的缓存是脏的，需要写回文件
         private readonly ConcurrentDictionary<Assembly, bool> _dirty = new();
 
-
         /// <summary>
         /// 初始化一个 NewtonsoftConfigStorage 实例
         /// </summary>
@@ -118,7 +117,6 @@ namespace JmcModLib.Config
 
             lock (GetFileLock(asm))
             {
-
                 File.WriteAllText(file, json);
                 ModLogger.Debug($"{ModRegistry.GetTag(asm)} 写入配置文件 {file}");
             }
@@ -179,7 +177,6 @@ namespace JmcModLib.Config
             // 普通值类型转换
             return Convert.ChangeType(raw, targetType);
         }
-
 
         // -------- IConfigStorage impl --------
 
@@ -252,7 +249,6 @@ namespace JmcModLib.Config
             ModLogger.Trace($"{ModRegistry.GetTag(asm)} 保存配置项 '{group}/{key}'");
             _dirty[asm] = true;    // 标记为需要写回
         }
-
 
         /// <summary>
         /// 真正将缓存写回文件

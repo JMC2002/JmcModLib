@@ -26,7 +26,7 @@ namespace JmcModLib.Utils
         /// <param name="initializeMethod">初始化方法，接受该组件的实例作为参数</param>
         /// <param name="info">可选的参数，成功添加的日志信息，如果有传递，会打印到Debug日志中</param>
         /// <returns>如果组件已存在返回 false，成功添加返回 true</returns>
-        /// 
+        ///
         public static bool AddComponentIfNeeded<T>(GameObject instance, Action<T> initializeMethod, string? info = null) where T : Component
         {
             if (instance.GetComponent<T>() != null)

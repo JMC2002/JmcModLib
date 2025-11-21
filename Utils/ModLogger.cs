@@ -14,22 +14,27 @@ namespace JmcModLib.Utils
         /// 主要用于打印出函数入函数
         /// </summary>
         Trace = 0,
+
         /// <summary>
         /// Debug
         /// </summary>
         Debug = 1,
+
         /// <summary>
         /// Info
         /// </summary>
         Info = 2,
+
         /// <summary>
         /// Warn
         /// </summary>
         Warn = 3,
+
         /// <summary>
         /// Error
         /// </summary>
         Error = 4,
+
         /// <summary>
         /// None
         /// </summary>
@@ -41,7 +46,6 @@ namespace JmcModLib.Utils
     /// </summary>
     public static class ModLogger
     {
-
         private static bool ShouldLog(Assembly asm, LogLevel level)
         {
             var info = ModRegistry.GetModInfo(asm);
@@ -72,9 +76,11 @@ namespace JmcModLib.Utils
                 case LogLevel.Info:
                     UnityEngine.Debug.Log(text);
                     break;
+
                 case LogLevel.Warn:
                     UnityEngine.Debug.LogWarning(text);
                     break;
+
                 case LogLevel.Error:
                     UnityEngine.Debug.LogError(text);
                     break;
@@ -92,16 +98,19 @@ namespace JmcModLib.Utils
         /// </summary>
         public static void Debug(string msg, Assembly? asm = null, [CallerMemberName] string caller = "", [CallerFilePath] string file = "", [CallerLineNumber] int line = 0)
             => Log(LogLevel.Debug, msg, asm ?? Assembly.GetCallingAssembly(), caller, file, line);
+
         /// <summary>
         /// Info输出
         /// </summary>
         public static void Info(string msg, Assembly? asm = null, [CallerMemberName] string caller = "", [CallerFilePath] string file = "", [CallerLineNumber] int line = 0)
             => Log(LogLevel.Info, msg, asm ?? Assembly.GetCallingAssembly(), caller, file, line);
+
         /// <summary>
         /// Warn输出
         /// </summary>
         public static void Warn(string msg, Exception? ex = null, Assembly? asm = null, [CallerMemberName] string caller = "", [CallerFilePath] string file = "", [CallerLineNumber] int line = 0)
             => Log(LogLevel.Warn, msg + (ex != null ? $"\n{ex}" : ""), asm ?? Assembly.GetCallingAssembly(), caller, file, line);
+
         /// <summary>
         /// Error输出，其中若传递异常，会换行并输出异常
         /// </summary>

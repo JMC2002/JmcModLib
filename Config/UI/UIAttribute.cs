@@ -1,7 +1,5 @@
-﻿using Duckov.Modding;
-using JmcModLib.Config.UI.ModSetting;
+﻿using JmcModLib.Config.UI.ModSetting;
 using System;
-using System.Reflection;
 using UnityEngine;
 
 namespace JmcModLib.Config.UI
@@ -44,6 +42,7 @@ namespace JmcModLib.Config.UI
     public abstract class UIConfigAttribute : UIBaseAttribute
     {
         internal virtual Type RequiredType => typeof(object);
+
         internal virtual bool IsValid(ConfigEntry entry) => entry.Accessor.MemberType == RequiredType;
 
         internal override void BuildUI(BaseEntry bEntry)
@@ -89,6 +88,7 @@ namespace JmcModLib.Config.UI
             DecimalPlaces = decimalPlaces;
             CharacterLimit = characterLimit;
         }
+
         internal override void BuildUI(ConfigEntry entry)
         {
             ModSettingBuilder.FloatSliderBuild(entry, this);
@@ -105,6 +105,7 @@ namespace JmcModLib.Config.UI
         internal int Min { get; }
         internal int Max { get; }
         internal int CharacterLimit { get; }
+
         internal override bool IsValid(ConfigEntry entry)
         {
             if (entry.Accessor.MemberType != RequiredType) return false;
@@ -151,6 +152,7 @@ namespace JmcModLib.Config.UI
     {
         internal override bool IsValid(ConfigEntry entry)
             => entry.Accessor.MemberType.IsEnum;
+
         internal override void BuildUI(ConfigEntry entry)
         {
             ModSettingBuilder.DropdownBuild(entry);
@@ -193,13 +195,4 @@ namespace JmcModLib.Config.UI
             ModSettingBuilder.InputBuild(entry, this);
         }
     }
-
-    //public sealed class UIButtonAttribute : UIConfigAttribute
-    //{
-    //    public string ButtonText { get; }
-    //    public UIButtonAttribute(string buttonText = "按钮")
-    //    {
-    //        ButtonText = buttonText;
-    //    }
-    //}
 }

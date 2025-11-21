@@ -35,14 +35,12 @@ namespace JmcModLib.Reflection
         /// </summary>
         public static MethodAccessor Get(MethodInfo method)
         {
-            // 缓存 key 应当是 method 
+            // 缓存 key 应当是 method
             // 当 method.IsGenericMethodDefinition 为 true，构造器不会立即生成 invoker
             bool canInvoke =
                 !method.IsGenericMethodDefinition;               // 延迟生成泛型方法
             return GetOrCreate(method, m => new MethodAccessor(m, createInvoker: canInvoke));
         }
-
-
 
         // ============================================================
         //   获取类型的所有方法（含私有 / 实例 / 静态）
@@ -62,7 +60,6 @@ namespace JmcModLib.Reflection
         /// </summary>
         public static IEnumerable<MethodAccessor> GetAll<T>(BindingFlags flags = DefaultFlags)
             => GetAll(typeof(T), flags);
-
 
         /// <summary>
         /// 获取类型下方法的 MethodAccessor（可匹配参数类型）
@@ -200,9 +197,9 @@ namespace JmcModLib.Reflection
 
             var parameters = method.GetParameters();
             var dm = owner != null ?
-                new DynamicMethod($"invoke_{method.DeclaringType!.Name}_{method.Name}", 
-                                  typeof(object), 
-                                  [typeof(object), typeof(object?[])], 
+                new DynamicMethod($"invoke_{method.DeclaringType!.Name}_{method.Name}",
+                                  typeof(object),
+                                  [typeof(object), typeof(object?[])],
                                   method.DeclaringType, true) :
                 new DynamicMethod($"invoke_{method.DeclaringType!.Name}_{method.Name}",
                                   typeof(object),

@@ -112,7 +112,6 @@ namespace JmcModLib.Config
                         ConfigUIManager.RegisterEntry(entry, attr);
                     }
 
-
                     foreach (var acc in MemberAccessor.GetAll(type))
                     {
                         if (!acc.HasAttribute<ConfigAttribute>())   // 仅处理标记了 ConfigAttribute 的成员
@@ -177,7 +176,7 @@ namespace JmcModLib.Config
         public static void Unregister(Assembly? asm = null)
         {
             asm ??= Assembly.GetCallingAssembly();
-            if  (!_entries.ContainsKey(asm))
+            if (!_entries.ContainsKey(asm))
                 return; // 未注册
 
             ConfigUIManager.Unregister(asm);
@@ -413,7 +412,7 @@ namespace JmcModLib.Config
             asm ??= Assembly.GetCallingAssembly();
             var entry = GetEntry(key, asm);
             if (entry == null) return;
-            
+
             SetValue(entry, value);
         }
     }

@@ -1,6 +1,4 @@
-﻿using Duckov.Modding;
-using JmcModLib.Config.UI.ModSetting;
-using JmcModLib.Reflection;
+﻿using JmcModLib.Config.UI.ModSetting;
 using System;
 using System.Collections.Generic;
 using System.Reflection;
@@ -19,7 +17,6 @@ namespace JmcModLib.Config.UI
         {
             ConfigManager.OnRegistered += Register; // 单个MOD扫描完后再决定是否广播
             ModSettingLinker.Init();
-            
         }
 
         internal static void Dispose()
@@ -46,7 +43,7 @@ namespace JmcModLib.Config.UI
             }
 
             list.Add(new PendingUIEntry<BaseEntry, UIBaseAttribute>(entry, ui));
-            //// ModSettingLinker.initialized[asm] = false; 
+            //// ModSettingLinker.initialized[asm] = false;
             //ModSettingLinker.initialized.TryAdd(asm, false);
             OnRegistered?.Invoke(asm);
         }
@@ -105,6 +102,4 @@ namespace JmcModLib.Config.UI
         internal static bool ContainsAssembly(Assembly asm)
             => _pending.ContainsKey(asm);
     }
-
-
 }

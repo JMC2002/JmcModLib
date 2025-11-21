@@ -12,6 +12,7 @@ namespace JmcModLib.Config
         /// 根据 key 和 group 保存配置值
         /// </summary>
         void Save(string key, string group, object? value, Assembly? asm);
+
         /// <summary>
         /// 保存配置值
         /// </summary>
@@ -22,10 +23,12 @@ namespace JmcModLib.Config
         /// <param name="asm">相关的程序集</param>
         /// <returns>是否成功加载配置</returns>
         bool TryLoad(string key, string group, Type type, out object? value, Assembly? asm);
+
         /// <summary>
         /// 是否存在assembly对应的配置文件
         /// </summary>
         bool Exists(Assembly? asm);
+
         /// <summary>
         /// 真实地将缓存写入存储介质
         /// </summary>

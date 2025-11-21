@@ -1,14 +1,10 @@
 ﻿using Duckov.Modding;
-using JmcModLib;
 using JmcModLib.Core;
 using JmcModLib.Reflection;
 using JmcModLib.Utils;
-using SodaCraft.Localizations;
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
-using System.Linq.Expressions;
 using System.Reflection;
 using UnityEngine;
 
@@ -138,7 +134,7 @@ namespace JmcModLib.Config.UI.ModSetting
         private static void TryUnInitModSetting(ModInfo info, Duckov.Modding.ModBehaviour behaviour)
         {
             ModLogger.Trace($"检测到Mod {info.name}停用");
-            if (info.name != ModSettingAPI.MOD_NAME || !SettingInit) 
+            if (info.name != ModSettingAPI.MOD_NAME || !SettingInit)
                 return;     // 只在 ModSetting 停用且已初始化完毕时进行移除
             ModLogger.Info("检测到 ModSetting 停用，所有配置恢复为未初始化状态");
             ModSettingAPI.IsInit = false;

@@ -1,9 +1,6 @@
-﻿using JmcModLib.Config.UI;
-using JmcModLib.Reflection;
+﻿using JmcModLib.Reflection;
 using System;
-using System.Collections.Generic;
 using System.Reflection;
-using System.Text;
 
 namespace JmcModLib.Config
 {

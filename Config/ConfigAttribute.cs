@@ -12,18 +12,22 @@ namespace JmcModLib.Config
         /// 显示名（用于放在UI上以及作为json中的key）
         /// </summary>
         public string DisplayName { get; }
+
         /// <summary>
         /// 配置项描述（暂时未使用）
         /// </summary>
         public string? Description { get; }
+
         /// <summary>
         /// 配置变更时的额外回调方法名称，需要和字段/变量在同一个类中，接受参数为新赋的值，将会在实际修改值前调用（注：不需要写变更变量的操作）
         /// </summary>
         public string? OnChanged { get; }
+
         /// <summary>
         /// 配置所在的分组，默认为 DefaultGroup
         /// </summary>
         public string Group { get; }
+
         /// <summary>
         /// 默认分组保留字，值为 "DefaultGroup"
         /// </summary>

@@ -1,8 +1,6 @@
 ﻿using JmcModLib.Reflection;
 using System;
-using System.Collections.Generic;
 using System.Reflection;
-using System.Text;
 
 namespace JmcModLib.Config
 {
@@ -22,7 +20,6 @@ namespace JmcModLib.Config
         public static string GetKey(Type declaringType, string Name) =>
             $"{declaringType.FullName}.{Name}";
 
-
         protected BaseEntry(Assembly asm, string group, Type declaringType)
         {
             assembly = asm;
@@ -35,13 +32,13 @@ namespace JmcModLib.Config
         where TAccessor : ReflectionAccessorBase
     {
         internal override string Key => GetKey(DeclaringType, Accessor.Name);
-            
+
         internal TAccessor Accessor;
+
         protected BaseEntry(Assembly asm, string group, Type declaringType, TAccessor accessor)
             : base(asm, group, declaringType)
         {
             Accessor = accessor;
         }
     }
-
 }

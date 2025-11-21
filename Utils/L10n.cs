@@ -9,6 +9,7 @@ using UnityEngine;
 namespace JmcModLib.Utils
 {
     using TableType = Dictionary<Assembly, Dictionary<string, string>>;
+
     /// <summary>
     /// 多语言本地化系统（按程序集管理）
     /// </summary>
@@ -55,7 +56,7 @@ namespace JmcModLib.Utils
 
         /// <summary>
         /// 注册当前程序集的本地化文件夹路径（例如 "Mods/MyMod/Lang"）。
-        /// 若找不到指定的备用语言对应的文件，会将指定文件夹的第一个 `.csv` 文件作为备用语言文件。       
+        /// 若找不到指定的备用语言对应的文件，会将指定文件夹的第一个 `.csv` 文件作为备用语言文件。
         /// </summary>
         /// <param name="langFolderRelative">存放本地化csv的相对路径，默认为“Lang”</param>
         /// <param name="fallbackLang">指定某语言文件不存在时的备份语言，默认为英语</param>
@@ -78,8 +79,8 @@ namespace JmcModLib.Utils
             else
                 ModLogger.Debug($"为{Tag}注册本地化模块");
 
-                // 获取 DLL 所在路径
-                string? asmPath = assembly.Location;
+            // 获取 DLL 所在路径
+            string? asmPath = assembly.Location;
             if (string.IsNullOrEmpty(asmPath))
             {
                 ModLogger.Warn("无法确定程序集路径，可能为动态加载程序集。");
@@ -173,7 +174,7 @@ namespace JmcModLib.Utils
                 return value;
             }
 
-            if (_fallbackTables.TryGetValue(assembly, out var fallback) 
+            if (_fallbackTables.TryGetValue(assembly, out var fallback)
              && fallback.TryGetValue(key, out var fallbackValue))
             {
                 ModLogger.Debug($"在fallback中成功找到{fallbackValue}");
@@ -243,7 +244,6 @@ namespace JmcModLib.Utils
 
             return LoadForPath(path);
         }
-
 
         /// <summary>
         /// 根据 SystemLanguage 返回语言文件名

@@ -2,17 +2,14 @@
 using JmcModLib.Core;
 using JmcModLib.Utils;
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using System.Text;
 using UnityEngine;
 
 namespace JmcModLib.Config.UI.ModSetting
 {
     internal static class ModSettingBuilder
     {
-
         internal static void FloatSliderBuild(ConfigEntry entry, UIFloatSliderAttribute uiAttr)
         {
             var asm = entry.assembly;
@@ -24,13 +21,13 @@ namespace JmcModLib.Config.UI.ModSetting
             }
 
             Vector2 range = new(uiAttr.Min, uiAttr.Max);
-            ModSettingAPI.AddSlider((ModInfo)info, 
-                                    entry.Key, 
-                                    L10n.Get(entry.Attribute.DisplayName, asm), 
-                                    (float)ConfigManager.GetValue(entry)!, 
-                                    range, 
-                                    (v) => ConfigManager.SetValue(entry, v), 
-                                    uiAttr.DecimalPlaces, 
+            ModSettingAPI.AddSlider((ModInfo)info,
+                                    entry.Key,
+                                    L10n.Get(entry.Attribute.DisplayName, asm),
+                                    (float)ConfigManager.GetValue(entry)!,
+                                    range,
+                                    (v) => ConfigManager.SetValue(entry, v),
+                                    uiAttr.DecimalPlaces,
                                     uiAttr.CharacterLimit);
         }
 
@@ -229,9 +226,9 @@ namespace JmcModLib.Config.UI.ModSetting
                 ModLogger.Warn($"{ModRegistry.GetTag(asm)} 未初始化modinfo");
                 return;
             }
-            ModSettingAPI.AddButton((ModInfo)info, 
-                                    $"JmcModLibGen.{modinfo!.Name}.Reset", 
-                                    $"重置所有选项到默认值（重启游戏或）", 
+            ModSettingAPI.AddButton((ModInfo)info,
+                                    $"JmcModLibGen.{modinfo!.Name}.Reset",
+                                    $"重置所有选项到默认值（重启游戏或）",
                                     L10n.Get("重置", Assembly.GetExecutingAssembly()),
                                     () => ConfigUIManager.ResetAsm(asm));   // 只重置注册了UI的Config
         }

@@ -20,11 +20,13 @@ namespace JmcModLib.Core
     {
         private static readonly Dictionary<Assembly, Modinfo> _mods = new();
         private static readonly Dictionary<string, Assembly> _pathToAssembly = new();
+
         /// <summary>
         /// 当一个 MOD 完成注册后触发。
         /// 参数：Assembly（唯一标识MOD）（该MOD元信息）
         /// </summary>
         internal static event Action<Assembly>? OnRegistered;
+
         /// <summary>
         /// 反注册 MOD 时触发。
         /// </summary>
@@ -59,7 +61,7 @@ namespace JmcModLib.Core
             assembly ??= Assembly.GetCallingAssembly();
             if (IsRegistered(assembly))
             {
-                ModLogger.Warn($"{GetTag(assembly)??"错误"} 重复注册");
+                ModLogger.Warn($"{GetTag(assembly) ?? "错误"} 重复注册");
                 return;
             }
 
@@ -74,7 +76,7 @@ namespace JmcModLib.Core
             _mods[assembly] = new Modinfo(info, name ?? info.displayName ?? assembly.FullName, version ?? "1.0.0", level);
             // ConfigManager.RegisterAllInAssembly(assembly);
 
-            ModLogger.Debug($"{GetTag(assembly)??"错误"} 注册成功");
+            ModLogger.Debug($"{GetTag(assembly) ?? "错误"} 注册成功");
             OnRegistered?.Invoke(assembly);
         }
 

@@ -12,6 +12,7 @@ namespace JmcModLib.Utils
     {
         // 缓存区（线程安全）
         private static readonly ConcurrentDictionary<(Type, string), Delegate?> _fieldGetterCache = new();
+
         private static readonly ConcurrentDictionary<(Type, string), Delegate?> _fieldSetterCache = new();
         private static readonly ConcurrentDictionary<(Type, string), Delegate?> _methodCache = new();
 
@@ -381,6 +382,5 @@ namespace JmcModLib.Utils
 
             return (Func<object?[], object?>)dm.CreateDelegate(typeof(Func<object?[], object?>));
         }
-
     }
 }
