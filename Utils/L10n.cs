@@ -23,12 +23,7 @@ namespace JmcModLib.Utils
         /// <summary>
         /// 语言变更后的事件，不建议订阅<c>LocalizationManager.CurrentLanguage</c>，不然可能本地化不及时生效
         /// </summary>
-        public static event Action<SystemLanguage> LanguageChanged;
-        static L10n()
-        {
-            _currentLanguage = LocalizationManager.CurrentLanguage;
-            LocalizationManager.OnSetLanguage += OnLanguageChanged;
-        }
+        public static event Action<SystemLanguage>? LanguageChanged;
 
         internal static void Init()
         {
