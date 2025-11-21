@@ -30,11 +30,13 @@ namespace JmcModLib.Config.UI.ModSetting
             ModManager.OnModActivated += TryInitModSetting;
             ConfigManager.OnRegistered += BuildAsm;
             L10n.LanguageChanged += OnLangChanged;
+            ConfigManager.OnValueChanged += SyncValue;
             _initialized = true;
         }
 
         internal static void Dispose()
         {
+            ConfigManager.OnValueChanged -= SyncValue;
             L10n.LanguageChanged -= OnLangChanged;
             ModManager.OnModActivated -= TryInitModSetting;
             ConfigManager.OnRegistered -= BuildAsm;
@@ -42,7 +44,58 @@ namespace JmcModLib.Config.UI.ModSetting
             _initialized = false;
         }
 
-        internal static void RemoveMod(Assembly asm)
+        private static void SyncValue(ConfigEntry entry, object? newVal)
+        {
+            try
+            {
+                var info = ModRegistry.GetModInfo(entry.assembly)?.Info;
+                var t = entry.Accessor.MemberType;
+
+                if (t.IsEnum && t != typeof(KeyCode))   // Enum作为下拉列表时是parse到string的，应该特殊处理
+                {
+                    newVal = Enum.GetName(t, newVal);
+                    t = typeof(string);
+                }
+
+                object? valueHolder = t.IsValueType ? Activator.CreateInstance(t) : null;
+                if ((bool)MethodAccessor.Get(typeof(ModSettingAPI), "GetSavedValue")
+                                        .MakeGeneric(t)
+                                        .Invoke(null, info, entry.Key, valueHolder)!
+                                        && valueHolder != newVal)
+                {
+                    MethodAccessor.Get(typeof(ModSettingAPI), "SetValue")
+                                        .MakeGeneric(t)
+                                        .Invoke(null, info, entry.Key, newVal);
+                    ModLogger.Trace($"{entry.Key}({entry.Attribute.DisplayName}) 的值向Setting同步");
+                }
+                else
+                {
+                    ModLogger.Trace($"{entry.Key}({entry.Attribute.DisplayName}) 的值不存在或者未更改，跳过同步");
+                }
+            }
+            catch (Exception ex)
+            {
+                ModLogger.Error($"{ModRegistry.GetTag(entry.assembly)} 在同步 {entry.Key} 条目时抛出异常", ex);
+            }
+        }
+
+        /// <summary>
+        /// 判断有没有注册过 Asm到Linker
+        /// </summary>
+        internal static bool IsRegistered(Assembly asm)
+        {
+            return initialized.ContainsKey(asm);
+        }
+
+        /// <summary>
+        /// 判断有没有将 ASM注册到 ModSetting UI 并且已经初始化完成。
+        /// </summary>
+        internal static bool IsInitialized(Assembly asm)
+        {
+            return IsRegistered(asm) && initialized[asm];
+        }
+
+        internal static void UnRegister(Assembly asm)
         {
             if (initialized.ContainsKey(asm) && initialized[asm])
             {
