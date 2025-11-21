@@ -44,6 +44,14 @@ namespace JmcModLib.Utils
         }
 
         /// <summary>
+        /// 判断某程序集是否已经被注册过语言文件。
+        /// </summary>
+        public static bool IsRegistered(Assembly assembly)
+        {
+            return _basePaths.ContainsKey(assembly);
+        }
+
+        /// <summary>
         /// 注册当前程序集的本地化文件夹路径（例如 "Mods/MyMod/Lang"）。
         /// 若找不到指定的备用语言对应的文件，会将指定文件夹的第一个 `.csv` 文件作为备用语言文件。       
         /// </summary>
@@ -110,6 +118,28 @@ namespace JmcModLib.Utils
                 }
             }
         }
+
+        /// <summary>
+        /// 反注册当前程序集的本地化数据。
+        /// </summary>
+        /// <param name="assembly">程序集，默认为调用者</param>
+        public static void UnRegister(Assembly? assembly = null)
+        {
+            assembly ??= Assembly.GetCallingAssembly();
+
+            if (!IsRegistered(assembly))
+            {
+                ModLogger.Warn($"尝试反注册未注册的本地化程序集：{assembly.FullName}");
+                return;
+            }
+
+            ModLogger.Debug($"反注册 {assembly.GetName().Name} 的本地化数据");
+
+            _basePaths.Remove(assembly);
+            _localizedTables.Remove(assembly);
+            _fallbackTables.Remove(assembly);
+        }
+
 
 
         /// <summary>
