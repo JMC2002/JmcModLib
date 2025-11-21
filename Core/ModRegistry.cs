@@ -25,15 +25,21 @@ namespace JmcModLib.Core
         /// 参数：Assembly（唯一标识MOD）（该MOD元信息）
         /// </summary>
         internal static event Action<Assembly>? OnRegistered;
+        /// <summary>
+        /// 反注册 MOD 时触发。
+        /// </summary>
+        internal static event Action<Assembly>? OnUnRegistered;
 
         internal static void Init()
         {
             ConfigManager.Init();
             L10n.Init();
+            ModManager.OnModWillBeDeactivated += TryUnRegistered;
         }
 
         internal static void Dispose()
         {
+            ModManager.OnModWillBeDeactivated -= TryUnRegistered;
             ConfigManager.Dispose();
             L10n.Dispose();
             _mods.Clear();
@@ -50,6 +56,13 @@ namespace JmcModLib.Core
         /// <param name="assembly">程序集，留空自动获取</param>
         public static void Register(ModInfo info, string? name = null, string? version = null, LogLevel level = LogLevel.Info, Assembly? assembly = null)
         {
+            assembly ??= Assembly.GetCallingAssembly();
+            if (IsRegistered(assembly))
+            {
+                ModLogger.Warn($"{GetTag(assembly)??"错误"} 重复注册");
+                return;
+            }
+
             if (string.IsNullOrEmpty(info.displayName))
             {
                 ModLogger.Warn("ModInfo未初始化，应当在OnAfterSetup及以后注册，而非OnEnable及以前");
@@ -63,6 +76,43 @@ namespace JmcModLib.Core
 
             ModLogger.Debug($"{GetTag(assembly)??"错误"} 注册成功");
             OnRegistered?.Invoke(assembly);
+        }
+
+        /// <summary>
+        /// 判断是否已注册
+        /// </summary>
+        public static bool IsRegistered(Assembly? assembly = null)
+        {
+            assembly ??= Assembly.GetCallingAssembly();
+            return _mods.ContainsKey(assembly);
+        }
+
+        /// <summary>
+        /// 反注册程序集的MOD信息，留空则反注册调用者的程序集
+        /// </summary>
+        public static void UnRegister(Assembly? assembly = null)
+        {
+            assembly ??= Assembly.GetCallingAssembly();
+            if (!IsRegistered(assembly))
+            {
+                return; // 未注册则不进行任何操作
+            }
+
+            if (GetModInfo(assembly) != null)
+            {
+                _pathToAssembly.Remove(GetModInfo(assembly)!.Info.path);
+            }
+
+            _mods.Remove(assembly);
+            OnUnRegistered?.Invoke(assembly);
+        }
+
+        private static void TryUnRegistered(ModInfo info, Duckov.Modding.ModBehaviour modBehaviour)
+        {
+            if (_pathToAssembly.TryGetValue(info.path, out var assembly))
+            {
+                UnRegister(assembly);
+            }
         }
 
         /// <summary>
