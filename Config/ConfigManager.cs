@@ -148,7 +148,7 @@ namespace JmcModLib.Config
 
             _entries[asm] = groups;
             // 加载已保存的配置
-            LoadAllInAssembly(asm);
+            SyncConfigInAssembly(asm);
             OnRegistered?.Invoke(asm);
             ModLogger.Info($"{ModRegistry.GetTag(asm)}注册配置成功!");
         }
@@ -272,7 +272,11 @@ namespace JmcModLib.Config
         // -------------------------------------------------------
         // 持久化：Load / Save
         // -------------------------------------------------------
-        private static void LoadAllInAssembly(Assembly asm)
+        /// <summary>
+        /// 将 Assembly 内所有配置项与存储介质同步，若文件中有保存的值则加载，否则保存当前值
+        /// </summary>
+        /// <exception cref="ArgumentNullException">asm为空抛出异常</exception>
+        private static void SyncConfigInAssembly(Assembly asm)
         {
             if (asm == null) throw new ArgumentNullException(nameof(asm));
             if (!_entries.TryGetValue(asm, out var groups)) return;
