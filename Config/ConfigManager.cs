@@ -138,9 +138,15 @@ namespace JmcModLib.Config
                 {
                     ModLogger.Error($"扫描类型 {type.FullName} 时发生异常", ex);
                 }
-
             }
 
+            if (!hasEntry)
+            {
+                ModLogger.Trace($"{ModRegistry.GetTag(asm)} 未找到配置项，跳过注册");
+                return;
+            }
+
+            _entries[asm] = groups;
             // 加载已保存的配置
             LoadAllInAssembly(asm);
             OnRegistered?.Invoke(asm);
