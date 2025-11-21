@@ -96,6 +96,23 @@ namespace JmcModLib.Config
                     if (type.ContainsGenericParameters)                                    // 跳过开放泛型类型
                         continue;
 
+                    foreach (var acc in MethodAccessor.GetAll(type))
+                    {
+                        if (!acc.HasAttribute<UIButtonAttribute>())
+                            continue;
+
+                        if (!acc.IsStatic)
+                        {
+                            ModLogger.Error($"方法 {type.FullName}.{acc.Name} 标记了 UIButtonAttribute，但不是静态方法，跳过注册");
+                            continue;
+                        }
+
+                        var attr = acc.GetAttribute<UIButtonAttribute>()!;
+                        var entry = new ButtonEntry(asm, type, acc, attr.Group);
+                        ConfigUIManager.RegisterEntry(entry, attr);
+                    }
+
+
                     foreach (var acc in MemberAccessor.GetAll(type))
                     {
                         if (!acc.HasAttribute<ConfigAttribute>())   // 仅处理标记了 ConfigAttribute 的成员
