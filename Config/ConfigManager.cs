@@ -320,7 +320,7 @@ namespace JmcModLib.Config
         private static void SaveAllInAssembly(Assembly asm)
         {
             if (asm == null) throw new ArgumentNullException(nameof(asm));
-            if (!_entries.TryGetValue(asm, out var groups)) return;
+            if (!_entries.ContainsKey(asm)) return;
 
             var storage = GetStorage(asm);
             storage.Flush(asm);
