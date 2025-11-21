@@ -32,7 +32,7 @@ internal static class ModSettingAPI
     private static Type? modBehaviour;
     private static ModInfo modInfo;
 
-    public static bool IsInit { get; private set; }
+    internal static bool IsInit { get; set; }
 
     // 缓存委托避免重复反射
     private static Dictionary<string, Delegate> methodCache = new Dictionary<string, Delegate>();
