@@ -20,9 +20,7 @@
 /// along with JmcModLib.  
 /// If not, see <see href="https://www.gnu.org/licenses/lgpl-3.0.html" />.
 /// </remarks>
-
 using JmcModLib.Config;
-using JmcModLib.Config.UI.ModSetting;
 using JmcModLib.Core;
 using JmcModLib.Utils;
 
