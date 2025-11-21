@@ -104,7 +104,7 @@ namespace JmcModLib.Reflection
                 methods = methods.Where(m =>
                 {
                     var ps = m.GetParameters();
-                    if (ps.Length != parameterTypes.Length) return false;
+                    if (parameterTypes.Length > ps.Length) return false;
 
                     for (int i = 0; i < ps.Length; i++)
                     {
@@ -117,6 +117,14 @@ namespace JmcModLib.Reflection
                         if (mp != parameterTypes[i])
                             return false;
                     }
+
+                    // 多出的参数必须是 optional
+                    for (int i = parameterTypes.Length; i < ps.Length; i++)
+                    {
+                        if (!ps[i].IsOptional)
+                            return false;
+                    }
+
                     return true;
                 });
             }
@@ -154,6 +162,40 @@ namespace JmcModLib.Reflection
 
             if (_invoker == null)
                 throw new InvalidOperationException($"方法 {Name} 是泛型方法定义，需要先调用 MakeGeneric(...) 生成具体方法再调用 Invoke。");
+
+            // -------------------------
+            // 补齐默认参数
+            // -------------------------
+            var ps = Method.GetParameters();
+
+            // 如果用户传入的参数不足，则自动补齐默认值
+            if (args.Length < ps.Length)
+            {
+                object?[] newArgs = new object?[ps.Length];
+
+                // 复制用户传入的部分
+                for (int i = 0; i < args.Length; i++)
+                    newArgs[i] = args[i];
+
+                // 补齐默认参数
+                for (int i = args.Length; i < ps.Length; i++)
+                {
+                    var p = ps[i];
+                    if (!p.IsOptional)
+                        throw new TargetParameterCountException(
+                            $"方法 {Name} 的参数 {p.Name} 没有默认值，但用户未提供");
+
+                    // C# 默认参数的值在编译器层面写死到了 metadata 的 DefaultValue 里
+                    newArgs[i] = p.DefaultValue;
+                }
+
+                args = newArgs;
+            }
+            else if (args.Length > ps.Length)
+            {
+                throw new TargetParameterCountException(
+                    $"调用方法 {Name} 的参数过多：期望 {ps.Length}，实际 {args.Length}");
+            }
 
             return _invoker(instance, args);
         }
