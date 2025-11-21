@@ -50,7 +50,7 @@ namespace JmcModLib.Core
         /// <param name="assembly">程序集，留空自动获取</param>
         public static void Register(ModInfo info, string? name = null, string? version = null, LogLevel level = LogLevel.Info, Assembly? assembly = null)
         {
-            if (info.displayName == null)
+            if (string.IsNullOrEmpty(info.displayName))
             {
                 ModLogger.Warn("ModInfo未初始化，应当在OnAfterSetup及以后注册，而非OnEnable及以前");
             }
