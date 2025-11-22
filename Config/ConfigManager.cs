@@ -119,35 +119,10 @@ namespace JmcModLib.Config
                         if (!acc.HasAttribute<ConfigAttribute>())   // 仅处理标记了 ConfigAttribute 的成员
                             continue;
 
-                        // 如果有 instance 需求，创建实例
-                        object? instance = null;
-                        if (!acc.IsStatic)
-                        {
-                            var perAsm = _typeInstances.GetOrAdd(asm, _ => new ConcurrentDictionary<Type, object>());
-                            instance = perAsm.GetOrAdd(type, t => Activator.CreateInstance(t)!);
-                        }
-
-                        var attr = acc.GetAttribute<ConfigAttribute>()!;
-                        var entry = new ConfigEntry(asm, type, acc, attr, acc.GetValue(instance));
+                        var entry = BuildConfigEntry(asm, type, acc);
                         var group = entry.Group;
                         var groupDict = groups.GetOrAdd(group, _ => new ConcurrentDictionary<string, ConfigEntry>(StringComparer.Ordinal));
                         groupDict[entry.Key] = entry;
-
-                        // 找 UI 属性（如果有）
-                        var uiAttr = acc.GetAttribute<UIConfigAttribute>();
-                        if (uiAttr != null)
-                        {
-                            // 注册任务，等待后续生成
-                            if (!uiAttr.IsValid(entry))
-                            {
-                                ModLogger.Error($"字段/属性 {entry.Key} 类型为 {acc.MemberType} 与 UIAttribute {uiAttr.GetType().Name} 要求不匹配或值不合法");
-                            }
-                            else
-                            {
-                                ConfigUIManager.RegisterEntry(entry, uiAttr);
-                            }
-                        }
-
                         hasEntry = true;
                         ModLogger.Trace($"{ModRegistry.GetTag(asm)}发现配置项: {type.FullName}.{acc.Name}, key 为: {entry.Key}");
                     }
@@ -169,6 +144,42 @@ namespace JmcModLib.Config
             SyncConfigInAssembly(asm);
             OnRegistered?.Invoke(asm);
             ModLogger.Info($"{ModRegistry.GetTag(asm)}注册配置成功!");
+        }
+
+        private static ConfigEntry BuildConfigEntry(Assembly asm, Type type, MemberAccessor acc)
+        {
+            // 如果有 instance 需求，创建实例
+            object? instance = null;
+            if (!acc.IsStatic)
+            {
+                var perAsm = _typeInstances.GetOrAdd(asm, _ => new ConcurrentDictionary<Type, object>());
+                instance = perAsm.GetOrAdd(type, t => Activator.CreateInstance(t)!);
+            }
+
+            var attr = acc.GetAttribute<ConfigAttribute>()!;
+            var defaultValue = acc.GetValue(instance);
+            
+            // 创建非泛型版本（简洁，易维护）
+            var entry = new ConfigEntry(asm, type, acc, attr, defaultValue);
+            RegisterUIAttribute(entry, acc);
+            return entry;
+        }
+
+        private static void RegisterUIAttribute(ConfigEntry entry, MemberAccessor acc)
+        {
+            var uiAttr = acc.GetAttribute<UIConfigAttribute>();
+            if (uiAttr != null)
+            {
+                // 注册任务，等待后续生成
+                if (!uiAttr.IsValid(entry))
+                {
+                    ModLogger.Error($"字段/属性 {entry.Key} 类型为 {acc.MemberType} 与 UIAttribute {uiAttr.GetType().Name} 要求不匹配或值不合法");
+                }
+                else
+                {
+                    ConfigUIManager.RegisterEntry(entry, uiAttr);
+                }
+            }
         }
 
         /// <summary>
@@ -359,7 +370,8 @@ namespace JmcModLib.Config
         // -------------- Direct GetValue/SetValue ------------------
         internal static object? GetValue(ConfigEntry modEntry)
         {
-            return modEntry.Accessor.GetValue(GetInstance(modEntry));
+            var instance = GetInstance(modEntry);
+            return modEntry.Accessor.GetValue(instance);
         }
 
         /// <summary>
@@ -381,25 +393,34 @@ namespace JmcModLib.Config
             // 如果注册有额外的 OnChanged 回调，调用它
             if (!string.IsNullOrEmpty(modEntry.Attribute.OnChanged))
             {
-                var mAcc = MethodAccessor.Get(modEntry.DeclaringType, modEntry.Attribute.OnChanged);
-                if (mAcc.IsStatic == modEntry.Accessor.IsStatic)
-                    mAcc.Invoke(GetInstance(modEntry), value);
-                else if (mAcc.IsStatic)
-                    mAcc.Invoke(null, value);
-                else
-                {
-                    var perAsm = _typeInstances.GetOrAdd(modEntry.Assembly, _ => new ConcurrentDictionary<Type, object>());
-                    var instance = perAsm.GetOrAdd(modEntry.DeclaringType, t => Activator.CreateInstance(t)!);
-                    mAcc.Invoke(instance, value);
-                }
+                InvokeOnChanged(modEntry, value);
             }
 
-            modEntry.Accessor.SetValue(GetInstance(modEntry), value);
-            var asm = modEntry.Assembly;
+            var instance = GetInstance(modEntry);
+            modEntry.Accessor.SetValue(instance, value);
+
             // 在设置值后调用 Save 方法以保持数据一致性
+            var asm = modEntry.Assembly;
             var storage = GetStorage(asm);
             storage.Save(modEntry.Attribute.DisplayName, modEntry.Group, value, asm);
             OnValueChanged?.Invoke(modEntry, value);
+        }
+
+        private static void InvokeOnChanged(ConfigEntry modEntry, object? value)
+        {
+            var mAcc = MethodAccessor.Get(modEntry.DeclaringType, modEntry.Attribute.OnChanged);
+            var instance = GetInstance(modEntry);
+
+            if (mAcc.IsStatic == modEntry.Accessor.IsStatic)
+                mAcc.Invoke(instance, value);
+            else if (mAcc.IsStatic)
+                mAcc.Invoke(null, value);
+            else
+            {
+                var perAsm = _typeInstances.GetOrAdd(modEntry.Assembly, _ => new ConcurrentDictionary<Type, object>());
+                var newInstance = perAsm.GetOrAdd(modEntry.DeclaringType, t => Activator.CreateInstance(t)!);
+                mAcc.Invoke(newInstance, value);
+            }
         }
 
         /// <summary>
