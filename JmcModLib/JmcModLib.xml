@@ -829,9 +829,47 @@
             获得一个成员访问器（自动缓存）。
             </summary>
         </member>
+        <member name="M:JmcModLib.Reflection.MemberAccessor.GetIndexer(System.Type,System.Type[])">
+             <summary>
+             索引器访问器获取，主要用于具有多个索引重载的情况。
+             
+             <example>
+             示例：
+             <code>
+            class MyList
+            {
+                private string[] _data = { "Apple", "Banana", "Cat" };
+            
+                public string this[int index]
+                {
+                    get => _data[index];
+                    set => _data[index] = value;
+                }
+            
+                public string this[int x, int y]
+                {
+                    get => $"{x},{y}";
+                    set { }
+                }
+            }
+             
+             var acc1 = MemberAccessor.GetIndexer(typeof(MyList), typeof(int));
+             var value1 = acc1.GetValue(list, 1); // "Banana"
+            
+             var acc2 = MemberAccessor.GetIndexer(typeof(MyList), typeof(int), typeof(int));
+             var value2 = acc2.GetValue(list, 3, 5); // "3,5"
+             </code>
+             </example>
+             
+             </summary>
+             <param name="type"></param>
+             <param name="parameterTypes"></param>
+             <returns></returns>
+             <exception cref="T:System.MissingMemberException"></exception>
+        </member>
         <member name="M:JmcModLib.Reflection.MemberAccessor.Get(System.Reflection.MemberInfo)">
             <summary>
-            按MemberInfo获取访问去
+            按MemberInfo获取访问器
             </summary>
         </member>
         <member name="M:JmcModLib.Reflection.MemberAccessor.IsSupportedMember(System.Reflection.MemberInfo)">

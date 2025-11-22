@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
@@ -232,6 +233,54 @@ namespace JmcModLib.Reflection
         }
 
         /// <summary>
+        /// 索引器访问器获取，主要用于具有多个索引重载的情况。
+        /// 
+        /// <example>
+        /// 示例：
+        /// <code>
+        ///class MyList
+        ///{
+        ///    private string[] _data = { "Apple", "Banana", "Cat" };
+        ///
+        ///    public string this[int index]
+        ///    {
+        ///        get => _data[index];
+        ///        set => _data[index] = value;
+        ///    }
+        ///
+        ///    public string this[int x, int y]
+        ///    {
+        ///        get => $"{x},{y}";
+        ///        set { }
+        ///    }
+        ///}
+        /// 
+        /// var acc1 = MemberAccessor.GetIndexer(typeof(MyList), typeof(int));
+        /// var value1 = acc1.GetValue(list, 1); // "Banana"
+        ///
+        /// var acc2 = MemberAccessor.GetIndexer(typeof(MyList), typeof(int), typeof(int));
+        /// var value2 = acc2.GetValue(list, 3, 5); // "3,5"
+        /// </code>
+        /// </example>
+        /// 
+        /// </summary>
+        /// <param name="type"></param>
+        /// <param name="parameterTypes"></param>
+        /// <returns></returns>
+        /// <exception cref="MissingMemberException"></exception>
+        public static MemberAccessor GetIndexer(Type type, params Type[] parameterTypes)
+        {
+            var prop = type.GetProperty(
+                "Item",
+                BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic,
+                binder: null,
+                returnType: null,
+                types: parameterTypes,
+                modifiers: null) ?? throw new MissingMemberException($"找不到匹配参数的索引器");
+            return Get(prop);
+        }
+
+        /// <summary>
         /// 按MemberInfo获取访问器
         /// </summary>
         public static MemberAccessor Get(MemberInfo member)
@@ -323,7 +372,7 @@ namespace JmcModLib.Reflection
                     // 特殊处理：如果是在枚举类型内的隐藏字段 value__（即 f.DeclaringType 是 enum 且字段名通常是 "value__"）
                     bool declaringIsEnum = f.DeclaringType?.IsEnum ?? false;
                     bool isValueFieldOfEnum = declaringIsEnum && string.Equals(f.Name, "value__", StringComparison.Ordinal);
-                    
+
                     if (isValueFieldOfEnum)
                     {
                         // 读取 boxed enum 的底层值：unbox.any underlyingType，box 并返回
@@ -551,7 +600,7 @@ namespace JmcModLib.Reflection
                         typeof(object),
                         [typeof(object), typeof(object?[])],
                         p.DeclaringType!,
-                        true):
+                        true) :
                 new DynamicMethod(
                         $"idx_get_{p.Name}",
                         typeof(object),
