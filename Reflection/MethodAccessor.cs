@@ -5,6 +5,7 @@ using System.Collections.Concurrent;
 using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
+using System.Linq.Expressions;
 using Unity.VisualScripting.Dependencies.NCalc;
 
 namespace JmcModLib.Reflection
@@ -84,6 +85,14 @@ namespace JmcModLib.Reflection
         // ThreadStatic buffer for default parameter completion to avoid per-call allocation
         [ThreadStatic] private static object?[]? _defaultArgBuffer;
 
+        // Strongly typed delegate (Func<...>/Action<...>) for methods without ref/out & non-generic definition
+        private readonly Delegate? _typedDelegate;
+        /// <summary>
+        /// 若可用，返回强类型委托 (Func/Action)。实例方法第一个参数是声明类型实例；静态方法不含实例参数。
+        /// 不支持 ref/out/泛型定义/包含可变参数的方法。
+        /// </summary>
+        public Delegate? TypedDelegate => _typedDelegate;
+
         private MethodAccessor(MethodInfo method, bool createInvoker = true)
             : base(method)
         {
@@ -108,6 +117,13 @@ namespace JmcModLib.Reflection
                         case 3: _fastInvoker3 = CreateFastInvoker3(method, ps[0], ps[1], ps[2]); break;
                     }
                 }
+
+                // 构建强类型委托（支持更多参数，只要无 ref/out/可选参数）
+                bool typedOk = !method.IsGenericMethodDefinition && ps.All(p => !p.ParameterType.IsByRef) && ps.All(p => !p.IsOptional);
+                if (typedOk)
+                {
+                    try { _typedDelegate = CreateTypedDelegate(method); } catch { /* 忽略生成失败 */ }
+                }
             }
         }
 
@@ -123,6 +139,12 @@ namespace JmcModLib.Reflection
             return GetOrCreate(method, m => new MethodAccessor(m, createInvoker: canInvoke));
         }
 
+        /// <summary>
+        /// 获取强类型委托（若不存在抛异常）
+        /// </summary>
+        /// <exception cref="InvalidOperationException"></exception>
+        public Delegate GetTypedDelegate() => _typedDelegate ?? throw new InvalidOperationException($"方法 {Name} 没有可用的强类型委托");
+
         // ============================================================
         //   获取类型的所有方法（含私有 / 实例 / 静态）
         // ============================================================
@@ -134,6 +156,69 @@ namespace JmcModLib.Reflection
         {
             return type.GetMethods(flags)
                        .Select(Get);
+        }
+
+        // ==============================
+        // Strong typed delegate builder (Expression)
+        // ==============================
+        private static Delegate CreateTypedDelegate(MethodInfo method)
+        {
+            var ps = method.GetParameters();
+            var paramExprs = new List<ParameterExpression>();
+            System.Linq.Expressions.ParameterExpression? instanceParam = null;
+            if (!method.IsStatic)
+            {
+                instanceParam = System.Linq.Expressions.Expression.Parameter(method.DeclaringType!, "instance");
+                paramExprs.Add(instanceParam);
+            }
+            foreach (var p in ps)
+            {
+                paramExprs.Add(System.Linq.Expressions.Expression.Parameter(p.ParameterType, p.Name ?? "p"));
+            }
+
+            System.Linq.Expressions.Expression call = method.IsStatic
+                ? System.Linq.Expressions.Expression.Call(method, paramExprs.Skip(method.IsStatic ? 0 : 1))
+                : System.Linq.Expressions.Expression.Call(instanceParam!, method, paramExprs.Skip(1));
+
+            bool isVoid = method.ReturnType == typeof(void);
+            Type delegateType = isVoid
+                ? GetActionType(paramExprs.Select(e => e.Type).ToArray())
+                : GetFuncType(paramExprs.Select(e => e.Type).Concat(new[] { method.ReturnType }).ToArray());
+
+            var lambda = System.Linq.Expressions.Expression.Lambda(delegateType, call, paramExprs);
+            return lambda.Compile();
+        }
+
+        private static Type GetActionType(Type[] types)
+        {
+            return types.Length switch
+            {
+                1 => typeof(Action<>).MakeGenericType(types),
+                2 => typeof(Action<,>).MakeGenericType(types),
+                3 => typeof(Action<,,>).MakeGenericType(types),
+                4 => typeof(Action<,,,>).MakeGenericType(types),
+                5 => typeof(Action<,,,,>).MakeGenericType(types),
+                6 => typeof(Action<,,,,,>).MakeGenericType(types),
+                7 => typeof(Action<,,,,,,>).MakeGenericType(types),
+                8 => typeof(Action<,,,,,,,>).MakeGenericType(types),
+                _ => throw new NotSupportedException("参数过多，无法生成 Action 委托")
+            };
+        }
+
+        private static Type GetFuncType(Type[] types)
+        {
+            return types.Length switch
+            {
+                1 => typeof(Func<>).MakeGenericType(types),
+                2 => typeof(Func<,>).MakeGenericType(types),
+                3 => typeof(Func<,,>).MakeGenericType(types),
+                4 => typeof(Func<,,,>).MakeGenericType(types),
+                5 => typeof(Func<,,,,>).MakeGenericType(types),
+                6 => typeof(Func<,,,,,>).MakeGenericType(types),
+                7 => typeof(Func<,,,,,,>).MakeGenericType(types),
+                8 => typeof(Func<,,,,,,,>).MakeGenericType(types),
+                _ => throw new NotSupportedException("参数过多，无法生成 Func 委托")
+            };
         }
 
         /// <summary>
