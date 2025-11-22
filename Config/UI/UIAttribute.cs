@@ -17,7 +17,7 @@ namespace JmcModLib.Config.UI
     /// 一个按钮属性
     /// </summary>
     /// <remarks>
-    /// 只能绑定在静态无参构造上
+    /// 只能绑定在静态无参无返回值构造上
     /// </remarks>
     /// <param name="description"></param>
     /// <param name="buttonText"></param>
