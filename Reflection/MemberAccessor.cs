@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
+using System.Linq.Expressions;
 
 namespace JmcModLib.Reflection
 {
@@ -23,6 +24,15 @@ namespace JmcModLib.Reflection
 
         private readonly Func<object?, object?>? getter;
         private readonly Action<object?, object?>? setter;
+
+        // 强类型委托（非索引器）：
+        // 实例成员：Getter=Func<TTarget,TValue>  Setter=Action<TTarget,TValue>
+        // 静态成员：Getter=Func<TValue>         Setter=Action<TValue>
+        private readonly Delegate? typedGetter;
+        private readonly Delegate? typedSetter;
+
+        public Delegate? TypedGetter => typedGetter;
+        public Delegate? TypedSetter => typedSetter;
 
         // 如果是索引器，这里会持有 index 参数
         private readonly ParameterInfo[]? indexParams;
@@ -45,17 +55,26 @@ namespace JmcModLib.Reflection
                     {
                         getter = CreateFieldGetter(f);
                         setter = null;
+                        // readonly：仅生成 Getter
+                        typedGetter = CreateTypedFieldGetter(f);
+                        typedSetter = null;
                     }
                     // 如果是 const 字段，直接使用 GetRawConstantValue 获取值
                     else if (f.IsLiteral && !f.IsInitOnly) // const 字段
                     {
                         getter = _ => f.GetRawConstantValue();
                         setter = null; // const 字段没有 setter
+                        // const 一定是静态字段：生成 Func<TValue>
+                        typedGetter = CreateTypedFieldGetter(f);
+                        typedSetter = null;
                     }
                     else
                     {
                         getter = CreateFieldGetter(f);
                         setter = CreateFieldSetter(f);
+                        // 普通字段：Getter/Setter 都生成
+                        typedGetter = CreateTypedFieldGetter(f);
+                        typedSetter = CreateTypedFieldSetter(f);
                     }
 
                     break;
@@ -84,6 +103,8 @@ namespace JmcModLib.Reflection
                         // 普通 getter/setter 清空
                         getter = null;
                         setter = null;
+                        typedGetter = null;
+                        typedSetter = null;
                     }
                     else
                     {
@@ -93,6 +114,12 @@ namespace JmcModLib.Reflection
                             getter = CreatePropertyGetter(p);
                         if (p.CanWrite)
                             setter = CreatePropertySetter(p);
+
+                        // 生成强类型委托
+                        if (p.CanRead)
+                            typedGetter = CreateTypedPropertyGetter(p);
+                        if (p.CanWrite)
+                            typedSetter = CreateTypedPropertySetter(p);
                     }
 
                     break;
@@ -100,6 +127,109 @@ namespace JmcModLib.Reflection
                 default:
                     throw new ArgumentException($"不支持的成员类型: {member.MemberType}");
             }
+
+        }
+
+        // ======================
+        // 强类型委托构造（Expression）
+        // ======================
+        private static Delegate CreateTypedFieldGetter(FieldInfo f)
+        {
+            if (f.IsStatic)
+            {
+                // () => StaticField
+                var fieldExpr = System.Linq.Expressions.Expression.Field(null, f);
+                var lambda = System.Linq.Expressions.Expression.Lambda(GetFuncType([f.FieldType]), fieldExpr);
+                return lambda.Compile();
+            }
+            else
+            {
+                // (TTarget obj) => obj.Field
+                var objParam = System.Linq.Expressions.Expression.Parameter(f.DeclaringType!, "obj");
+                var fieldExpr = System.Linq.Expressions.Expression.Field(objParam, f);
+                var lambda = System.Linq.Expressions.Expression.Lambda(GetFuncType([f.DeclaringType!, f.FieldType]), fieldExpr, objParam);
+                return lambda.Compile();
+            }
+        }
+
+        private static Delegate CreateTypedFieldSetter(FieldInfo f)
+        {
+            if (f.IsStatic)
+            {
+                // (TValue v) => StaticField = v
+                var valParam = System.Linq.Expressions.Expression.Parameter(f.FieldType, "value");
+                var assign = System.Linq.Expressions.Expression.Assign(System.Linq.Expressions.Expression.Field(null, f), valParam);
+                var lambda = System.Linq.Expressions.Expression.Lambda(GetActionType([f.FieldType]), assign, valParam);
+                return lambda.Compile();
+            }
+            else
+            {
+                // (TTarget obj, TValue v) => obj.Field = v
+                var objParam = System.Linq.Expressions.Expression.Parameter(f.DeclaringType!, "obj");
+                var valParam = System.Linq.Expressions.Expression.Parameter(f.FieldType, "value");
+                var assign = System.Linq.Expressions.Expression.Assign(System.Linq.Expressions.Expression.Field(objParam, f), valParam);
+                var lambda = System.Linq.Expressions.Expression.Lambda(GetActionType([f.DeclaringType!, f.FieldType]), assign, objParam, valParam);
+                return lambda.Compile();
+            }
+        }
+
+        private static Delegate CreateTypedPropertyGetter(PropertyInfo p)
+        {
+            var m = p.GetGetMethod(true)!;
+            if (m.IsStatic)
+            {
+                // () => get_Prop()
+                var call = System.Linq.Expressions.Expression.Call(m);
+                var lambda = System.Linq.Expressions.Expression.Lambda(GetFuncType([p.PropertyType]), call);
+                return lambda.Compile();
+            }
+            else
+            {
+                var objParam = System.Linq.Expressions.Expression.Parameter(p.DeclaringType!, "obj");
+                var call = System.Linq.Expressions.Expression.Call(objParam, m);
+                var lambda = System.Linq.Expressions.Expression.Lambda(GetFuncType([p.DeclaringType!, p.PropertyType]), call, objParam);
+                return lambda.Compile();
+            }
+        }
+
+        private static Delegate CreateTypedPropertySetter(PropertyInfo p)
+        {
+            var m = p.GetSetMethod(true)!;
+            if (m.IsStatic)
+            {
+                var valParam = System.Linq.Expressions.Expression.Parameter(p.PropertyType, "value");
+                var call = System.Linq.Expressions.Expression.Call(m, valParam);
+                var lambda = System.Linq.Expressions.Expression.Lambda(GetActionType([p.PropertyType]), call, valParam);
+                return lambda.Compile();
+            }
+            else
+            {
+                var objParam = System.Linq.Expressions.Expression.Parameter(p.DeclaringType!, "obj");
+                var valParam = System.Linq.Expressions.Expression.Parameter(p.PropertyType, "value");
+                var call = System.Linq.Expressions.Expression.Call(objParam, m, valParam);
+                var lambda = System.Linq.Expressions.Expression.Lambda(GetActionType([p.DeclaringType!, p.PropertyType]), call, objParam, valParam);
+                return lambda.Compile();
+            }
+        }
+
+        private static Type GetActionType(Type[] types)
+        {
+            return types.Length switch
+            {
+                1 => typeof(Action<>).MakeGenericType(types),
+                2 => typeof(Action<,>).MakeGenericType(types),
+                _ => throw new NotSupportedException("参数过多，无法生成 Action 委托")
+            };
+        }
+
+        private static Type GetFuncType(Type[] types)
+        {
+            return types.Length switch
+            {
+                1 => typeof(Func<>).MakeGenericType(types),
+                2 => typeof(Func<,>).MakeGenericType(types),
+                _ => throw new NotSupportedException("参数过多，无法生成 Func 委托")
+            };
         }
 
         /// <summary>
