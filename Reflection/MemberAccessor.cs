@@ -346,28 +346,23 @@ namespace JmcModLib.Reflection
         // =============================================
         // 泛型语法糖（非索引器）
         // =============================================
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public TValue GetValue<TTarget, TValue>(TTarget target)
         {
             if (indexParams != null)
                 throw new InvalidOperationException($"属性 {Name} 是索引器，不能使用泛型 GetValue<TTarget,TValue>(...) 语法");
             if (!IsStatic && target == null)
                 throw new ArgumentNullException(nameof(target), $"对于非静态成员 {Name}，target 不能为空");
-            var dg = typedGetter; // 本地缓存，减少字段读
-            if (dg is Func<TTarget, TValue> inst) return inst(target);
-            if (IsStatic && dg is Func<TValue> stat) return stat();
-            // 直接走底层 getter 委托，避免再次进入公共 GetValue 方法的分支与异常检查
-            if (getter != null)
-            {
-                var rawFast = getter(IsStatic ? null : (object?)target);
-                return rawFast is null ? default! : (TValue)rawFast;
-            }
-            // 理论上不会走到（无 getter 时早已抛出），仍作兼容
-            var raw = GetValue(target);
+            if (getter == null)
+                throw new InvalidOperationException($"成员 {Name} 不可读");
+            if (typedGetter is Func<TTarget, TValue> g)
+                return g(target);
+            if (IsStatic && typedGetter is Func<TValue> sg)
+                return sg();
+
+            var raw = getter(target);
             return raw is null ? default! : (TValue)raw;
         }
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void SetValue<TTarget, TValue>(TTarget target, TValue value)
         {
             if (indexParams != null)
@@ -376,38 +371,36 @@ namespace JmcModLib.Reflection
                 throw new ArgumentNullException(nameof(target), $"对于非静态成员 {Name}，target 不能为空");
             if (setter == null)
                 throw new InvalidOperationException($"成员 {Name} 不可写");
-            var ds = typedSetter; // 缓存
-            if (ds is Action<TTarget, TValue> inst) { inst(target, value); return; }
-            if (IsStatic && ds is Action<TValue> stat) { stat(value); return; }
-            SetValue(target, (object?)value);
+            if (typedSetter is Action<TTarget, TValue> s)
+                s(target, value);
+            else if (IsStatic && typedSetter is Action<TValue> ss)
+                ss(value);
+            else
+                setter(target, value);
         }
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public TValue GetValue<TValue>()
         {
             if (!IsStatic)
                 throw new InvalidOperationException($"成员 {Name} 不是静态成员，不能使用 GetValue<TValue>() 语法");
-            var dg = typedGetter;
-            if (dg is Func<TValue> stat) return stat();
-            if (getter != null)
-            {
-                var rawFast = getter(null);
-                return rawFast is null ? default! : (TValue)rawFast;
-            }
-            var raw = GetValue(null); // 兼容兜底
+            if (getter == null)
+                throw new InvalidOperationException($"成员 {Name} 不可读");
+            if (typedGetter is Func<TValue> g)
+                return g();
+            var raw = getter(null);
             return raw is null ? default! : (TValue)raw;
         }
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void SetValue<TValue>(TValue value)
         {
             if (!IsStatic)
                 throw new InvalidOperationException($"成员 {Name} 不是静态成员，不能使用 SetValue<TValue>(...) 语法");
             if (setter == null)
                 throw new InvalidOperationException($"成员 {Name} 不可写");
-            var ds = typedSetter;
-            if (ds is Action<TValue> stat) { stat(value); return; }
-            SetValue(null, (object?)value);
+            if (typedSetter is Action<TValue> s)
+                s(value);
+            else
+                setter(null, value);
         }
 
 

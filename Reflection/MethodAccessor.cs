@@ -194,6 +194,7 @@ namespace JmcModLib.Reflection
         {
             return types.Length switch
             {
+                0 => typeof(Action),
                 1 => typeof(Action<>).MakeGenericType(types),
                 2 => typeof(Action<,>).MakeGenericType(types),
                 3 => typeof(Action<,,>).MakeGenericType(types),
@@ -398,8 +399,8 @@ namespace JmcModLib.Reflection
         }
 
         // ==============================
-        // Fast Invoke integrated as overloads (0..3 params) –
-        // these route to precompiled fast delegates when available, otherwise fall back to params object?[] path.
+        // 快速调用以重载形式集成（0–3 个参数）
+        // 当可用时会路由到预编译的快速委托，否则回退到使用 params object?[] 的路径。
 
         public object? Invoke(object? instance)
         {
@@ -409,7 +410,7 @@ namespace JmcModLib.Reflection
                     throw new ArgumentNullException(nameof(instance), $"调用实例方法 {Name} 需要实例对象");
                 return _fastInvoker0(instance);
             }
-            return Invoke(instance, Array.Empty<object?>());
+            return Invoke(instance, []);
         }
 
         public object? Invoke(object? instance, object? a0)
@@ -420,7 +421,7 @@ namespace JmcModLib.Reflection
                     throw new ArgumentNullException(nameof(instance), $"调用实例方法 {Name} 需要实例对象");
                 return _fastInvoker1(instance, a0);
             }
-            return Invoke(instance, new object?[] { a0 });
+            return Invoke(instance, [a0]);
         }
 
         public object? Invoke(object? instance, object? a0, object? a1)
@@ -431,7 +432,7 @@ namespace JmcModLib.Reflection
                     throw new ArgumentNullException(nameof(instance), $"调用实例方法 {Name} 需要实例对象");
                 return _fastInvoker2(instance, a0, a1);
             }
-            return Invoke(instance, new object?[] { a0, a1 });
+            return Invoke(instance, [a0, a1]);
         }
 
         public object? Invoke(object? instance, object? a0, object? a1, object? a2)
@@ -442,7 +443,7 @@ namespace JmcModLib.Reflection
                     throw new ArgumentNullException(nameof(instance), $"调用实例方法 {Name} 需要实例对象");
                 return _fastInvoker3(instance, a0, a1, a2);
             }
-            return Invoke(instance, new object?[] { a0, a1, a2 });
+            return Invoke(instance, [a0, a1, a2]);
         }
 
         // =============================================
@@ -517,6 +518,83 @@ namespace JmcModLib.Reflection
             return ret is null ? default! : (TResult)ret;
         }
 
+        // 专门用于 void 返回方法的强类型语法糖，避免与返回 TResult 的泛型重载冲突
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void InvokeVoid<TTarget>(TTarget instance)
+        {
+            if (!IsStatic && instance == null)
+                throw new ArgumentNullException(nameof(instance));
+            var td = _typedDelegate;
+            if (td is Action<TTarget> a)
+            {
+                a(instance);
+                return;
+            }
+            if (_fastInvoker0 != null)
+            {
+                _fastInvoker0(instance);
+                return;
+            }
+            Invoke(instance);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void InvokeVoid<TTarget, T1>(TTarget instance, T1 a1)
+        {
+            if (!IsStatic && instance == null)
+                throw new ArgumentNullException(nameof(instance));
+            var td = _typedDelegate;
+            if (td is Action<TTarget, T1> a)
+            {
+                a(instance, a1);
+                return;
+            }
+            if (_fastInvoker1 != null)
+            {
+                _fastInvoker1(instance, a1);
+                return;
+            }
+            Invoke(instance, a1);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void InvokeVoid<TTarget, T1, T2>(TTarget instance, T1 a1, T2 a2)
+        {
+            if (!IsStatic && instance == null)
+                throw new ArgumentNullException(nameof(instance));
+            var td = _typedDelegate;
+            if (td is Action<TTarget, T1, T2> a)
+            {
+                a(instance, a1, a2);
+                return;
+            }
+            if (_fastInvoker2 != null)
+            {
+                _fastInvoker2(instance, a1, a2);
+                return;
+            }
+            Invoke(instance, a1, a2);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void InvokeVoid<TTarget, T1, T2, T3>(TTarget instance, T1 a1, T2 a2, T3 a3)
+        {
+            if (!IsStatic && instance == null)
+                throw new ArgumentNullException(nameof(instance));
+            var td = _typedDelegate;
+            if (td is Action<TTarget, T1, T2, T3> a)
+            {
+                a(instance, a1, a2, a3);
+                return;
+            }
+            if (_fastInvoker3 != null)
+            {
+                _fastInvoker3(instance, a1, a2, a3);
+                return;
+            }
+            Invoke(instance, a1, a2, a3);
+        }
+
         // 静态方法专用 (使用不同方法名避免与已有 Invoke 重载冲突)
         public TResult InvokeStatic<TResult>()
         {
@@ -524,38 +602,115 @@ namespace JmcModLib.Reflection
                 throw new InvalidOperationException($"方法 {Name} 不是静态方法，不能使用 Invoke<TResult>()");
             if (TypedDelegate is Func<TResult> f)
                 return f();
-            return (TResult?)Invoke(null) !;
+            return (TResult?)Invoke(null)!;
         }
 
         public TResult InvokeStatic<T1, TResult>(T1 a1)
         {
             if (!IsStatic)
-                throw new InvalidOperationException($"方法 {Name} 不是静态方法，不能使用 Invoke<T1,TResult>(...)" );
+                throw new InvalidOperationException($"方法 {Name} 不是静态方法，不能使用 Invoke<T1,TResult>(...)");
             if (TypedDelegate is Func<T1, TResult> f)
                 return f(a1);
-            return (TResult?)Invoke(null, a1) !;
+            return (TResult?)Invoke(null, a1)!;
         }
 
         public TResult InvokeStatic<T1, T2, TResult>(T1 a1, T2 a2)
         {
             if (!IsStatic)
-                throw new InvalidOperationException($"方法 {Name} 不是静态方法，不能使用 Invoke<T1,T2,TResult>(...)" );
+                throw new InvalidOperationException($"方法 {Name} 不是静态方法，不能使用 Invoke<T1,T2,TResult>(...)");
             if (TypedDelegate is Func<T1, T2, TResult> f)
                 return f(a1, a2);
-            return (TResult?)Invoke(null, a1, a2) !;
+            return (TResult?)Invoke(null, a1, a2)!;
         }
 
         public TResult InvokeStatic<T1, T2, T3, TResult>(T1 a1, T2 a2, T3 a3)
         {
             if (!IsStatic)
-                throw new InvalidOperationException($"方法 {Name} 不是静态方法，不能使用 Invoke<T1,T2,T3,TResult>(...)" );
+                throw new InvalidOperationException($"方法 {Name} 不是静态方法，不能使用 Invoke<T1,T2,T3,TResult>(...)");
             if (TypedDelegate is Func<T1, T2, T3, TResult> f)
                 return f(a1, a2, a3);
-            return (TResult?)Invoke(null, a1, a2, a3) !;
+            return (TResult?)Invoke(null, a1, a2, a3)!;
+        }
+
+        // 静态 void 方法语法糖 (0..3 参数)
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void InvokeStaticVoid()
+        {
+            if (!IsStatic)
+                throw new InvalidOperationException($"方法 {Name} 不是静态方法，不能使用 InvokeStaticVoid()");
+            var td = _typedDelegate;
+            if (td is Action a)
+            {
+                a();
+                return;
+            }
+            if (_fastInvoker0 != null)
+            {
+                _fastInvoker0(null);
+                return;
+            }
+            Invoke(null);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void InvokeStaticVoid<T1>(T1 a1)
+        {
+            if (!IsStatic)
+                throw new InvalidOperationException($"方法 {Name} 不是静态方法，不能使用 InvokeStaticVoid<T1>(...)");
+            var td = _typedDelegate;
+            if (td is Action<T1> a)
+            {
+                a(a1);
+                return;
+            }
+            if (_fastInvoker1 != null)
+            {
+                _fastInvoker1(null, a1);
+                return;
+            }
+            Invoke(null, a1);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void InvokeStaticVoid<T1, T2>(T1 a1, T2 a2)
+        {
+            if (!IsStatic)
+                throw new InvalidOperationException($"方法 {Name} 不是静态方法，不能使用 InvokeStaticVoid<T1,T2>(...)");
+            var td = _typedDelegate;
+            if (td is Action<T1, T2> a)
+            {
+                a(a1, a2);
+                return;
+            }
+            if (_fastInvoker2 != null)
+            {
+                _fastInvoker2(null, a1, a2);
+                return;
+            }
+            Invoke(null, a1, a2);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void InvokeStaticVoid<T1, T2, T3>(T1 a1, T2 a2, T3 a3)
+        {
+            if (!IsStatic)
+                throw new InvalidOperationException($"方法 {Name} 不是静态方法，不能使用 InvokeStaticVoid<T1,T2,T3>(...)");
+            var td = _typedDelegate;
+            if (td is Action<T1, T2, T3> a)
+            {
+                a(a1, a2, a3);
+                return;
+            }
+            if (_fastInvoker3 != null)
+            {
+                _fastInvoker3(null, a1, a2, a3);
+                return;
+            }
+            Invoke(null, a1, a2, a3);
         }
 
         // ==============================
-        // Fast Invoker Builders
+        // 创建快速 Invoker
         // ==============================
         private static Func<object?, object?> CreateFastInvoker0(MethodInfo method)
         {
