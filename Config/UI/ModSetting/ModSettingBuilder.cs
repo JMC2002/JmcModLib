@@ -151,7 +151,7 @@ namespace JmcModLib.Config.UI.ModSetting
                                     entry.Key,
                                     L10n.Get(uiAttr.Description, asm),
                                     L10n.Get(uiAttr.ButtonText, asm),
-                                    () => entry.Accessor.Invoke(null));
+                                    entry.Accessor.InvokeStaticVoid);   // 前期已经验证过是静态无参方法
         }
 
         internal static void BuildGroup(Assembly asm)

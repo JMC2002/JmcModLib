@@ -101,9 +101,11 @@ namespace JmcModLib.Config
                         if (!acc.HasAttribute<UIButtonAttribute>())
                             continue;
 
-                        if (!acc.IsStatic)
+                        // 使用 UIButtonAttribute 的验证函数
+                        var methodInfo = acc.Member;
+                        if (!UIButtonAttribute.IsValidButtonMethod(methodInfo, out var errorMsg))
                         {
-                            ModLogger.Error($"方法 {type.FullName}.{acc.Name} 标记了 UIButtonAttribute，但不是静态方法，跳过注册");
+                            ModLogger.Error($"方法 {type.FullName}.{acc.Name} 标记了 UIButtonAttribute，但 {errorMsg}，跳过注册");
                             continue;
                         }
 

@@ -1,5 +1,6 @@
 ﻿using JmcModLib.Config.UI.ModSetting;
 using System;
+using System.Reflection;
 using UnityEngine;
 
 namespace JmcModLib.Config.UI
@@ -16,7 +17,7 @@ namespace JmcModLib.Config.UI
     /// 一个按钮属性
     /// </summary>
     /// <remarks>
-    /// 
+    /// 只能绑定在静态无参构造上
     /// </remarks>
     /// <param name="description"></param>
     /// <param name="buttonText"></param>
@@ -35,6 +36,41 @@ namespace JmcModLib.Config.UI
             if (bEntry is not ButtonEntry entry)
                 throw new ArgumentException("UIButtonAttribute 只适用于 ButtonEntry.");
             ModSettingBuilder.ButtonBuild(entry, this);
+        }
+
+        /// <summary>
+        /// 检查 MethodInfo 是否满足 UIButtonAttribute 的要求（静态、void、无参）
+        /// </summary>
+        /// <param name="method">要检查的方法</param>
+        /// <param name="errorMessage">如果验证失败，返回错误描述</param>
+        /// <returns>如果方法合法返回 true，否则返回 false</returns>
+        public static bool IsValidButtonMethod(MethodInfo method, out string? errorMessage)
+        {
+            errorMessage = null;
+
+            // 检查是否为静态方法
+            if (!method.IsStatic)
+            {
+                errorMessage = $"方法必须是静态方法";
+                return false;
+            }
+
+            // 检查返回类型是否为 void
+            if (method.ReturnType != typeof(void))
+            {
+                errorMessage = $"方法返回类型必须是 void，实际为 {method.ReturnType.Name}";
+                return false;
+            }
+
+            // 检查参数个数是否为 0
+            var parameters = method.GetParameters();
+            if (parameters.Length != 0)
+            {
+                errorMessage = $"方法不能有参数，实际有 {parameters.Length} 个参数";
+                return false;
+            }
+
+            return true;
         }
     }
 
