@@ -1,6 +1,7 @@
 ﻿using JmcModLib.Utils;
 using System;
 using System.Collections.Generic;
+using System.Collections.Concurrent;
 using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
@@ -13,6 +14,56 @@ namespace JmcModLib.Reflection
     /// </summary>
     public sealed class MethodAccessor : ReflectionAccessorBase<MethodInfo, MethodAccessor>
     {
+        // ==============================
+        //   快速查找缓存
+        // ==============================
+
+        // (Type → 该类型的方法按名称分组索引) 仅构建一次，避免每次调用遍历全部方法集合
+        private static readonly ConcurrentDictionary<Type, Dictionary<string, List<MethodInfo>>> _typeMethodGroups = new();
+
+        // (Type, Name, ParamSignature) → MethodAccessor 直接命中（参数签名可以为 default 表示不指定参数匹配）
+        private static readonly ConcurrentDictionary<(Type Type, string Name, ParamSignature Signature), MethodAccessor> _fastLookupCache = new();
+
+        /// <summary>
+        /// 参数签名（用于缓存键）
+        /// 说明：
+        ///   1. null / 未提供参数列表用 Length = -1 表示（即 default ParamSignature）
+        ///   2. 泛型参数占位符统一使用 RuntimeTypeHandle = default 记录，使不同的 T / T1 在同一方法定义上产生相同签名
+        /// </summary>
+        private readonly struct ParamSignature : IEquatable<ParamSignature>
+        {
+            public readonly int Length;
+            private readonly int _hash;
+
+            public ParamSignature(Type[]? types)
+            {
+                if (types == null)
+                {
+                    Length = -1; // 未指定参数类型
+                    _hash = 0;
+                    return;
+                }
+
+                Length = types.Length;
+                unchecked
+                {
+                    int h = 17;
+                    for (int i = 0; i < types.Length; i++)
+                    {
+                        // 泛型参数占位符统一 => 0
+                        var t = types[i];
+                        int v = (t.IsGenericParameter ? 0 : t.TypeHandle.GetHashCode());
+                        h = h * 31 + v;
+                    }
+                    _hash = h;
+                }
+            }
+
+            public bool Equals(ParamSignature other) => Length == other.Length && _hash == other._hash;
+            public override bool Equals(object? obj) => obj is ParamSignature ps && Equals(ps);
+            public override int GetHashCode() => HashCode.Combine(Length, _hash);
+            public static ParamSignature From(Type[]? types) => new(types);
+        }
         /// <summary>
         /// 是否为静态
         /// </summary>
@@ -72,44 +123,74 @@ namespace JmcModLib.Reflection
         /// <exception cref="MissingMethodException"></exception>
         public static MethodAccessor Get(Type type, string methodName, Type[]? parameterTypes = null)
         {
-            var methods = GetAll(type)
-                         .Select(ma => ma.Member)
-                         .Where(m => m.Name == methodName);
+            var sig = ParamSignature.From(parameterTypes);
 
-            if (parameterTypes != null)
+            // 1. 直接命中缓存
+            if (_fastLookupCache.TryGetValue((type, methodName, sig), out var accessor))
+                return accessor;
+
+            // 2. 获取 / 构建类型方法按名称分组
+            var groups = _typeMethodGroups.GetOrAdd(type, t =>
             {
-                methods = methods.Where(m =>
+                var dict = new Dictionary<string, List<MethodInfo>>(StringComparer.Ordinal);
+                foreach (var m in t.GetMethods(DefaultFlags))
+                {
+                    if (!dict.TryGetValue(m.Name, out var list))
+                        dict[m.Name] = list = new List<MethodInfo>(4);
+                    list.Add(m);
+                }
+                return dict;
+            });
+
+            // 3. 找到名称组
+            if (!groups.TryGetValue(methodName, out var overloads))
+                throw new MissingMethodException($"在 {type.FullName} 找不到方法 {methodName}");
+
+            MethodInfo? matched = null;
+
+            if (parameterTypes == null)
+            {
+                // 未指定参数，直接取第一个重载
+                matched = overloads[0];
+            }
+            else
+            {
+                // 遍历重载进行匹配（通常数量较少）
+                foreach (var m in overloads)
                 {
                     var ps = m.GetParameters();
-                    if (parameterTypes.Length > ps.Length) return false;
+                    if (parameterTypes.Length > ps.Length) continue;
 
-                    for (int i = 0; i < ps.Length; i++)
+                    bool ok = true;
+                    for (int i = 0; i < parameterTypes.Length; i++)
                     {
                         var mp = ps[i].ParameterType;
-
-                        // 如果方法参数是泛型占位符（T1、T2…），则接受任意类型匹配
-                        if (mp.IsGenericParameter)
-                            continue;
-
-                        if (mp != parameterTypes[i])
-                            return false;
+                        var req = parameterTypes[i];
+                        if (mp.IsGenericParameter) continue; // 泛型参数占位接受任意
+                        if (mp != req) { ok = false; break; }
                     }
+                    if (!ok) continue;
 
-                    // 多出的参数必须是 optional
+                    // 剩余参数必须是 optional
                     for (int i = parameterTypes.Length; i < ps.Length; i++)
                     {
-                        if (!ps[i].IsOptional)
-                            return false;
+                        if (!ps[i].IsOptional) { ok = false; break; }
                     }
 
-                    return true;
-                });
+                    if (ok)
+                    {
+                        matched = m;
+                        break;
+                    }
+                }
             }
 
-            var method = methods.FirstOrDefault()
-                ?? throw new MissingMethodException($"在 {type.FullName} 找不到方法 {methodName}");
+            if (matched == null)
+                throw new MissingMethodException($"在 {type.FullName} 找不到方法 {methodName} 指定的参数签名");
 
-            return Get(method);
+            accessor = Get(matched);
+            _fastLookupCache.TryAdd((type, methodName, sig), accessor);
+            return accessor;
         }
 
         /// <summary>
