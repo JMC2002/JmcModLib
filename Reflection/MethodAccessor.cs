@@ -21,8 +21,11 @@ namespace JmcModLib.Reflection
         // (Type → 该类型的方法按名称分组索引) 仅构建一次，避免每次调用遍历全部方法集合
         private static readonly ConcurrentDictionary<Type, Dictionary<string, List<MethodInfo>>> _typeMethodGroups = new();
 
-        // (Type, Name, ParamSignature) → MethodAccessor 直接命中（参数签名可以为 default 表示不指定参数匹配）
-        private static readonly ConcurrentDictionary<(Type Type, string Name, ParamSignature Signature), MethodAccessor> _fastLookupCache = new();
+        // (Type, Name) → 第一个方法（用于 parameterTypes == null 的快速路径，不创建 ParamSignature）
+        private static readonly ConcurrentDictionary<(Type, string), MethodAccessor> _nameFirstAccessor = new();
+
+        // (Type → (Name → (ParamSignature → MethodAccessor))) 二级索引，按需填充，不预生成全部前缀
+        private static readonly ConcurrentDictionary<Type, ConcurrentDictionary<string, ConcurrentDictionary<ParamSignature, MethodAccessor>>> _signatureIndex = new();
 
         /// <summary>
         /// 参数签名（用于缓存键）
@@ -123,13 +126,26 @@ namespace JmcModLib.Reflection
         /// <exception cref="MissingMethodException"></exception>
         public static MethodAccessor Get(Type type, string methodName, Type[]? parameterTypes = null)
         {
+            // 1. parameterTypes == null 快速路径（只按名称）
+            if (parameterTypes == null)
+            {
+                // 直接命中名称缓存
+                if (_nameFirstAccessor.TryGetValue((type, methodName), out var firstAcc))
+                    return firstAcc;
+            }
+
             var sig = ParamSignature.From(parameterTypes);
 
-            // 1. 直接命中缓存
-            if (_fastLookupCache.TryGetValue((type, methodName, sig), out var accessor))
-                return accessor;
+            // 2. 签名索引命中（已构建）
+            if (parameterTypes != null &&
+                _signatureIndex.TryGetValue(type, out var nameMap) &&
+                nameMap.TryGetValue(methodName, out var sigMap) &&
+                sigMap.TryGetValue(sig, out var acc))
+            {
+                return acc;
+            }
 
-            // 2. 获取 / 构建类型方法按名称分组
+            // 3. 获取 / 构建类型方法按名称分组
             var groups = _typeMethodGroups.GetOrAdd(type, t =>
             {
                 var dict = new Dictionary<string, List<MethodInfo>>(StringComparer.Ordinal);
@@ -146,8 +162,8 @@ namespace JmcModLib.Reflection
             if (!groups.TryGetValue(methodName, out var overloads))
                 throw new MissingMethodException($"在 {type.FullName} 找不到方法 {methodName}");
 
+            // 4. 遍历重载进行匹配（通常数量较少）
             MethodInfo? matched = null;
-
             if (parameterTypes == null)
             {
                 // 未指定参数，直接取第一个重载
@@ -165,9 +181,8 @@ namespace JmcModLib.Reflection
                     for (int i = 0; i < parameterTypes.Length; i++)
                     {
                         var mp = ps[i].ParameterType;
-                        var req = parameterTypes[i];
                         if (mp.IsGenericParameter) continue; // 泛型参数占位接受任意
-                        if (mp != req) { ok = false; break; }
+                        if (mp != parameterTypes[i]) { ok = false; break; }
                     }
                     if (!ok) continue;
 
@@ -176,20 +191,31 @@ namespace JmcModLib.Reflection
                     {
                         if (!ps[i].IsOptional) { ok = false; break; }
                     }
+                    if (!ok) continue;
 
-                    if (ok)
-                    {
-                        matched = m;
-                        break;
-                    }
+                    matched = m;
+                    break;
                 }
             }
 
             if (matched == null)
                 throw new MissingMethodException($"在 {type.FullName} 找不到方法 {methodName} 指定的参数签名");
 
-            accessor = Get(matched);
-            _fastLookupCache.TryAdd((type, methodName, sig), accessor);
+            var accessor = Get(matched);
+
+            // 5. 写入快速名称缓存（只在名称路径）
+            if (parameterTypes == null)
+            {
+                _nameFirstAccessor.TryAdd((type, methodName), accessor);
+            }
+            else
+            {
+                // 写入签名索引
+                var nameDict = _signatureIndex.GetOrAdd(type, _ => new ConcurrentDictionary<string, ConcurrentDictionary<ParamSignature, MethodAccessor>>(StringComparer.Ordinal));
+                var sigDict = nameDict.GetOrAdd(methodName, _ => new ConcurrentDictionary<ParamSignature, MethodAccessor>());
+                sigDict.TryAdd(sig, accessor);
+            }
+
             return accessor;
         }
 
