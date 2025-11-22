@@ -120,6 +120,9 @@ namespace JmcModLib.Config
                             continue;
 
                         var entry = BuildConfigEntry(asm, type, acc);
+                        if (entry == null!)  // 验证失败，跳过
+                            continue;
+
                         var group = entry.Group;
                         var groupDict = groups.GetOrAdd(group, _ => new ConcurrentDictionary<string, ConfigEntry>(StringComparer.Ordinal));
                         groupDict[entry.Key] = entry;
@@ -148,16 +151,51 @@ namespace JmcModLib.Config
 
         private static ConfigEntry BuildConfigEntry(Assembly asm, Type type, MemberAccessor acc)
         {
-            // 如果有 instance 需求，创建实例
-            object? instance = null;
+            var attr = acc.GetAttribute<ConfigAttribute>()!;
+
+            // ============ 限制 1：必须是静态成员 ============
             if (!acc.IsStatic)
             {
-                var perAsm = _typeInstances.GetOrAdd(asm, _ => new ConcurrentDictionary<Type, object>());
-                instance = perAsm.GetOrAdd(type, t => Activator.CreateInstance(t)!);
+                ModLogger.Error($"配置项 {type.FullName}.{acc.Name} 必须是静态成员。[Config] 特性仅支持 static 字段/属性，跳过注册");
+                return null!;
             }
 
-            var attr = acc.GetAttribute<ConfigAttribute>()!;
-            var defaultValue = acc.GetValue(instance);
+            // ============ 限制 2：OnChanged 方法验证 ============
+            if (!string.IsNullOrEmpty(attr.OnChanged))
+            {
+                try
+                {
+                    var onChangedMethod = MethodAccessor.Get(type, attr.OnChanged);
+
+                    // 检查 1：必须是静态方法
+                    if (!onChangedMethod.IsStatic)
+                    {
+                        ModLogger.Error($"配置项 {type.FullName}.{acc.Name} 的 OnChanged 方法 '{attr.OnChanged}' 必须是静态方法，跳过注册");
+                        return null!;
+                    }
+
+                    // 检查 2：参数个数必须恰好为 1（新值）
+                    var ps = onChangedMethod.Member.GetParameters();
+                    if (ps.Length != 1)
+                    {
+                        ModLogger.Error($"配置项 {type.FullName}.{acc.Name} 的 OnChanged 方法 '{attr.OnChanged}' 参数个数必须为 1，实际为 {ps.Length}，跳过注册");
+                        return null!;
+                    }
+
+                    // 检查 3：有返回值则输出警告（但仍然注册）
+                    if (onChangedMethod.Member.ReturnType != typeof(void))
+                    {
+                        ModLogger.Warn($"⚠️ 配置项 {type.FullName}.{acc.Name} 的 OnChanged 方法 '{attr.OnChanged}' 有返回值（{onChangedMethod.Member.ReturnType.Name}），返回值将被忽略");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    ModLogger.Error($"配置项 {type.FullName}.{acc.Name} 的 OnChanged 方法 '{attr.OnChanged}' 未找到，错误：{ex.Message}，跳过注册");
+                    return null!;
+                }
+            }
+
+            var defaultValue = acc.GetValue(null);  // 静态成员，instance 传 null
             
             // 创建非泛型版本（简洁，易维护）
             var entry = new ConfigEntry(asm, type, acc, attr, defaultValue);
@@ -408,19 +446,9 @@ namespace JmcModLib.Config
 
         private static void InvokeOnChanged(ConfigEntry modEntry, object? value)
         {
+            // 注册时已验证 OnChanged 是静态方法，参数为 1 个，直接调用即可
             var mAcc = MethodAccessor.Get(modEntry.DeclaringType, modEntry.Attribute.OnChanged);
-            var instance = GetInstance(modEntry);
-
-            if (mAcc.IsStatic == modEntry.Accessor.IsStatic)
-                mAcc.Invoke(instance, value);
-            else if (mAcc.IsStatic)
-                mAcc.Invoke(null, value);
-            else
-            {
-                var perAsm = _typeInstances.GetOrAdd(modEntry.Assembly, _ => new ConcurrentDictionary<Type, object>());
-                var newInstance = perAsm.GetOrAdd(modEntry.DeclaringType, t => Activator.CreateInstance(t)!);
-                mAcc.Invoke(newInstance, value);
-            }
+            mAcc.Invoke(null, value);  // 静态方法，instance 传 null
         }
 
         /// <summary>
