@@ -50,7 +50,7 @@ var value2 = idx2.GetValue(list, 3, 5);
 - 使用 `GetIndexer(type, params Type[] parameterTypes)` 获取特定索引器重载。
 - 调用时索引参数数量必须匹配，否则抛出 `ArgumentException`。
 
-### 2.4 强类型委托（推荐）
+### 2.4 强类型委托与语法糖（推荐）
 当成员不是索引器时，会自动生成强类型委托以避免装箱与运行时转换：
 
 - 实例字段/属性
@@ -103,7 +103,7 @@ add.Invoke(obj, new object?[]{ 1, 2 });
 - 传参不足（且参数无默认值）或过多时抛出 `TargetParameterCountException`。
 - 当形参存在默认值时，通用路径会自动补齐缺省值。
 
-### 3.3 强类型委托（推荐）
+### 3.3 强类型委托与语法糖（推荐）
 满足以下条件将自动生成强类型委托：非泛型定义、无 `ref/out`、形参无可选参数。
 - 实例方法：委托原型形如 `Func<TTarget, T1, T2, TResult>` 或 `Action<TTarget, ...>`
 - 静态方法：委托原型形如 `Func<T1, T2, TResult>` 或 `Action<...>`
@@ -114,9 +114,15 @@ var acc = MethodAccessor.Get(typeof(MyType), "Add", new[]{ typeof(int), typeof(i
 var typed = (Func<MyType, int, int, int>)acc.TypedDelegate!;
 int sum = typed(obj, 1, 2);
 
+// 语法糖（实例方法）
+int sum2 = acc.Invoke<MyType,int,int,int>(obj, 1, 2);
+
 var sacc = MethodAccessor.Get(typeof(MyType), "StaticAdd", null);
 var styped = (Func<int, int, int>)sacc.TypedDelegate!;
 int ssum = styped(1, 2);
+
+// 语法糖（静态方法）
+int ssum2 = sacc.InvokeStatic<int,int,int>(1, 2);
 ```
 
 ### 3.4 ref/out 参数
@@ -226,6 +232,9 @@ var r1 = add.Invoke(obj, 1, 2);
 var addTyped = (Func<MyType,int,int,int>)add.TypedDelegate!;
 int r2 = addTyped(obj, 1, 2);
 
+// 方法（语法糖）
+int r3Sugar = add.Invoke<MyType,int,int,int>(obj, 1, 2);
+
 // 索引器
 var idx = MemberAccessor.GetIndexer(typeof(MyList), typeof(int));
 var iv = idx.GetValue(list, 1);
@@ -235,6 +244,10 @@ idx.SetValue(list, "x", 1);
 var echo = MethodAccessor.Get(typeof(MyType), "Echo", new[]{ typeof(object) });
 var echoStr = echo.MakeGeneric(typeof(string));
 var r3 = echoStr.Invoke(obj, "hello");
+
+// 静态方法语法糖示例
+var staticAdd = MethodAccessor.Get(typeof(MyType), "StaticAdd");
+int rs = staticAdd.InvokeStatic<int,int,int>(1,2);
 ```
 
 ---

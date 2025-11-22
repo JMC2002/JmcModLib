@@ -444,6 +444,82 @@ namespace JmcModLib.Reflection
             return Invoke(instance, new object?[] { a0, a1, a2 });
         }
 
+        // =============================================
+        // 泛型语法糖 (强类型委托优先)
+        // =============================================
+        public TResult Invoke<TTarget, TResult>(TTarget instance)
+        {
+            if (!IsStatic && instance == null)
+                throw new ArgumentNullException(nameof(instance));
+            if (TypedDelegate is Func<TTarget, TResult> f)
+                return f(instance);
+            return (TResult?)Invoke(instance) !;
+        }
+
+        public TResult Invoke<TTarget, T1, TResult>(TTarget instance, T1 a1)
+        {
+            if (!IsStatic && instance == null)
+                throw new ArgumentNullException(nameof(instance));
+            if (TypedDelegate is Func<TTarget, T1, TResult> f)
+                return f(instance, a1);
+            return (TResult?)Invoke(instance, a1) !;
+        }
+
+        public TResult Invoke<TTarget, T1, T2, TResult>(TTarget instance, T1 a1, T2 a2)
+        {
+            if (!IsStatic && instance == null)
+                throw new ArgumentNullException(nameof(instance));
+            if (TypedDelegate is Func<TTarget, T1, T2, TResult> f)
+                return f(instance, a1, a2);
+            return (TResult?)Invoke(instance, a1, a2) !;
+        }
+
+        public TResult Invoke<TTarget, T1, T2, T3, TResult>(TTarget instance, T1 a1, T2 a2, T3 a3)
+        {
+            if (!IsStatic && instance == null)
+                throw new ArgumentNullException(nameof(instance));
+            if (TypedDelegate is Func<TTarget, T1, T2, T3, TResult> f)
+                return f(instance, a1, a2, a3);
+            return (TResult?)Invoke(instance, a1, a2, a3) !;
+        }
+
+        // 静态方法专用 (使用不同方法名避免与已有 Invoke 重载冲突)
+        public TResult InvokeStatic<TResult>()
+        {
+            if (!IsStatic)
+                throw new InvalidOperationException($"方法 {Name} 不是静态方法，不能使用 Invoke<TResult>()");
+            if (TypedDelegate is Func<TResult> f)
+                return f();
+            return (TResult?)Invoke(null) !;
+        }
+
+        public TResult InvokeStatic<T1, TResult>(T1 a1)
+        {
+            if (!IsStatic)
+                throw new InvalidOperationException($"方法 {Name} 不是静态方法，不能使用 Invoke<T1,TResult>(...)" );
+            if (TypedDelegate is Func<T1, TResult> f)
+                return f(a1);
+            return (TResult?)Invoke(null, a1) !;
+        }
+
+        public TResult InvokeStatic<T1, T2, TResult>(T1 a1, T2 a2)
+        {
+            if (!IsStatic)
+                throw new InvalidOperationException($"方法 {Name} 不是静态方法，不能使用 Invoke<T1,T2,TResult>(...)" );
+            if (TypedDelegate is Func<T1, T2, TResult> f)
+                return f(a1, a2);
+            return (TResult?)Invoke(null, a1, a2) !;
+        }
+
+        public TResult InvokeStatic<T1, T2, T3, TResult>(T1 a1, T2 a2, T3 a3)
+        {
+            if (!IsStatic)
+                throw new InvalidOperationException($"方法 {Name} 不是静态方法，不能使用 Invoke<T1,T2,T3,TResult>(...)" );
+            if (TypedDelegate is Func<T1, T2, T3, TResult> f)
+                return f(a1, a2, a3);
+            return (TResult?)Invoke(null, a1, a2, a3) !;
+        }
+
         // ==============================
         // Fast Invoker Builders
         // ==============================

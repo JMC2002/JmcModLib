@@ -342,6 +342,69 @@ namespace JmcModLib.Reflection
             indexSetter(target, value, indexArgs);
         }
 
+        // =============================================
+        // 泛型语法糖（非索引器）
+        // =============================================
+        public TValue GetValue<TTarget, TValue>(TTarget target)
+        {
+            if (indexParams != null)
+                throw new InvalidOperationException($"属性 {Name} 是索引器，不能使用泛型 GetValue<TTarget,TValue>(...) 语法");
+            if (!IsStatic && target == null)
+                throw new ArgumentNullException(nameof(target), $"对于非静态成员 {Name}，target 不能为空");
+            if (typedGetter is Func<TTarget, TValue> g)
+                return g(target);
+            if (IsStatic && typedGetter is Func<TValue> sg)
+                return sg();
+
+            var raw = GetValue(target);
+            return raw is null ? default! : (TValue)raw;
+        }
+
+        public void SetValue<TTarget, TValue>(TTarget target, TValue value)
+        {
+            if (indexParams != null)
+                throw new InvalidOperationException($"属性 {Name} 是索引器，不能使用泛型 SetValue<TTarget,TValue>(...) 语法");
+            if (!IsStatic && target == null)
+                throw new ArgumentNullException(nameof(target), $"对于非静态成员 {Name}，target 不能为空");
+            if (setter == null)
+                throw new InvalidOperationException($"成员 {Name} 不可写");
+            if (typedSetter is Action<TTarget, TValue> s)
+            {
+                s(target, value);
+                return;
+            }
+            if (IsStatic && typedSetter is Action<TValue> ss)
+            {
+                ss(value);
+                return;
+            }
+            SetValue(target, (object?)value);
+        }
+
+        public TValue GetValue<TValue>()
+        {
+            if (!IsStatic)
+                throw new InvalidOperationException($"成员 {Name} 不是静态成员，不能使用 GetValue<TValue>() 语法");
+            if (typedGetter is Func<TValue> g)
+                return g();
+            var raw = GetValue(null);
+            return raw is null ? default! : (TValue)raw;
+        }
+
+        public void SetValue<TValue>(TValue value)
+        {
+            if (!IsStatic)
+                throw new InvalidOperationException($"成员 {Name} 不是静态成员，不能使用 SetValue<TValue>(...) 语法");
+            if (setter == null)
+                throw new InvalidOperationException($"成员 {Name} 不可写");
+            if (typedSetter is Action<TValue> s)
+            {
+                s(value);
+                return;
+            }
+            SetValue(null, (object?)value);
+        }
+
 
         /// <summary>
         /// 获得一个成员访问器（自动缓存）。
