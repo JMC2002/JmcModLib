@@ -75,6 +75,15 @@ namespace JmcModLib.Reflection
         // 允许为 null（当这是一个泛型定义尚未闭包时）
         private readonly Func<object?, object?[], object?>? _invoker;
 
+        // Fast path delegates (no object?[] allocation) for 0..3 parameters (no ref/out/optional)
+        private readonly Func<object?, object?>? _fastInvoker0;
+        private readonly Func<object?, object?, object?>? _fastInvoker1;
+        private readonly Func<object?, object?, object?, object?>? _fastInvoker2;
+        private readonly Func<object?, object?, object?, object?, object?>? _fastInvoker3;
+
+        // ThreadStatic buffer for default parameter completion to avoid per-call allocation
+        [ThreadStatic] private static object?[]? _defaultArgBuffer;
+
         private MethodAccessor(MethodInfo method, bool createInvoker = true)
             : base(method)
         {
@@ -83,6 +92,23 @@ namespace JmcModLib.Reflection
                 _invoker = CreateInvoker(method);
             else
                 _invoker = null; // 延迟创建
+
+            // 构建 fastInvoker（仅限非泛型定义、无 ref/out、参数数<=3、无可选参数缺省逻辑）
+            if (_invoker != null)
+            {
+                var ps = method.GetParameters();
+                bool suitable = ps.Length <= 3 && ps.All(p => !p.ParameterType.IsByRef) && ps.All(p => !p.IsOptional);
+                if (suitable)
+                {
+                    switch (ps.Length)
+                    {
+                        case 0: _fastInvoker0 = CreateFastInvoker0(method); break;
+                        case 1: _fastInvoker1 = CreateFastInvoker1(method, ps[0]); break;
+                        case 2: _fastInvoker2 = CreateFastInvoker2(method, ps[0], ps[1]); break;
+                        case 3: _fastInvoker3 = CreateFastInvoker3(method, ps[0], ps[1], ps[2]); break;
+                    }
+                }
+            }
         }
 
         /// <summary>
@@ -255,25 +281,26 @@ namespace JmcModLib.Reflection
             // 如果用户传入的参数不足，则自动补齐默认值
             if (args.Length < ps.Length)
             {
-                object?[] newArgs = new object?[ps.Length];
+                // 复用 ThreadStatic buffer
+                var buffer = _defaultArgBuffer;
+                if (buffer == null || buffer.Length != ps.Length)
+                {
+                    buffer = new object?[ps.Length];
+                    _defaultArgBuffer = buffer;
+                }
 
-                // 复制用户传入的部分
-                for (int i = 0; i < args.Length; i++)
-                    newArgs[i] = args[i];
+                // 复制已传参数
+                for (int i = 0; i < args.Length; i++) buffer[i] = args[i];
 
                 // 补齐默认参数
                 for (int i = args.Length; i < ps.Length; i++)
                 {
                     var p = ps[i];
                     if (!p.IsOptional)
-                        throw new TargetParameterCountException(
-                            $"方法 {Name} 的参数 {p.Name} 没有默认值，但用户未提供");
-
-                    // C# 默认参数的值在编译器层面写死到了 metadata 的 DefaultValue 里
-                    newArgs[i] = p.DefaultValue;
+                        throw new TargetParameterCountException($"方法 {Name} 的参数 {p.Name} 没有默认值，但用户未提供");
+                    buffer[i] = p.DefaultValue;
                 }
-
-                args = newArgs;
+                args = buffer;
             }
             else if (args.Length > ps.Length)
             {
@@ -282,6 +309,186 @@ namespace JmcModLib.Reflection
             }
 
             return _invoker(instance, args);
+        }
+
+        // ==============================
+        // Fast Invoke Overloads (0..3 params)
+        // ==============================
+        public object? InvokeFast(object? instance)
+        {
+            if (_fastInvoker0 != null)
+            {
+                if (!IsStatic && instance == null)
+                    throw new ArgumentNullException(nameof(instance), $"调用实例方法 {Name} 需要实例对象");
+                return _fastInvoker0(instance);
+            }
+            return Invoke(instance, Array.Empty<object?>());
+        }
+
+        public object? InvokeFast(object? instance, object? a0)
+        {
+            if (_fastInvoker1 != null)
+            {
+                if (!IsStatic && instance == null)
+                    throw new ArgumentNullException(nameof(instance), $"调用实例方法 {Name} 需要实例对象");
+                return _fastInvoker1(instance, a0);
+            }
+            return Invoke(instance, a0);
+        }
+
+        public object? InvokeFast(object? instance, object? a0, object? a1)
+        {
+            if (_fastInvoker2 != null)
+            {
+                if (!IsStatic && instance == null)
+                    throw new ArgumentNullException(nameof(instance), $"调用实例方法 {Name} 需要实例对象");
+                return _fastInvoker2(instance, a0, a1);
+            }
+            return Invoke(instance, a0, a1);
+        }
+
+        public object? InvokeFast(object? instance, object? a0, object? a1, object? a2)
+        {
+            if (_fastInvoker3 != null)
+            {
+                if (!IsStatic && instance == null)
+                    throw new ArgumentNullException(nameof(instance), $"调用实例方法 {Name} 需要实例对象");
+                return _fastInvoker3(instance, a0, a1, a2);
+            }
+            return Invoke(instance, a0, a1, a2);
+        }
+
+        // ==============================
+        // Fast Invoker Builders
+        // ==============================
+        private static Func<object?, object?> CreateFastInvoker0(MethodInfo method)
+        {
+            var dm = new DynamicMethod($"fast_invoke0_{method.DeclaringType!.Name}_{method.Name}", typeof(object), new[] { typeof(object) }, method.Module, true);
+            var il = dm.GetILGenerator();
+
+            if (!method.IsStatic)
+            {
+                il.Emit(OpCodes.Ldarg_0);
+                if (method.DeclaringType!.IsValueType)
+                    il.Emit(OpCodes.Unbox, method.DeclaringType!);
+                else
+                    il.Emit(OpCodes.Castclass, method.DeclaringType!);
+            }
+
+            if (method.DeclaringType!.IsValueType && !method.IsStatic)
+            {
+                il.Emit(OpCodes.Constrained, method.DeclaringType!);
+                il.Emit(OpCodes.Callvirt, method);
+            }
+            else
+            {
+                il.EmitCall(method.IsVirtual && !method.IsFinal && !method.IsStatic ? OpCodes.Callvirt : OpCodes.Call, method, null);
+            }
+
+            if (method.ReturnType == typeof(void))
+                il.Emit(OpCodes.Ldnull);
+            else if (method.ReturnType.IsValueType)
+                il.Emit(OpCodes.Box, method.ReturnType);
+
+            il.Emit(OpCodes.Ret);
+            return (Func<object?, object?>)dm.CreateDelegate(typeof(Func<object?, object?>));
+        }
+
+        private static Func<object?, object?, object?> CreateFastInvoker1(MethodInfo method, ParameterInfo p0)
+        {
+            var dm = new DynamicMethod($"fast_invoke1_{method.DeclaringType!.Name}_{method.Name}", typeof(object), new[] { typeof(object), typeof(object) }, method.Module, true);
+            var il = dm.GetILGenerator();
+
+            if (!method.IsStatic)
+            {
+                il.Emit(OpCodes.Ldarg_0);
+                if (method.DeclaringType!.IsValueType)
+                    il.Emit(OpCodes.Unbox, method.DeclaringType!);
+                else
+                    il.Emit(OpCodes.Castclass, method.DeclaringType!);
+            }
+
+            il.Emit(OpCodes.Ldarg_1);
+            EmitParamCast(il, p0.ParameterType);
+
+            EmitDirectCall(il, method);
+
+            if (method.ReturnType == typeof(void)) il.Emit(OpCodes.Ldnull); else if (method.ReturnType.IsValueType) il.Emit(OpCodes.Box, method.ReturnType);
+            il.Emit(OpCodes.Ret);
+            return (Func<object?, object?, object?>)dm.CreateDelegate(typeof(Func<object?, object?, object?>));
+        }
+
+        private static Func<object?, object?, object?, object?> CreateFastInvoker2(MethodInfo method, ParameterInfo p0, ParameterInfo p1)
+        {
+            var dm = new DynamicMethod($"fast_invoke2_{method.DeclaringType!.Name}_{method.Name}", typeof(object), new[] { typeof(object), typeof(object), typeof(object) }, method.Module, true);
+            var il = dm.GetILGenerator();
+            if (!method.IsStatic)
+            {
+                il.Emit(OpCodes.Ldarg_0);
+                if (method.DeclaringType!.IsValueType)
+                    il.Emit(OpCodes.Unbox, method.DeclaringType!);
+                else
+                    il.Emit(OpCodes.Castclass, method.DeclaringType!);
+            }
+            il.Emit(OpCodes.Ldarg_1); EmitParamCast(il, p0.ParameterType);
+            il.Emit(OpCodes.Ldarg_2); EmitParamCast(il, p1.ParameterType);
+            EmitDirectCall(il, method);
+            if (method.ReturnType == typeof(void)) il.Emit(OpCodes.Ldnull); else if (method.ReturnType.IsValueType) il.Emit(OpCodes.Box, method.ReturnType);
+            il.Emit(OpCodes.Ret);
+            return (Func<object?, object?, object?, object?>)dm.CreateDelegate(typeof(Func<object?, object?, object?, object?>));
+        }
+
+        private static Func<object?, object?, object?, object?, object?> CreateFastInvoker3(MethodInfo method, ParameterInfo p0, ParameterInfo p1, ParameterInfo p2)
+        {
+            var dm = new DynamicMethod($"fast_invoke3_{method.DeclaringType!.Name}_{method.Name}", typeof(object), new[] { typeof(object), typeof(object), typeof(object), typeof(object) }, method.Module, true);
+            var il = dm.GetILGenerator();
+            if (!method.IsStatic)
+            {
+                il.Emit(OpCodes.Ldarg_0);
+                if (method.DeclaringType!.IsValueType)
+                    il.Emit(OpCodes.Unbox, method.DeclaringType!);
+                else
+                    il.Emit(OpCodes.Castclass, method.DeclaringType!);
+            }
+            il.Emit(OpCodes.Ldarg_1); EmitParamCast(il, p0.ParameterType);
+            il.Emit(OpCodes.Ldarg_2); EmitParamCast(il, p1.ParameterType);
+            il.Emit(OpCodes.Ldarg_3); EmitParamCast(il, p2.ParameterType);
+            EmitDirectCall(il, method);
+            if (method.ReturnType == typeof(void)) il.Emit(OpCodes.Ldnull); else if (method.ReturnType.IsValueType) il.Emit(OpCodes.Box, method.ReturnType);
+            il.Emit(OpCodes.Ret);
+            return (Func<object?, object?, object?, object?, object?>)dm.CreateDelegate(typeof(Func<object?, object?, object?, object?, object?>));
+        }
+
+        private static void EmitParamCast(ILGenerator il, Type type)
+        {
+            if (type.IsEnum)
+            {
+                var underlying = Enum.GetUnderlyingType(type);
+                il.Emit(OpCodes.Unbox_Any, underlying);
+                il.Emit(OpCodes.Box, underlying);
+                il.Emit(OpCodes.Unbox_Any, type);
+            }
+            else if (type.IsValueType)
+            {
+                il.Emit(OpCodes.Unbox_Any, type);
+            }
+            else
+            {
+                il.Emit(OpCodes.Castclass, type);
+            }
+        }
+
+        private static void EmitDirectCall(ILGenerator il, MethodInfo method)
+        {
+            if (method.DeclaringType!.IsValueType && !method.IsStatic)
+            {
+                il.Emit(OpCodes.Constrained, method.DeclaringType!);
+                il.Emit(OpCodes.Callvirt, method);
+            }
+            else
+            {
+                il.EmitCall(method.IsVirtual && !method.IsFinal && !method.IsStatic ? OpCodes.Callvirt : OpCodes.Call, method, null);
+            }
         }
 
         /// <summary>
