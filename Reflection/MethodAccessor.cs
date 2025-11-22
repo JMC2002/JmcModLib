@@ -312,9 +312,10 @@ namespace JmcModLib.Reflection
         }
 
         // ==============================
-        // Fast Invoke Overloads (0..3 params)
-        // ==============================
-        public object? InvokeFast(object? instance)
+        // Fast Invoke integrated as overloads (0..3 params) –
+        // these route to precompiled fast delegates when available, otherwise fall back to params object?[] path.
+
+        public object? Invoke(object? instance)
         {
             if (_fastInvoker0 != null)
             {
@@ -325,7 +326,7 @@ namespace JmcModLib.Reflection
             return Invoke(instance, Array.Empty<object?>());
         }
 
-        public object? InvokeFast(object? instance, object? a0)
+        public object? Invoke(object? instance, object? a0)
         {
             if (_fastInvoker1 != null)
             {
@@ -333,10 +334,10 @@ namespace JmcModLib.Reflection
                     throw new ArgumentNullException(nameof(instance), $"调用实例方法 {Name} 需要实例对象");
                 return _fastInvoker1(instance, a0);
             }
-            return Invoke(instance, a0);
+            return Invoke(instance, new object?[] { a0 });
         }
 
-        public object? InvokeFast(object? instance, object? a0, object? a1)
+        public object? Invoke(object? instance, object? a0, object? a1)
         {
             if (_fastInvoker2 != null)
             {
@@ -344,10 +345,10 @@ namespace JmcModLib.Reflection
                     throw new ArgumentNullException(nameof(instance), $"调用实例方法 {Name} 需要实例对象");
                 return _fastInvoker2(instance, a0, a1);
             }
-            return Invoke(instance, a0, a1);
+            return Invoke(instance, new object?[] { a0, a1 });
         }
 
-        public object? InvokeFast(object? instance, object? a0, object? a1, object? a2)
+        public object? Invoke(object? instance, object? a0, object? a1, object? a2)
         {
             if (_fastInvoker3 != null)
             {
@@ -355,7 +356,7 @@ namespace JmcModLib.Reflection
                     throw new ArgumentNullException(nameof(instance), $"调用实例方法 {Name} 需要实例对象");
                 return _fastInvoker3(instance, a0, a1, a2);
             }
-            return Invoke(instance, a0, a1, a2);
+            return Invoke(instance, new object?[] { a0, a1, a2 });
         }
 
         // ==============================
