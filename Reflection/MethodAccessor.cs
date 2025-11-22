@@ -7,6 +7,7 @@ using System.Reflection;
 using System.Reflection.Emit;
 using System.Linq.Expressions;
 using Unity.VisualScripting.Dependencies.NCalc;
+using System.Runtime.CompilerServices;
 
 namespace JmcModLib.Reflection
 {
@@ -447,40 +448,73 @@ namespace JmcModLib.Reflection
         // =============================================
         // 泛型语法糖 (强类型委托优先)
         // =============================================
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public TResult Invoke<TTarget, TResult>(TTarget instance)
         {
             if (!IsStatic && instance == null)
                 throw new ArgumentNullException(nameof(instance));
-            if (TypedDelegate is Func<TTarget, TResult> f)
+            var td = _typedDelegate;
+            if (td is Func<TTarget, TResult> f)
                 return f(instance);
-            return (TResult?)Invoke(instance) !;
+            // Fast path 0-param instance method
+            if (_fastInvoker0 != null)
+            {
+                var r = _fastInvoker0(instance);
+                return r is null ? default! : (TResult)r;
+            }
+            var ret = Invoke(instance);
+            return ret is null ? default! : (TResult)ret;
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public TResult Invoke<TTarget, T1, TResult>(TTarget instance, T1 a1)
         {
             if (!IsStatic && instance == null)
                 throw new ArgumentNullException(nameof(instance));
-            if (TypedDelegate is Func<TTarget, T1, TResult> f)
+            var td = _typedDelegate;
+            if (td is Func<TTarget, T1, TResult> f)
                 return f(instance, a1);
-            return (TResult?)Invoke(instance, a1) !;
+            if (_fastInvoker1 != null)
+            {
+                var r = _fastInvoker1(instance, a1);
+                return r is null ? default! : (TResult)r;
+            }
+            var ret = Invoke(instance, a1);
+            return ret is null ? default! : (TResult)ret;
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public TResult Invoke<TTarget, T1, T2, TResult>(TTarget instance, T1 a1, T2 a2)
         {
             if (!IsStatic && instance == null)
                 throw new ArgumentNullException(nameof(instance));
-            if (TypedDelegate is Func<TTarget, T1, T2, TResult> f)
+            var td = _typedDelegate;
+            if (td is Func<TTarget, T1, T2, TResult> f)
                 return f(instance, a1, a2);
-            return (TResult?)Invoke(instance, a1, a2) !;
+            if (_fastInvoker2 != null)
+            {
+                var r = _fastInvoker2(instance, a1, a2);
+                return r is null ? default! : (TResult)r;
+            }
+            var ret = Invoke(instance, a1, a2);
+            return ret is null ? default! : (TResult)ret;
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public TResult Invoke<TTarget, T1, T2, T3, TResult>(TTarget instance, T1 a1, T2 a2, T3 a3)
         {
             if (!IsStatic && instance == null)
                 throw new ArgumentNullException(nameof(instance));
-            if (TypedDelegate is Func<TTarget, T1, T2, T3, TResult> f)
+            var td = _typedDelegate;
+            if (td is Func<TTarget, T1, T2, T3, TResult> f)
                 return f(instance, a1, a2, a3);
-            return (TResult?)Invoke(instance, a1, a2, a3) !;
+            if (_fastInvoker3 != null)
+            {
+                var r = _fastInvoker3(instance, a1, a2, a3);
+                return r is null ? default! : (TResult)r;
+            }
+            var ret = Invoke(instance, a1, a2, a3);
+            return ret is null ? default! : (TResult)ret;
         }
 
         // 静态方法专用 (使用不同方法名避免与已有 Invoke 重载冲突)
