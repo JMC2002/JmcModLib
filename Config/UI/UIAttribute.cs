@@ -44,9 +44,7 @@ namespace JmcModLib.Config.UI
     [AttributeUsage(AttributeTargets.Field | AttributeTargets.Property)]
     public abstract class UIConfigAttribute : UIBaseAttribute
     {
-        internal virtual Type RequiredType => typeof(object);
-
-        internal virtual bool IsValid(ConfigEntry entry) => entry.Accessor.MemberType == RequiredType;
+        internal abstract bool IsValid(ConfigEntry entry);
 
         internal override void BuildUI(BaseEntry bEntry)
         {
@@ -56,6 +54,37 @@ namespace JmcModLib.Config.UI
         }
 
         internal abstract void BuildUI(ConfigEntry entry);
+    }
+
+    /// <summary>
+    /// 用于标记具有某个类型约束的基类属性
+    /// </summary>
+    public abstract class UIConfigAttribute<T> : UIConfigAttribute
+    {
+        internal Type RequiredType => typeof(T);
+        internal override bool IsValid(ConfigEntry entry)
+            => entry.Accessor.MemberType == RequiredType;
+    }
+
+    /// <summary>
+    /// 具有某个类型的滑动条
+    /// </summary>
+    public abstract class UISliderAttribute<T>(
+                            T min,
+                            T max,
+                            int characterLimit = 5) : UIConfigAttribute<T>
+        where T : IComparable<T>
+    {
+        internal T Min { get; } = min;
+        internal T Max { get; } = max;
+
+        internal int CharacterLimit { get; } = characterLimit;
+        internal override bool IsValid(ConfigEntry entry)
+        {
+            if (entry.Accessor.MemberType != RequiredType) return false;
+            var v = (T)ConfigManager.GetValue(entry)!;
+            return v.CompareTo(Min) >= 0 && v.CompareTo(Max) <= 0;
+        }
     }
 
     /// <summary>
@@ -72,21 +101,10 @@ namespace JmcModLib.Config.UI
                             float min, 
                             float max, 
                             int decimalPlaces = 1, 
-                            int characterLimit = 5) : UIConfigAttribute
+                            int characterLimit = 5) : UISliderAttribute<float>(min, max, characterLimit)
     {
-        internal override Type RequiredType => typeof(float);
 
-        internal float Min { get; } = min;
-        internal float Max { get; } = max;
         internal int DecimalPlaces { get; } = decimalPlaces;
-        internal int CharacterLimit { get; } = characterLimit;
-
-        internal override bool IsValid(ConfigEntry entry)
-        {
-            if (entry.Accessor.MemberType != RequiredType) return false;
-            var v = (float)ConfigManager.GetValue(entry)!;
-            return v >= Min && v <= Max;
-        }
 
         internal override void BuildUI(ConfigEntry entry)
         {
@@ -106,21 +124,8 @@ namespace JmcModLib.Config.UI
     public sealed class UIIntSliderAttribute(
                             int min, 
                             int max, 
-                            int characterLimit = 5) : UIConfigAttribute
+                            int characterLimit = 5) : UISliderAttribute<int>(min, max, characterLimit)
     {
-        internal override Type RequiredType => typeof(int);
-
-        internal int Min { get; } = min;
-        internal int Max { get; } = max;
-        internal int CharacterLimit { get; } = characterLimit;
-
-        internal override bool IsValid(ConfigEntry entry)
-        {
-            if (entry.Accessor.MemberType != RequiredType) return false;
-            var v = (int)ConfigManager.GetValue(entry)!;
-            return v >= Min && v <= Max;
-        }
-
         internal override void BuildUI(ConfigEntry entry)
         {
             ModSettingBuilder.IntSliderBuild(entry, this);
@@ -130,10 +135,8 @@ namespace JmcModLib.Config.UI
     /// <summary>
     /// 开关属性
     /// </summary>
-    public sealed class UIToggleAttribute : UIConfigAttribute
+    public sealed class UIToggleAttribute : UIConfigAttribute<bool>
     {
-        internal override Type RequiredType => typeof(bool);
-
         internal override void BuildUI(ConfigEntry entry)
         {
             ModSettingBuilder.ToggleBuild(entry);
@@ -157,10 +160,8 @@ namespace JmcModLib.Config.UI
     /// <summary>
     /// 绑定按键属性
     /// </summary>
-    public sealed class UIKeyBindAttribute : UIConfigAttribute
+    public sealed class UIKeyBindAttribute : UIConfigAttribute<KeyCode>
     {
-        internal override Type RequiredType => typeof(KeyCode);
-
         internal override void BuildUI(ConfigEntry entry)
         {
             ModSettingBuilder.KeyBindBuild(entry);
@@ -170,20 +171,13 @@ namespace JmcModLib.Config.UI
     /// <summary>
     /// 输入框属性
     /// </summary>
-    public sealed class UIInputAttribute : UIConfigAttribute
+    /// <remarks>
+    /// 初始化一个输入框属性
+    /// </remarks>
+    /// <param name="characterLimit">输入字符限制</param>
+    public sealed class UIInputAttribute(int characterLimit = 5) : UIConfigAttribute<string>
     {
-        internal override Type RequiredType => typeof(string);
-
-        internal int CharacterLimit { get; }
-
-        /// <summary>
-        /// 初始化一个输入框属性
-        /// </summary>
-        /// <param name="characterLimit">输入字符限制</param>
-        public UIInputAttribute(int characterLimit = 5)
-        {
-            CharacterLimit = characterLimit;
-        }
+        internal int CharacterLimit { get; } = characterLimit;
 
         internal override void BuildUI(ConfigEntry entry)
         {
