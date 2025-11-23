@@ -1,4 +1,6 @@
-﻿using System;
+﻿using JmcModLib.Utils;
+using System;
+using System.Reflection;
 
 namespace JmcModLib.Config
 {
@@ -35,5 +37,58 @@ namespace JmcModLib.Config
         /// 默认分组保留字，值为 "DefaultGroup"
         /// </summary>
         public const string DefaultGroup = "DefaultGroup";
+
+        /// <summary>
+        /// 检查 MethodInfo 是否满足 回调 的要求（静态、void、单参）
+        /// </summary>
+        /// <param name="method">要检查的方法</param>
+        /// <param name="type"></param>
+        /// <param name="level">返回日志等级，若验证成功返回空，若返回值不匹配返回WARN</param>
+        /// <param name="errorMessage">返回错误描述，验证成功返回空</param>
+        /// <returns>如果警告等级在WARN以下返回 true，否则返回 false</returns>
+        public static bool IsValidMethod(MethodInfo method, Type type, out LogLevel? level, out string? errorMessage)
+        {
+            level = null;
+            errorMessage = null;
+
+            // 必须是静态
+            if (!method.IsStatic)
+            {
+                level = LogLevel.Error;
+                errorMessage = "方法必须是静态方法";
+                return false;
+            }
+
+            // 必须只有一个参数
+            var parameters = method.GetParameters();
+            if (parameters.Length != 1)
+            {
+                level = LogLevel.Error;
+                errorMessage = $"方法只能有 1 个参数，实际有 {parameters.Length} 个参数";
+                return false;
+            }
+
+            var p = parameters[0];
+
+            // 参数类型必须匹配指定类型
+            if (p.ParameterType != type)
+            {
+                level = LogLevel.Error;
+                errorMessage =
+                    $"方法的唯一参数类型必须是 {type.FullName}，实际是 {p.ParameterType.FullName}";
+                return false;
+            }
+
+            // ② 返回值必须为 void
+            if (method.ReturnType != typeof(void))
+            {
+                level = LogLevel.Warn;
+                errorMessage =
+                    $"方法返回类型必须是 void，实际为 {method.ReturnType.Name}，返回值将被丢弃";
+            }
+
+            return true;
+        }
+
     }
 }

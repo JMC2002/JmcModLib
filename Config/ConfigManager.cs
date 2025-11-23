@@ -23,14 +23,13 @@ namespace JmcModLib.Config
         [UIButton("复制配置文件夹路径到剪贴板", "复制")]
         private static void CopyConfigPathToClipboard()
         {
-            GUIUtility.systemCopyBuffer = ConfigManager.ConfigDir;
-            ModLogger.Info($"已复制路径到剪贴板: {ConfigManager.ConfigDir}");
+            GUIUtility.systemCopyBuffer = ConfigDir;
+            ModLogger.Info($"已复制路径到剪贴板: {ConfigDir}");
         }
 
         // Assembly -> group -> key -> ConfigEntry
         private static readonly ConcurrentDictionary<Assembly,
-            ConcurrentDictionary<string, ConcurrentDictionary<string, ConfigEntry>>> _entries
-            = new();
+            ConcurrentDictionary<string, ConcurrentDictionary<string, ConfigEntry>>> _entries = [];
 
         // 存放每一个修改了存储后端的 Assembly对应的存储实现
         private static readonly ConcurrentDictionary<Assembly, IConfigStorage> _storages
@@ -73,10 +72,10 @@ namespace JmcModLib.Config
 
         internal static void Dispose()
         {
-            ConfigUIManager.Dispose();
-            UnregisterAll();
             ModRegistry.OnRegistered -= RegisterAllInAssembly;
             ModRegistry.OnUnRegistered -= Unregister;
+            ConfigUIManager.Dispose();
+            UnregisterAll();
         }
 
         /// <summary>
@@ -106,7 +105,7 @@ namespace JmcModLib.Config
 
                         // 使用 UIButtonAttribute 的验证函数
                         var methodInfo = acc.Member;
-                        if (!UIButtonAttribute.IsValidButtonMethod(methodInfo, out var errorMsg))
+                        if (!UIButtonAttribute.IsValidMethod(methodInfo, out var lvl, out var errorMsg))
                         {
                             ModLogger.Error($"方法 {type.FullName}.{acc.Name} 标记了 UIButtonAttribute，但 {errorMsg}，跳过注册");
                             continue;
@@ -168,29 +167,13 @@ namespace JmcModLib.Config
             {
                 try
                 {
-                    var onChangedMethod = MethodAccessor.Get(type, attr.OnChanged);
-
-                    // 检查 1：必须是静态方法
-                    if (!onChangedMethod.IsStatic)
-                    {
-                        ModLogger.Error($"配置项 {type.FullName}.{acc.Name} 的 OnChanged 方法 '{attr.OnChanged}' 必须是静态方法，跳过注册");
+                    onChangedMethod = MethodAccessor.Get(type, attr.OnChanged);
+                    var isValid = ConfigAttribute.IsValidMethod(onChangedMethod.Member, acc.MemberType, out var level, out var errorMsg);
+                    if (string.IsNullOrEmpty(errorMsg))
+                        ModLogger.Log(level, $"配置项 {type.FullName}.{acc.Name} 标记了 OnChanged 方法，但 {errorMsg}");
+                    if (!isValid)
                         return null!;
                     }
-
-                    // 检查 2：参数个数必须恰好为 1（新值）
-                    var ps = onChangedMethod.Member.GetParameters();
-                    if (ps.Length != 1)
-                    {
-                        ModLogger.Error($"配置项 {type.FullName}.{acc.Name} 的 OnChanged 方法 '{attr.OnChanged}' 参数个数必须为 1，实际为 {ps.Length}，跳过注册");
-                        return null!;
-                    }
-
-                    // 检查 3：有返回值则输出警告（但仍然注册）
-                    if (onChangedMethod.Member.ReturnType != typeof(void))
-                    {
-                        ModLogger.Warn($"⚠️ 配置项 {type.FullName}.{acc.Name} 的 OnChanged 方法 '{attr.OnChanged}' 有返回值（{onChangedMethod.Member.ReturnType.Name}），返回值将被忽略");
-                    }
-                }
                 catch (Exception ex)
                 {
                     ModLogger.Error($"配置项 {type.FullName}.{acc.Name} 的 OnChanged 方法 '{attr.OnChanged}' 未找到，错误：{ex.Message}，跳过注册");
@@ -198,9 +181,9 @@ namespace JmcModLib.Config
                 }
             }
 
-            var defaultValue = acc.GetValue(null);  // 静态成员，instance 传 null
+            var defaultValue = acc.GetValue(null);
             
-            // 创建非泛型版本（简洁，易维护）
+            // var entry = new ConfigEntry(asm, acc, onChangedMethod, attr, defaultValue);
             var entry = new ConfigEntry(asm, type, acc, attr, defaultValue);
             RegisterUIAttribute(entry, acc);
             return entry;
