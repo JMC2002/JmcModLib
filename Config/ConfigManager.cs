@@ -32,10 +32,6 @@ namespace JmcModLib.Config
             ConcurrentDictionary<string, ConcurrentDictionary<string, ConfigEntry>>> _entries
             = new();
 
-        // Assembly -> Type -> instance (用于 instance 字段的读写)
-        private static readonly ConcurrentDictionary<Assembly, ConcurrentDictionary<Type, object>> _typeInstances
-            = new();
-
         // 存放每一个修改了存储后端的 Assembly对应的存储实现
         private static readonly ConcurrentDictionary<Assembly, IConfigStorage> _storages
             = new();
@@ -260,9 +256,6 @@ namespace JmcModLib.Config
             // 清除该 Assembly 所有 entry
             _entries.TryRemove(asm, out _);
 
-            // 清除实例缓存
-            _typeInstances.TryRemove(asm, out _);
-
             // 清除自定义存储后端（如果有）
             _storages.TryRemove(asm, out _);
 
@@ -331,10 +324,7 @@ namespace JmcModLib.Config
         // 获取entry对应的实例对象（如果是静态成员则返回null），不检查 entry 是否存在
         private static object? GetInstance(ConfigEntry entry)
         {
-            if (entry.Accessor.IsStatic)
                 return null;
-
-            return entry.Accessor.IsStatic ? null : _typeInstances[entry.Assembly][entry.DeclaringType];
         }
 
         // 通过 key 获取实例对象（如果是静态成员则返回null），若 key 不存在则抛出异常
