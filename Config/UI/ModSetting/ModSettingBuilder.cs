@@ -4,24 +4,35 @@ using JmcModLib.Utils;
 using System;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using UnityEngine;
 
 namespace JmcModLib.Config.UI.ModSetting
 {
     internal static class ModSettingBuilder
     {
+        private static bool TryGetModInfo(Assembly asm, out ModInfo info, [CallerMemberName] string caller = "")
+        {
+            var mod = ModRegistry.GetModInfo(asm);
+            if (mod?.Info == null)
+            {
+                info = default!;
+                ModLogger.Warn($"{ModRegistry.GetTag(asm)} 无法执行 {caller}: 未初始化 modinfo");
+                return false;
+            }
+
+            info = mod.Info;
+            return true;
+        }
+
         internal static void FloatSliderBuild(ConfigEntry entry, UIFloatSliderAttribute uiAttr)
         {
             var asm = entry.Assembly;
-            var info = ModRegistry.GetModInfo(asm)?.Info;
-            if (info == null)
-            {
-                ModLogger.Warn($"{ModRegistry.GetTag(asm)} 未初始化modinfo");
+            if (!TryGetModInfo(asm, out var info))
                 return;
-            }
 
             Vector2 range = new(uiAttr.Min, uiAttr.Max);
-            ModSettingAPI.AddSlider((ModInfo)info,
+            ModSettingAPI.AddSlider(info!,
                                     entry.Key,
                                     L10n.Get(entry.Attribute.DisplayName, asm),
                                     (float)ConfigManager.GetValue(entry)!,
@@ -34,14 +45,10 @@ namespace JmcModLib.Config.UI.ModSetting
         internal static void IntSliderBuild(ConfigEntry entry, UIIntSliderAttribute uiAttr)
         {
             var asm = entry.Assembly;
-            var info = ModRegistry.GetModInfo(asm)?.Info;
-            if (info == null)
-            {
-                ModLogger.Warn($"{ModRegistry.GetTag(asm)} 未初始化modinfo");
+            if (!TryGetModInfo(asm, out var info))
                 return;
-            }
 
-            ModSettingAPI.AddSlider((ModInfo)info,
+            ModSettingAPI.AddSlider(info,
                                     entry.Key,
                                     L10n.Get(entry.Attribute.DisplayName),
                                     (int)ConfigManager.GetValue(entry)!,
@@ -54,14 +61,10 @@ namespace JmcModLib.Config.UI.ModSetting
         internal static void ToggleBuild(ConfigEntry entry)
         {
             var asm = entry.Assembly;
-            var info = ModRegistry.GetModInfo(asm)?.Info;
-            if (info == null)
-            {
-                ModLogger.Warn($"{ModRegistry.GetTag(asm)} 未初始化modinfo");
+            if (!TryGetModInfo(asm, out var info))
                 return;
-            }
 
-            ModSettingAPI.AddToggle((ModInfo)info,
+            ModSettingAPI.AddToggle(info,
                                     entry.Key,
                                     L10n.Get(entry.Attribute.DisplayName),
                                     (bool)ConfigManager.GetValue(entry)!,
@@ -71,12 +74,8 @@ namespace JmcModLib.Config.UI.ModSetting
         internal static void DropdownBuild(ConfigEntry entry)
         {
             var asm = entry.Assembly;
-            var info = ModRegistry.GetModInfo(asm)?.Info;
-            if (info == null)
-            {
-                ModLogger.Warn($"{ModRegistry.GetTag(asm)} 未初始化 modinfo");
+            if (!TryGetModInfo(asm, out var info))
                 return;
-            }
 
             var enumType = entry.Accessor.MemberType;
 
@@ -88,7 +87,7 @@ namespace JmcModLib.Config.UI.ModSetting
             string defaultValue = Enum.GetName(enumType, currentValue)!;
 
             // 添加 UI
-            ModSettingAPI.AddDropdownList((ModInfo)info,
+            ModSettingAPI.AddDropdownList(info,
                                           entry.Key,
                                           L10n.Get(entry.Attribute.DisplayName),
                                           options,
@@ -105,14 +104,10 @@ namespace JmcModLib.Config.UI.ModSetting
         internal static void KeyBindBuild(ConfigEntry entry)
         {
             var asm = entry.Assembly;
-            var info = ModRegistry.GetModInfo(asm)?.Info;
-            if (info == null)
-            {
-                ModLogger.Warn($"{ModRegistry.GetTag(asm)} 未初始化modinfo");
+            if (!TryGetModInfo(asm, out var info))
                 return;
-            }
 
-            ModSettingAPI.AddKeybinding((ModInfo)info,
+            ModSettingAPI.AddKeybinding(info,
                                         entry.Key,
                                         L10n.Get(entry.Attribute.DisplayName),
                                         (KeyCode)ConfigManager.GetValue(entry)!,
@@ -123,14 +118,10 @@ namespace JmcModLib.Config.UI.ModSetting
         internal static void InputBuild(ConfigEntry entry, UIInputAttribute uiAttr)
         {
             var asm = entry.Assembly;
-            var info = ModRegistry.GetModInfo(asm)?.Info;
-            if (info == null)
-            {
-                ModLogger.Warn($"{ModRegistry.GetTag(asm)} 未初始化modinfo");
+            if (!TryGetModInfo(asm, out var info))
                 return;
-            }
 
-            ModSettingAPI.AddInput((ModInfo)info,
+            ModSettingAPI.AddInput(info,
                                     entry.Key,
                                     L10n.Get(entry.Attribute.DisplayName),
                                     (string)ConfigManager.GetValue(entry)!,
@@ -141,13 +132,10 @@ namespace JmcModLib.Config.UI.ModSetting
         internal static void ButtonBuild(ButtonEntry entry, UIButtonAttribute uiAttr)
         {
             var asm = entry.Assembly;
-            var info = ModRegistry.GetModInfo(asm)?.Info;
-            if (info == null)
-            {
-                ModLogger.Warn($"{ModRegistry.GetTag(asm)} 未初始化modinfo");
+            if (!TryGetModInfo(asm, out var info))
                 return;
-            }
-            ModSettingAPI.AddButton((ModInfo)info,
+            
+            ModSettingAPI.AddButton(info,
                                     entry.Key,
                                     L10n.Get(uiAttr.Description, asm),
                                     L10n.Get(uiAttr.ButtonText, asm),
@@ -156,12 +144,8 @@ namespace JmcModLib.Config.UI.ModSetting
 
         internal static void BuildGroup(Assembly asm)
         {
-            var modInfo = ModRegistry.GetModInfo(asm)?.Info;
-            if (modInfo == null)
-            {
-                ModLogger.Warn($"{ModRegistry.GetTag(asm)} 无法建立组：modInfo 尚未注册");
+            if (!TryGetModInfo(asm, out var info))
                 return;
-            }
 
             var groups = ConfigUIManager.GetGroups(asm);
             if (groups == null)
@@ -181,7 +165,7 @@ namespace JmcModLib.Config.UI.ModSetting
                 .ForEach(g =>
                 {
                     ModSettingAPI.AddGroup(
-                        (ModInfo)modInfo,
+                        info,
                         g.UiGroupKey,
                         g.Description,
                         g.Keys
@@ -223,13 +207,10 @@ namespace JmcModLib.Config.UI.ModSetting
         internal static void BuildReset(Assembly asm)
         {
             var modinfo = ModRegistry.GetModInfo(asm);
-            var info = modinfo?.Info;
-            if (info == null)
-            {
-                ModLogger.Warn($"{ModRegistry.GetTag(asm)} 未初始化modinfo");
+            if (!TryGetModInfo(asm, out var info))
                 return;
-            }
-            ModSettingAPI.AddButton((ModInfo)info,
+
+            ModSettingAPI.AddButton(info,
                                     $"JmcModLibGen.{modinfo!.Name}.Reset",
                                     $"重置所有选项到默认值（重启游戏或）",
                                     L10n.Get("重置", Assembly.GetExecutingAssembly()),
