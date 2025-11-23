@@ -50,12 +50,24 @@ namespace JmcModLib.Config
             }
         }
 
-        private string GetFilePath(Assembly asm)
+        /// <summary>
+        /// 获取文件名
+        /// </summary>
+        public string GetFileName(Assembly? asm = null)
         {
+            asm ??= Assembly.GetCallingAssembly();
             var modName = ModRegistry.GetModInfo(asm)?.Name;
             if (string.IsNullOrWhiteSpace(modName))
                 modName = asm.GetName().Name ?? "UnknownMod";
-            return Path.Combine(_rootFolder, modName + ".json");
+            return modName + ".json";
+        }
+
+        /// <summary>
+        /// 获得指定程序集对应的配置文件路径
+        /// </summary>
+        private string GetFilePath(Assembly? asm)
+        {
+            return Path.Combine(_rootFolder, GetFileName(asm));
         }
 
         // ------------------ file read/write ------------------
@@ -127,13 +139,6 @@ namespace JmcModLib.Config
             return _cache.GetOrAdd(asm, key => ReadFileRaw(asm));
         }
 
-        // Helper: 用来包装任意类型的值以便序列化
-        [Serializable]
-        private class ValueWrapper<T>
-        {
-            public T value = default!;
-        }
-
         private object? SerializeValue(object? value)
         {
             return value; // 直接返回
@@ -200,7 +205,7 @@ namespace JmcModLib.Config
         /// <param name="value">返回的配置项值</param>
         /// <param name="asm">调用的程序集，默认是调用者</param>
         /// <returns>如果加载成功，则返回true</returns>
-        public bool TryLoad(string key, string group, Type type, out object? value, Assembly? asm)
+        public bool TryLoad(string key, string group, Type type, out object? value, Assembly? asm = null)
         {
             asm ??= Assembly.GetCallingAssembly();
 
@@ -241,7 +246,7 @@ namespace JmcModLib.Config
 
             if (!cache.TryGetValue(group, out var inner))
             {
-                inner = new Dictionary<string, object?>();
+                inner = [];
                 cache[group] = inner;
             }
 
