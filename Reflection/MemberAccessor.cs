@@ -19,6 +19,16 @@ namespace JmcModLib.Reflection
         private static readonly ConcurrentDictionary<(Type, string), MemberInfo?> _lookupCache = new();
 
         /// <summary>
+        /// 可读
+        /// </summary>
+        public bool CanRead => getter != null;
+
+        /// <summary>
+        /// 可写
+        /// </summary>
+        public bool CanWrite => setter != null;
+
+        /// <summary>
         /// 成员数据类型（不是MemberTypes）
         /// </summary>
         public Type MemberType { get; }
