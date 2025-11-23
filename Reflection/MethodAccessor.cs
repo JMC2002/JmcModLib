@@ -77,7 +77,7 @@ namespace JmcModLib.Reflection
         // 允许为 null（当这是一个泛型定义尚未闭包时）
         private readonly Func<object?, object?[], object?>? _invoker;
 
-        // Fast path delegates (no object?[] allocation) for 0..3 parameters (no ref/out/optional)
+        // 无ref/out/默认参数的快速路径，避免object[]装箱
         private readonly Func<object?, object?>? _fastInvoker0;
         private readonly Func<object?, object?, object?>? _fastInvoker1;
         private readonly Func<object?, object?, object?, object?>? _fastInvoker2;
@@ -86,7 +86,7 @@ namespace JmcModLib.Reflection
         // ThreadStatic buffer for default parameter completion to avoid per-call allocation
         [ThreadStatic] private static object?[]? _defaultArgBuffer;
 
-        // Strongly typed delegate (Func<...>/Action<...>) for methods without ref/out & non-generic definition
+        // 强类型委托 (Func<...>/Action<...>) ，ref/out或者泛型方法不可用
         private readonly Delegate? _typedDelegate;
         /// <summary>
         /// 若可用，返回强类型委托 (Func/Action)。实例方法第一个参数是声明类型实例；静态方法不含实例参数。
@@ -166,7 +166,7 @@ namespace JmcModLib.Reflection
         {
             var ps = method.GetParameters();
             var paramExprs = new List<ParameterExpression>();
-            System.Linq.Expressions.ParameterExpression? instanceParam = null;
+            ParameterExpression? instanceParam = null;
             if (!method.IsStatic)
             {
                 instanceParam = System.Linq.Expressions.Expression.Parameter(method.DeclaringType!, "instance");
