@@ -100,13 +100,13 @@ namespace JmcModLib.Core
                 return; // 未注册则不进行任何操作
             }
 
+            OnUnRegistered?.Invoke(assembly);
             if (GetModInfo(assembly) != null)
             {
                 _pathToAssembly.Remove(GetModInfo(assembly)!.Info.path);
             }
 
             _mods.Remove(assembly);
-            OnUnRegistered?.Invoke(assembly);
         }
 
         private static void TryUnRegistered(ModInfo info, Duckov.Modding.ModBehaviour modBehaviour)
