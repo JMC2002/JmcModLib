@@ -9,6 +9,11 @@ namespace JmcModLib.Config
     public interface IConfigStorage
     {
         /// <summary>
+        /// 获取文件名
+        /// </summary>
+        public string GetFileName(Assembly? asm = null);
+
+        /// <summary>
         /// 根据 key 和 group 保存配置值
         /// </summary>
         void Save(string key, string group, object? value, Assembly? asm);
