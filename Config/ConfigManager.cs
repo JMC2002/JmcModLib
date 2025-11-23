@@ -20,6 +20,13 @@ namespace JmcModLib.Config
         // Config 文件根目录（默认）
         private static readonly string ConfigDir = Path.Combine(Application.persistentDataPath, "Saves/JmcModLibConfig");
 
+        [UIButton("复制配置文件夹路径到剪贴板", "复制")]
+        private static void CopyConfigPathToClipboard()
+        {
+            GUIUtility.systemCopyBuffer = ConfigManager.ConfigDir;
+            ModLogger.Info($"已复制路径到剪贴板: {ConfigManager.ConfigDir}");
+        }
+
         // Assembly -> group -> key -> ConfigEntry
         private static readonly ConcurrentDictionary<Assembly,
             ConcurrentDictionary<string, ConcurrentDictionary<string, ConfigEntry>>> _entries
