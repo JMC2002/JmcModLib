@@ -9,9 +9,12 @@ namespace JmcModLib.Config.UI
     {
         // Assembly → Group → UIEntry
         private static readonly Dictionary<Assembly, Dictionary<string, List<PendingUIEntry<BaseEntry, UIBaseAttribute>>>> _pending
-            = new();
+            = [];
 
-        internal static event Action<Assembly>? OnRegistered;
+		// 扫描完成后基于程序集的广播
+		internal static event Action<Assembly>? OnRegistered;
+		// 每次注册单条 UI 时的广播
+		internal static event Action<PendingUIEntry<BaseEntry, UIBaseAttribute>>? OnEntryRegistered;
 
         internal static void Init()
         {
@@ -23,6 +26,7 @@ namespace JmcModLib.Config.UI
         {
             ConfigManager.OnRegistered -= Register;
             ModSettingLinker.Dispose();
+            _pending.Clear();
         }
 
         public static void RegisterEntry(BaseEntry entry, UIBaseAttribute ui)
@@ -30,7 +34,7 @@ namespace JmcModLib.Config.UI
             var asm = entry.Assembly;
             if (!_pending.TryGetValue(asm, out var groups))
             {
-                groups = new Dictionary<string, List<PendingUIEntry<BaseEntry, UIBaseAttribute>>>();
+                groups = [];
                 _pending.Add(asm, groups);
             }
 
@@ -38,14 +42,14 @@ namespace JmcModLib.Config.UI
 
             if (!groups.TryGetValue(group, out var list))
             {
-                list = new List<PendingUIEntry<BaseEntry, UIBaseAttribute>>();
-                groups.Add(group, list);
+                list = [];
+                groups.Add(group, []);
             }
 
-            list.Add(new PendingUIEntry<BaseEntry, UIBaseAttribute>(entry, ui));
-            //// ModSettingLinker.initialized[asm] = false;
-            //ModSettingLinker.initialized.TryAdd(asm, false);
-            OnRegistered?.Invoke(asm);
+			var pending = new PendingUIEntry<BaseEntry, UIBaseAttribute>(entry, ui);
+			list.Add(pending);
+			// 每条 UI 注册都单独广播
+			OnEntryRegistered?.Invoke(pending);
         }
 
         private static bool IsRegistered(Assembly asm)
@@ -66,9 +70,9 @@ namespace JmcModLib.Config.UI
 
         internal static void Unregister(Assembly asm)
         {
-            ModSettingLinker.UnRegister(asm);
             if (_pending.ContainsKey(asm))
             {
+                ModSettingLinker.UnRegister(asm);
                 _pending.Remove(asm);
             }
         }

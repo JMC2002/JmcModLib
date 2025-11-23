@@ -193,27 +193,30 @@ namespace JmcModLib.Config.UI.ModSetting
                 });
         }
 
+        internal static void BuildEntry(PendingUIEntry<BaseEntry, UIBaseAttribute> pending)
+        {
+            try
+            {
+                pending.UIAttr.BuildUI(pending.Entry);
+                ModLogger.Debug($"构建 UI 条目 {pending.Entry.Key} 到 ModSetting. " );
+            }
+            catch (Exception ex)
+            {
+                ModLogger.Error($"为 {pending.Entry.Key} 构建 UI 时异常", ex);
+            }
+        }
+
         internal static void BuildEntries(Assembly asm)
         {
             ModLogger.Trace($"{ModRegistry.GetTag(asm)} 进入BuildEntries");
-            var groups = ConfigUIManager.GetGroups(asm);
-            if (groups == null)
+            
+            if (ConfigUIManager.GetGroups(asm) is not { } groups)
                 return;
 
             groups
                 .SelectMany(g => g.Value)
                 .ToList()
-                .ForEach(p =>
-                {
-                    try
-                    {
-                        p.UIAttr.BuildUI(p.Entry);
-                    }
-                    catch (Exception ex)
-                    {
-                        ModLogger.Error($"为 {p.Entry.Key} 构建 UI 时异常", ex);
-                    }
-                });
+                .ForEach(BuildEntry);
             ModLogger.Trace($"{ModRegistry.GetTag(asm)} 退出BuildEntries");
         }
 

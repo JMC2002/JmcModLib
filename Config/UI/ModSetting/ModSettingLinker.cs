@@ -13,20 +13,37 @@ namespace JmcModLib.Config.UI.ModSetting
     /// <summary>
     /// 负责将 DuckSort 的 ModConfig 注册到 ModSetting。
     /// </summary>
+    /// <remarks>
+    /// 两个路径，当此MOD与子MOD在Setting上线前注册配置，在Setting上线时会直接从UIManager处获取Entry并构建所有，
+    /// 当Setting上线后才出现配置，则UIManager处读一条这里构建一条，并在扫描结束后构建元信息
+    /// </remarks>
     internal static class ModSettingLinker
     {
         private static bool _initialized = false;
-        private static bool SettingInit => ModSetting.ModSettingAPI.IsInit;
-        internal static Dictionary<Assembly, bool> initialized = new();
+        private static bool SettingInit => ModSettingAPI.IsInit;
+        internal static Dictionary<Assembly, bool> initialized = [];
 
         public static void Init()
         {
-            if (_initialized) return;
-            if (ModSettingAPI.Init(VersionInfo.modInfo)) InitAllMod();
+            if (_initialized)
+            {
+                ModLogger.Warn("重复初始化ModSettingLinker，拒绝");
+                return;
+            }
+
+            if (!TryInitModSetting())
+                ModLogger.Info("未检测到ModSetting或者初始化失败，将会在ModSetting重新上线时尝试初始化");
+
             // 当任意 Mod 启用时尝试与 ModSetting 连接
             ModManager.OnModActivated += TryInitModSetting;
+            // 当ModSetting离线，清除初始化状态以重新监听重建
             ModManager.OnModWillBeDeactivated += TryUnInitModSetting;
             ConfigUIManager.OnRegistered += Register;
+            // 每当有一个Entry被注册，直接构建
+            ConfigUIManager.OnEntryRegistered += BuildEntry;
+            // 当一个Entry的配置扫描完毕后，构建元信息（维护组+重置按钮等）
+            ConfigUIManager.OnRegistered += BuildMeta;
+            // 当改变语言或者ModSetting后启用，需要重建所有Entry
             L10n.LanguageChanged += OnLangChanged;
             ConfigManager.OnValueChanged += SyncValue;
             _initialized = true;
@@ -36,9 +53,11 @@ namespace JmcModLib.Config.UI.ModSetting
         {
             ConfigManager.OnValueChanged -= SyncValue;
             L10n.LanguageChanged -= OnLangChanged;
+            ConfigUIManager.OnRegistered -= BuildMeta;
+            ConfigUIManager.OnEntryRegistered -= BuildEntry;
+            ConfigUIManager.OnRegistered -= Register;
             ModManager.OnModWillBeDeactivated -= TryUnInitModSetting;
             ModManager.OnModActivated -= TryInitModSetting;
-            ConfigUIManager.OnRegistered -= Register;
             RemoveAllMod();
             _initialized = false;
         }
@@ -101,7 +120,7 @@ namespace JmcModLib.Config.UI.ModSetting
                 var info = ModRegistry.GetModInfo(asm)?.Info;
                 if (info == null)
                 {
-                    ModLogger.Error($"尝试移除未注册info信息的ModSetting条目，asm：{asm.FullName}");
+                    ModLogger.Warn($"尝试移除未注册info信息的ModSetting条目，asm：{asm.FullName}");
                     return;
                 }
                 else
@@ -121,14 +140,24 @@ namespace JmcModLib.Config.UI.ModSetting
 
         private static void TryInitModSetting(ModInfo info, Duckov.Modding.ModBehaviour behaviour)
         {
+            if (SettingInit)
+                return;
             ModLogger.Trace($"检测到Mod {info.name}启用");
             // 只在 ModSetting 启动时进行初始化
-            if (info.name != ModSettingAPI.MOD_NAME || !ModSettingAPI.Init(VersionInfo.modInfo))
+            if (info.name != ModSettingAPI.MOD_NAME)
                 return;
+            TryInitModSetting();
+        }
 
+        private static bool TryInitModSetting()
+        {
+            if (SettingInit // 只初始化一次
+             || !ModSettingAPI.Init(VersionInfo.modInfo))
+                return false;
             ModLogger.Info("检测到 ModSetting 启用，尝试注册配置界面");
 
             InitAllMod();
+            return true;
         }
 
         private static void TryUnInitModSetting(ModInfo info, Duckov.Modding.ModBehaviour behaviour)
@@ -146,8 +175,30 @@ namespace JmcModLib.Config.UI.ModSetting
 
         private static void Register(Assembly asm)
         {
-            initialized[asm] = false;
-            InitMod(asm);
+            if (!IsRegistered(asm))
+                initialized[asm] = false;
+        }
+
+        internal static void BuildEntry(PendingUIEntry<BaseEntry, UIBaseAttribute> pending)
+        {
+            // 当Setting未连接时不操作
+            if (!SettingInit)
+                return;
+            Register(pending.Entry.Assembly);
+            ModSettingBuilder.BuildEntry(pending);
+        }
+
+        /// <summary>
+        /// 当一个ASM配置扫描完毕，注册元信息
+        /// </summary>
+        /// <param name="asm"></param>
+        private static void BuildMeta(Assembly asm)
+        {
+            if (!SettingInit)
+                return;
+            ModSettingBuilder.BuildGroup(asm);
+            ModSettingBuilder.BuildReset(asm);
+            initialized[asm] = true;        // 触发BuildMeta时标记初始化完成
         }
 
         /// <summary>
@@ -161,16 +212,15 @@ namespace JmcModLib.Config.UI.ModSetting
                 return;  // 还没有初始化ModSetting
             }
             ModLogger.Trace($"注册 {ModRegistry.GetTag(asm)} UI");
-            if (initialized.TryGetValue(asm, out bool isInit) && isInit)
+            // 保证只在需要的时候才初始化UI，理论上不会走这条分支，除非操作失误
+            if (IsInitialized(asm))
             {
-                ModLogger.Trace($"已初始化，退出, isInit: {isInit}");
+                ModLogger.Warn($"已初始化，退出");
                 return;
             }
             ModSettingBuilder.BuildEntries(asm);
-            ModSettingBuilder.BuildGroup(asm);
-            ModSettingBuilder.BuildReset(asm);
-            initialized[asm] = true;
-            ModLogger.Trace($"注册 {ModRegistry.GetTag(asm)} UI成功");
+            BuildMeta(asm);
+            ModLogger.Debug($"注册 {ModRegistry.GetTag(asm)} UI成功");
         }
 
         private static void InitAllMod()
