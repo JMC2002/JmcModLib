@@ -1,4 +1,5 @@
 ﻿using JmcModLib.Config.UI.ModSetting;
+using JmcModLib.Utils;
 using System;
 using System.Collections.Generic;
 using System.Reflection;
@@ -43,7 +44,7 @@ namespace JmcModLib.Config.UI
             if (!groups.TryGetValue(group, out var list))
             {
                 list = [];
-                groups.Add(group, []);
+                groups.Add(group, list);
             }
 
 			var pending = new PendingUIEntry<BaseEntry, UIBaseAttribute>(entry, ui);
