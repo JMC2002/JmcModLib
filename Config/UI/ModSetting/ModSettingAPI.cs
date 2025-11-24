@@ -314,9 +314,17 @@ namespace JmcModLib.Config.UI.ModSetting
         /// <returns></returns>
         public static bool SetValue<T>(ModInfo modInfo, string key, T value, Action<bool>? callback = null)
         {
-            if (!Available(modInfo, key)) return false;
+            if (!Available(modInfo, key))
+            {
+                ModLogger.Warn("传入的modInfo或key无效，取消设置");
+                return false;
+            }
             MethodInfo? methodInfo = GetStaticPublicMethodInfo(SET_VALUE);
-            if (methodInfo == null) return false;
+            if (methodInfo == null) 
+            {
+                ModLogger.Error("获取SetValue方法失败，取消设置");
+                return false; 
+            }
             MethodInfo genericMethod = methodInfo.MakeGenericMethod(typeof(T));
             genericMethod.Invoke(null, new object[] { modInfo, key, value!, callback! });
             return true;
