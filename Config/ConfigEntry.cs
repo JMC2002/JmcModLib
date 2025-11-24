@@ -1,15 +1,10 @@
-﻿using Duckov.Modding.UI;
-using JmcModLib.Config.Entry;
-using JmcModLib.Config.UI;
+﻿using JmcModLib.Config.Entry;
 using JmcModLib.Config.UI.ModSetting;
 using JmcModLib.Core;
 using JmcModLib.Reflection;
 using JmcModLib.Utils;
 using System;
 using System.Reflection;
-using Unity.Burst.Intrinsics;
-using Unity.VisualScripting.FullSerializer;
-using static UnityEngine.Rendering.DebugUI;
 
 namespace JmcModLib.Config
 {
@@ -34,6 +29,9 @@ namespace JmcModLib.Config
         public abstract event Action<object?>? OnChanged;
 
         internal abstract void Sync();
+
+        internal abstract void RegisterUISync();
+
     }
 
 
@@ -51,8 +49,9 @@ namespace JmcModLib.Config
         /// 字段/属性最初的默认值，用于 Reset。
         /// </summary>
         internal T DefaultValue { get; }
-        private readonly Func<T>? getter;
-        private readonly Action<T>? setter;
+        private readonly Func<T> getter;
+        private readonly Action<T> setter;
+        private readonly Action<T>? action1;
 
         public ConfigEntry(Assembly asm,
                            string displayName,
@@ -96,9 +95,9 @@ namespace JmcModLib.Config
                 {
                     ModLogger.Log(lvl, error);
                     if (method.TypedDelegate is Action<T> change)
-                        OnChangedTyped += change;
+                        action1 = change;
                     else
-                        OnChangedTyped += method.InvokeStaticVoid;
+                        action1 = method.InvokeStaticVoid;
                 }
             }
 
@@ -116,9 +115,9 @@ namespace JmcModLib.Config
 
             if (method != null)
                 if (method.TypedDelegate is Action<T> change)
-                    OnChangedTyped += change;
+                    action1 = change;
                 else
-                    OnChangedTyped += method.InvokeStaticVoid;
+                    action1 = method.InvokeStaticVoid;
         }
 
         public override bool Reset()
@@ -126,12 +125,39 @@ namespace JmcModLib.Config
             var now = GetTypedValue();
             if (Equals(now, DefaultValue))
             {
-                ModLogger.Trace($"{Key} 的旧值为{now}, 与默认值{DefaultValue}相等，跳过重置");
+                // ModLogger.Trace($"{Key} 的旧值为{now}, 与默认值{DefaultValue}相等，跳过重置");
                 return false;
             }
             ModLogger.Debug($"将{Key} 的旧值{now}重置为默认值{DefaultValue}");
             SetTypedValue(DefaultValue);
             return true;
+        }
+
+        private bool _uiSyncRegistered = false;
+        internal override void RegisterUISync()
+        {
+            if (!_uiSyncRegistered)
+            {
+                OnChangedTypedWithSelf += ModSettingLinker.SyncValue;
+                ModSettingLinker.BeforeRemoveAsm += OnAsmRemove;
+                _uiSyncRegistered = true;
+            }
+        }
+        
+        private void UnUISync()
+        {
+            if (_uiSyncRegistered)
+            {
+                OnChangedTypedWithSelf -= ModSettingLinker.SyncValue;
+                ModSettingLinker.BeforeRemoveAsm -= OnAsmRemove;
+                _uiSyncRegistered = false;
+            }
+        }
+
+        private void OnAsmRemove(Assembly asm)
+        {
+            if (asm == Assembly)
+                UnUISync();
         }
 
         /// <summary>
@@ -173,11 +199,12 @@ namespace JmcModLib.Config
         public void SetTypedValue(T value)
         {
             ModLogger.Debug($"将旧值设置为{value}");
-            setter!(value);
+            setter(value);
             Save(value);
             OnChangedTyped?.Invoke(value);
             _onChanged?.Invoke(value);
-            ModSettingLinker.SyncValue(this,  value);
+            OnChangedTypedWithSelf?.Invoke(this, value);
+            action1?.Invoke(value);
         }
 
         // 显式实现泛型接口的方法
@@ -188,6 +215,7 @@ namespace JmcModLib.Config
         public override object? GetValue() => GetTypedValue();
         public override void SetValue(object? value) => SetTypedValue((T)value!);
 
+        internal event Action<ConfigEntry<T>, T>? OnChangedTypedWithSelf;
         public event Action<T>? OnChangedTyped;
         private event Action<object?>? _onChanged;
         public override event Action<object?>? OnChanged

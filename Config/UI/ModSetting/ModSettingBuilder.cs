@@ -210,6 +210,8 @@ namespace JmcModLib.Config.UI.ModSetting
             try
             {
                 pending.UIAttr.BuildUI(pending.Entry);
+                if (pending.Entry is ConfigEntry configEntry)
+                    configEntry.RegisterUISync();
                 ModLogger.Debug($"构建 UI 条目 {pending.Entry.Key} 到 ModSetting. " );
             }
             catch (Exception ex)

@@ -23,6 +23,8 @@ namespace JmcModLib.Config.UI.ModSetting
         private static bool SettingInit => ModSettingAPI.IsInit;
         internal static Dictionary<Assembly, bool> initialized = [];
 
+        internal static event Action<Assembly>? BeforeRemoveAsm;
+
         public static void Init()
         {
             if (_initialized)
@@ -65,16 +67,21 @@ namespace JmcModLib.Config.UI.ModSetting
             try
             {
                 var info = (ModInfo)ModRegistry.GetModInfo(entry.Assembly)?.Info!;
-                if (ModSettingAPI.GetSavedValue(info, entry.Key, out T savedValue)
-                           && !Equals(savedValue, newVal))
+                if (!ModSettingAPI.GetValue(info, entry.Key, (T savedValue) => 
                 {
-                    ModSettingAPI.SetValue(info, entry.Key, newVal);
-
-                    ModLogger.Trace($"{entry.Key}({entry.DisplayName}) 的值向Setting同步");
-                }
-                else
+                    if (!Equals(savedValue, newVal))
+                    {
+                        ModSettingAPI.SetValue(info, entry.Key, newVal, (flg =>
+                        {
+                            if (flg)
+                                ModLogger.Info($"向Setting 同步 {entry.Key} 的值成功：{savedValue} → {newVal}");
+                            else
+                                ModLogger.Error($"向Setting 同步 {entry.Key} 的值失败");
+                        }));
+                    }
+                }))
                 {
-                    ModLogger.Trace($"{entry.Key}({entry.DisplayName}) 的值不存在或者未更改，跳过同步");
+                    ModLogger.Error($"{entry.Key} 传入的Key不正确，跳过同步");
                 }
             }
             catch (Exception ex)
@@ -149,6 +156,7 @@ namespace JmcModLib.Config.UI.ModSetting
                 {
                     ModSettingAPI.RemoveMod((ModInfo)info);
                 }
+                BeforeRemoveAsm?.Invoke(asm);
             }
             if (IsRegistered(asm))
                 initialized.Remove(asm);
