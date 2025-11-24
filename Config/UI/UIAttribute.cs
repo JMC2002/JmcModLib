@@ -42,23 +42,19 @@ namespace JmcModLib.Config.UI
         /// 检查 MethodInfo 是否满足 UIButtonAttribute 的要求（静态、void、无参）
         /// </summary>
         /// <param name="method">要检查的方法</param>
-        /// <param name="errorMessage">如果验证失败，返回错误描述</param>
+        /// <param name="level"></param>
         /// <returns>如果方法合法返回 true，否则返回 false</returns>
-        public static bool IsValidButtonMethod(MethodInfo method, out string? errorMessage)
+        /// <param name="errorMessage">如果验证失败，返回错误描述</param>
+        public static bool IsValidMethod(MethodInfo method, out LogLevel? level, out string? errorMessage)
         {
+            level = null;
             errorMessage = null;
 
             // 检查是否为静态方法
             if (!method.IsStatic)
             {
+                level = LogLevel.Error;
                 errorMessage = $"方法必须是静态方法";
-                return false;
-            }
-
-            // 检查返回类型是否为 void
-            if (method.ReturnType != typeof(void))
-            {
-                errorMessage = $"方法返回类型必须是 void，实际为 {method.ReturnType.Name}";
                 return false;
             }
 
@@ -66,8 +62,16 @@ namespace JmcModLib.Config.UI
             var parameters = method.GetParameters();
             if (parameters.Length != 0)
             {
+                level = LogLevel.Error;
                 errorMessage = $"方法不能有参数，实际有 {parameters.Length} 个参数";
                 return false;
+            }
+
+            // 检查返回类型是否为 void
+            if (method.ReturnType != typeof(void))
+            {
+                level = LogLevel.Warn;
+                errorMessage = $"方法返回类型实际为 {method.ReturnType.Name}，返回值将被丢弃";
             }
 
             return true;
