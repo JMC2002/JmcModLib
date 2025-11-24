@@ -87,7 +87,7 @@ namespace JmcModLib.Config.UI
                     {
                         if (entry.Entry is ConfigEntry cfg)
                         {
-                            ConfigManager.ResetKey(cfg);
+                            cfg.Reset();
                         }
                     }
                 }

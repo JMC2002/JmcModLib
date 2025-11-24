@@ -8,7 +8,7 @@ namespace JmcModLib.Core
     {
         [UIDropdown]
         [Config("打印等级", onChanged: nameof(OnLogLevelChanged))]
-        internal static LogLevel logLevel = LogLevel.Info;
+        internal static LogLevel logLevel = LogLevel.Trace;
 
         internal static void OnLogLevelChanged(LogLevel newValue)
         {

@@ -73,9 +73,10 @@ namespace JmcModLib.Core
             {
                 _pathToAssembly[info.path] = assembly;
             }
-            _mods[assembly] = new Modinfo(info, name ?? info.displayName ?? assembly.FullName, version ?? "1.0.0", level);
+            _mods[assembly] = new Modinfo(info, name ?? info.displayName ?? assembly.FullName, version ?? "1.0.0");
             // ConfigManager.RegisterAllInAssembly(assembly);
 
+            ModLogger.RegisterAssembly(assembly, level);
             ModLogger.Debug($"{GetTag(assembly)} 注册成功");
             OnRegistered?.Invoke(assembly);
         }
@@ -83,11 +84,14 @@ namespace JmcModLib.Core
         /// <summary>
         /// 判断是否已注册
         /// </summary>
-        public static bool IsRegistered(Assembly? assembly = null)
-        {
-            assembly ??= Assembly.GetCallingAssembly();
-            return _mods.ContainsKey(assembly);
-        }
+        public static bool IsRegistered()
+            => IsRegistered(Assembly.GetCallingAssembly());
+
+        /// <summary>
+        /// 判断是否已注册
+        /// </summary>
+        public static bool IsRegistered(Assembly assembly)
+            => _mods.ContainsKey(assembly);
 
         /// <summary>
         /// 反注册程序集的MOD信息，留空则反注册调用者的程序集
@@ -132,10 +136,7 @@ namespace JmcModLib.Core
         public static void SetLogLevel(LogLevel level, Assembly? assembly = null)
         {
             assembly ??= Assembly.GetCallingAssembly();
-            if (_mods.TryGetValue(assembly, out var info))
-            {
-                _mods[assembly] = info with { Level = level };
-            }
+            ModLogger.SetMinLevel(level, assembly);
         }
 
         /// <summary>
@@ -146,7 +147,8 @@ namespace JmcModLib.Core
         {
             assembly ??= Assembly.GetCallingAssembly();
             var info = GetModInfo(assembly);
-            return info is null ? $"[{assembly.GetName().Name} v{assembly.GetName().Version}]" : $"[{info.Name} v{info.Version}]";
+            return info is null ? $"[{assembly.GetName().Name} v{assembly.GetName().Version}]" 
+                                : $"[{info.Name} v{info.Version}]";
         }
 
         /// <summary>
@@ -155,7 +157,6 @@ namespace JmcModLib.Core
         /// <param name="Info">Mod的详细信息</param>
         /// <param name="Name">Mod名</param>
         /// <param name="Version">Mod版本号</param>
-        /// <param name="Level">Mod打印级别</param>
-        internal record Modinfo(ModInfo Info, string Name, string Version, LogLevel Level);
+        internal record Modinfo(ModInfo Info, string Name, string Version);
     }
 }

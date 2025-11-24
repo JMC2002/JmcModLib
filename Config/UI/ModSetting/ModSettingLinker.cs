@@ -45,13 +45,11 @@ namespace JmcModLib.Config.UI.ModSetting
             ConfigUIManager.OnRegistered += BuildMeta;
             // 当改变语言或者ModSetting后启用，需要重建所有Entry
             L10n.LanguageChanged += OnLangChanged;
-            ConfigManager.OnValueChanged += SyncValue;
             _initialized = true;
         }
 
         internal static void Dispose()
         {
-            ConfigManager.OnValueChanged -= SyncValue;
             L10n.LanguageChanged -= OnLangChanged;
             ConfigUIManager.OnRegistered -= BuildMeta;
             ConfigUIManager.OnEntryRegistered -= BuildEntry;
@@ -62,12 +60,36 @@ namespace JmcModLib.Config.UI.ModSetting
             _initialized = false;
         }
 
+        internal static void SyncValue<T>(ConfigEntry<T> entry, T newVal)
+        {
+            try
+            {
+                var info = (ModInfo)ModRegistry.GetModInfo(entry.Assembly)?.Info!;
+                if (ModSettingAPI.GetSavedValue(info, entry.Key, out T savedValue)
+                           && !Equals(savedValue, newVal))
+                {
+                    ModSettingAPI.SetValue(info, entry.Key, newVal);
+
+                    ModLogger.Trace($"{entry.Key}({entry.DisplayName}) 的值向Setting同步");
+                }
+                else
+                {
+                    ModLogger.Trace($"{entry.Key}({entry.DisplayName}) 的值不存在或者未更改，跳过同步");
+                }
+            }
+            catch (Exception ex)
+            {
+                ModLogger.Error($"{ModRegistry.GetTag(entry.Assembly)} 在同步 {entry.Key} 条目时抛出异常", ex);
+            }
+        }
+
+
         private static void SyncValue(ConfigEntry entry, object? newVal)
         {
             try
             {
                 var info = ModRegistry.GetModInfo(entry.Assembly)?.Info;
-                var t = entry.Accessor.MemberType;
+                var t = entry.UIType;
 
                 if (t.IsEnum && t != typeof(KeyCode))   // Enum作为下拉列表时是parse到string的，应该特殊处理
                 {
@@ -84,11 +106,11 @@ namespace JmcModLib.Config.UI.ModSetting
                     MethodAccessor.Get(typeof(ModSettingAPI), "SetValue")
                                         .MakeGeneric(t)
                                         .Invoke(null, info, entry.Key, newVal);
-                    ModLogger.Trace($"{entry.Key}({entry.Attribute.DisplayName}) 的值向Setting同步");
+                    ModLogger.Trace($"{entry.Key}({entry.DisplayName}) 的值向Setting同步");
                 }
                 else
                 {
-                    ModLogger.Trace($"{entry.Key}({entry.Attribute.DisplayName}) 的值不存在或者未更改，跳过同步");
+                    ModLogger.Trace($"{entry.Key}({entry.DisplayName}) 的值不存在或者未更改，跳过同步");
                 }
             }
             catch (Exception ex)

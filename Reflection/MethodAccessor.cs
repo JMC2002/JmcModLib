@@ -33,7 +33,7 @@ namespace JmcModLib.Reflection
         /// 参数签名（用于缓存键）
         /// 说明：
         ///   1. null / 未提供参数列表用 Length = -1 表示（即 default ParamSignature）
-        ///   2. 泛型参数占位符统一使用 RuntimeTypeHandle = default 记录，使不同的 T / T1 在同一方法定义上产生相同签名
+        ///   2. 泛型参数占位符统一使用 RuntimeTypeHandle = default 记录，使不同的 TUI / T1 在同一方法定义上产生相同签名
         /// </summary>
         private readonly struct ParamSignature : IEquatable<ParamSignature>
         {

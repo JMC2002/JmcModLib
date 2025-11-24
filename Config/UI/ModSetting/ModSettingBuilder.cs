@@ -5,6 +5,8 @@ using System;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
+using UI;
+using Unity.Burst.Intrinsics;
 using UnityEngine;
 
 namespace JmcModLib.Config.UI.ModSetting
@@ -25,7 +27,7 @@ namespace JmcModLib.Config.UI.ModSetting
             return true;
         }
 
-        internal static void FloatSliderBuild(ConfigEntry entry, UIFloatSliderAttribute uiAttr)
+        internal static void FloatSliderBuild(ConfigEntry<float> entry, UIFloatSliderAttribute uiAttr)
         {
             var asm = entry.Assembly;
             if (!TryGetModInfo(asm, out var info))
@@ -34,15 +36,15 @@ namespace JmcModLib.Config.UI.ModSetting
             Vector2 range = new(uiAttr.Min, uiAttr.Max);
             ModSettingAPI.AddSlider(info!,
                                     entry.Key,
-                                    L10n.Get(entry.Attribute.DisplayName, asm),
-                                    (float)ConfigManager.GetValue(entry)!,
+                                    L10n.Get(entry.DisplayName, asm),
+                                    entry.GetTypedValue(),
                                     range,
-                                    (v) => ConfigManager.SetValue(entry, v),
+                                    entry.SetTypedValue,
                                     uiAttr.DecimalPlaces,
                                     uiAttr.CharacterLimit);
         }
 
-        internal static void IntSliderBuild(ConfigEntry entry, UIIntSliderAttribute uiAttr)
+        internal static void IntSliderBuild(ConfigEntry<int> entry, UIIntSliderAttribute uiAttr)
         {
             var asm = entry.Assembly;
             if (!TryGetModInfo(asm, out var info))
@@ -50,15 +52,15 @@ namespace JmcModLib.Config.UI.ModSetting
 
             ModSettingAPI.AddSlider(info,
                                     entry.Key,
-                                    L10n.Get(entry.Attribute.DisplayName),
-                                    (int)ConfigManager.GetValue(entry)!,
+                                    L10n.Get(entry.DisplayName),
+                                    entry.GetTypedValue(),
                                     uiAttr.Min,
                                     uiAttr.Max,
-                                    v => ConfigManager.SetValue(entry, v),
+                                    entry.SetTypedValue,
                                     uiAttr.CharacterLimit);
         }
 
-        internal static void ToggleBuild(ConfigEntry entry)
+        internal static void ToggleBuild(ConfigEntry<bool> entry)
         {
             var asm = entry.Assembly;
             if (!TryGetModInfo(asm, out var info))
@@ -66,42 +68,68 @@ namespace JmcModLib.Config.UI.ModSetting
 
             ModSettingAPI.AddToggle(info,
                                     entry.Key,
-                                    L10n.Get(entry.Attribute.DisplayName),
-                                    (bool)ConfigManager.GetValue(entry)!,
-                                    v => ConfigManager.SetValue(entry, v));
+                                    L10n.Get(entry.DisplayName),
+                                    entry.GetTypedValue(),
+                                    entry.SetTypedValue);
         }
 
-        internal static void DropdownBuild(ConfigEntry entry)
+        internal static void DropdownBuild(ConfigEntry<string> entry)
         {
             var asm = entry.Assembly;
             if (!TryGetModInfo(asm, out var info))
                 return;
 
-            var enumType = entry.Accessor.MemberType;
+            if (entry.LogicalType.IsEnum)
+            {
+                // 枚举的所有选项
+                var options = Enum.GetNames(entry.LogicalType).ToList();
+
+                // 添加 UI
+                ModSettingAPI.AddDropdownList(info,
+                                              entry.Key,
+                                              L10n.Get(entry.DisplayName),
+                                              options,
+                                              entry.GetTypedValue(),
+                                              entry.SetTypedValue);
+            }
+            else
+            {
+                ModLogger.Error($"{ModRegistry.GetTag(asm)} 构造下拉列表 {entry.Key}时失败：现在仅支持从 enum 构造下拉列表");
+            }
+        }
+
+        internal static void DropdownBuild<TEnum>(ConfigEntry<TEnum> entry)
+            where TEnum : Enum
+        {
+            var asm = entry.Assembly;
+            if (!TryGetModInfo(asm, out var info))
+                return;
+
+            var enumType = typeof(TEnum);
 
             // 枚举的所有选项
             var options = Enum.GetNames(enumType).ToList();
 
             // 当前值
-            var currentValue = ConfigManager.GetValue(entry)!;
-            string defaultValue = Enum.GetName(enumType, currentValue)!;
+            TEnum currentValue = entry.GetTypedValue();
+            string currentStr = currentValue.ToString();
 
             // 添加 UI
             ModSettingAPI.AddDropdownList(info,
                                           entry.Key,
-                                          L10n.Get(entry.Attribute.DisplayName),
+                                          L10n.Get(entry.DisplayName),
                                           options,
-                                          currentValue.ToString(),
+                                          currentStr,
                                           selected =>
                                           {
                                               // 用户改值 → 解析回 enum
-                                              var parsed = Enum.Parse(enumType, selected, ignoreCase: true);
-                                              ConfigManager.SetValue(entry, parsed);
+                                              var parsed = (TEnum)Enum.Parse(enumType, selected, ignoreCase: true);
+                                              entry.SetTypedValue(parsed);
                                           }
             );
         }
 
-        internal static void KeyBindBuild(ConfigEntry entry)
+        internal static void KeyBindBuild(ConfigEntry<KeyCode> entry)
         {
             var asm = entry.Assembly;
             if (!TryGetModInfo(asm, out var info))
@@ -109,13 +137,13 @@ namespace JmcModLib.Config.UI.ModSetting
 
             ModSettingAPI.AddKeybinding(info,
                                         entry.Key,
-                                        L10n.Get(entry.Attribute.DisplayName),
-                                        (KeyCode)ConfigManager.GetValue(entry)!,
-                                        (KeyCode)entry.DefaultValue!,
-                                        v => ConfigManager.SetValue(entry, v));
+                                        L10n.Get(entry.DisplayName),
+                                        entry.GetTypedValue(),
+                                        entry.DefaultValue,
+                                        entry.SetTypedValue);
         }
 
-        internal static void InputBuild(ConfigEntry entry, UIInputAttribute uiAttr)
+        internal static void InputBuild(ConfigEntry<string> entry, UIInputAttribute uiAttr)
         {
             var asm = entry.Assembly;
             if (!TryGetModInfo(asm, out var info))
@@ -123,10 +151,10 @@ namespace JmcModLib.Config.UI.ModSetting
 
             ModSettingAPI.AddInput(info,
                                     entry.Key,
-                                    L10n.Get(entry.Attribute.DisplayName),
-                                    (string)ConfigManager.GetValue(entry)!,
+                                    L10n.Get(entry.DisplayName),
+                                    entry.GetTypedValue(),
                                     uiAttr.CharacterLimit,
-                                    v => ConfigManager.SetValue(entry, v));
+                                    entry.SetTypedValue);
         }
 
         internal static void ButtonBuild(ButtonEntry entry, UIButtonAttribute uiAttr)
@@ -139,7 +167,7 @@ namespace JmcModLib.Config.UI.ModSetting
                                     entry.Key,
                                     L10n.Get(uiAttr.Description, asm),
                                     L10n.Get(uiAttr.ButtonText, asm),
-                                    entry.Accessor.InvokeStaticVoid);   // 前期已经验证过是静态无参方法
+                                    entry.Invoke);
         }
 
         internal static void BuildGroup(Assembly asm)

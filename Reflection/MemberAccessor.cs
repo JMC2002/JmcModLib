@@ -497,7 +497,7 @@ namespace JmcModLib.Reflection
             {
                 case FieldInfo f:
 
-                    // ref struct / Span<T> / ReadOnlySpan<T> 会崩
+                    // ref struct / Span<TUI> / ReadOnlySpan<TUI> 会崩
                     if (f.FieldType.IsByRefLike)
                         return false;
 

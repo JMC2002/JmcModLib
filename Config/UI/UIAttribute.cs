@@ -1,7 +1,12 @@
-﻿using JmcModLib.Config.UI.ModSetting;
+﻿using Duckov.Modding.UI;
+using JmcModLib.Config.UI.ModSetting;
+using JmcModLib.Core;
+using JmcModLib.Reflection;
+using JmcModLib.Utils;
 using System;
 using System.Reflection;
 using UnityEngine;
+using UnityEngine.SocialPlatforms;
 
 namespace JmcModLib.Config.UI
 {
@@ -79,13 +84,14 @@ namespace JmcModLib.Config.UI
     }
 
     /// <summary>
-    /// ui 配置属性基类。
+    /// 需要维护数据的 ui 配置属性基类。
     /// </summary>
     [AttributeUsage(AttributeTargets.Field | AttributeTargets.Property)]
     public abstract class UIConfigAttribute : UIBaseAttribute
     {
-        internal abstract bool IsValid(ConfigEntry entry);
-
+        internal abstract Type UIType { get; }
+        internal virtual bool IsValid(ConfigEntry entry)
+            => entry.UIType == UIType;
         internal override void BuildUI(BaseEntry bEntry)
         {
             if (bEntry is not ConfigEntry entry)
@@ -101,9 +107,14 @@ namespace JmcModLib.Config.UI
     /// </summary>
     public abstract class UIConfigAttribute<T> : UIConfigAttribute
     {
-        internal Type RequiredType => typeof(T);
-        internal override bool IsValid(ConfigEntry entry)
-            => entry.Accessor.MemberType == RequiredType;
+        internal override Type UIType => typeof(T);
+        internal override void BuildUI(ConfigEntry bEntry)
+        {
+            if (bEntry is not ConfigEntry<T> entry)
+                throw new ArgumentException("UIConfigAttribute 类型绑定错误.");
+            BuildUI(entry);
+        }
+        internal abstract void BuildUI(ConfigEntry<T> entry);
     }
 
     /// <summary>
@@ -121,8 +132,9 @@ namespace JmcModLib.Config.UI
         internal int CharacterLimit { get; } = characterLimit;
         internal override bool IsValid(ConfigEntry entry)
         {
-            if (entry.Accessor.MemberType != RequiredType) return false;
-            var v = (T)ConfigManager.GetValue(entry)!;
+            if (entry.UIType != UIType)
+                return false;
+            var v = (T)entry.GetValue()!;
             return v.CompareTo(Min) >= 0 && v.CompareTo(Max) <= 0;
         }
     }
@@ -146,7 +158,7 @@ namespace JmcModLib.Config.UI
 
         internal int DecimalPlaces { get; } = decimalPlaces;
 
-        internal override void BuildUI(ConfigEntry entry)
+        internal override void BuildUI(ConfigEntry<float> entry)
         {
             ModSettingBuilder.FloatSliderBuild(entry, this);
         }
@@ -166,7 +178,7 @@ namespace JmcModLib.Config.UI
                             int max, 
                             int characterLimit = 5) : UISliderAttribute<int>(min, max, characterLimit)
     {
-        internal override void BuildUI(ConfigEntry entry)
+        internal override void BuildUI(ConfigEntry<int> entry)
         {
             ModSettingBuilder.IntSliderBuild(entry, this);
         }
@@ -177,32 +189,17 @@ namespace JmcModLib.Config.UI
     /// </summary>
     public sealed class UIToggleAttribute : UIConfigAttribute<bool>
     {
-        internal override void BuildUI(ConfigEntry entry)
+        internal override void BuildUI(ConfigEntry<bool> entry)
         {
             ModSettingBuilder.ToggleBuild(entry);
         }
     }
-
-    /// <summary>
-    /// 添加一个下拉框属性，仅支持枚举类型
-    /// </summary>
-    public sealed class UIDropdownAttribute : UIConfigAttribute
-    {
-        internal override bool IsValid(ConfigEntry entry)
-            => entry.Accessor.MemberType.IsEnum;
-
-        internal override void BuildUI(ConfigEntry entry)
-        {
-            ModSettingBuilder.DropdownBuild(entry);
-        }
-    }
-
     /// <summary>
     /// 绑定按键属性
     /// </summary>
     public sealed class UIKeyBindAttribute : UIConfigAttribute<KeyCode>
     {
-        internal override void BuildUI(ConfigEntry entry)
+        internal override void BuildUI(ConfigEntry<KeyCode> entry)
         {
             ModSettingBuilder.KeyBindBuild(entry);
         }
@@ -219,9 +216,66 @@ namespace JmcModLib.Config.UI
     {
         internal int CharacterLimit { get; } = characterLimit;
 
-        internal override void BuildUI(ConfigEntry entry)
+        internal override void BuildUI(ConfigEntry<string> entry)
         {
             ModSettingBuilder.InputBuild(entry, this);
+        }
+    }
+
+
+    public abstract class UINeedCovertAttribute : UIConfigAttribute
+    {
+    }
+
+    public abstract class UIConverterAttribute<T> : UINeedCovertAttribute
+    {
+        internal override Type UIType => typeof(T);
+
+        /// <summary>
+        /// 将原始数据转换为UI层/存储层需要的数据
+        /// </summary>
+        public abstract T ToUI(object logicalValue);
+        /// <summary>
+        /// 从UI层/存储层转回原始数据
+        /// </summary>
+        public abstract object FromUI(T uiValue, Type logicalType);
+
+        internal override void BuildUI(ConfigEntry bEntry)
+        {
+            if (bEntry is not ConfigEntry<T> entry)
+                throw new ArgumentException("UIConverterAttribute 类型绑定错误.");
+            BuildUI(entry);
+        }
+        internal abstract void BuildUI(ConfigEntry<T> entry);
+    }
+
+    /// <summary>
+    /// 添加一个下拉框属性，仅支持枚举类型
+    /// </summary>
+    public sealed class UIDropdownAttribute : UIConverterAttribute<string>
+    {
+        internal override bool IsValid(ConfigEntry entry)
+            => entry.UIType == UIType && entry.LogicalType.IsEnum;
+
+        public override string ToUI(object logicalValue)
+                    => logicalValue?.ToString()!;
+        /// <summary>
+        /// 从UI层/存储层转回原始数据
+        /// </summary>
+        public override object FromUI(string uiValue, Type logicalType)
+                    => uiValue != null ? Enum.Parse(logicalType, uiValue, true) : null!;
+        internal override void BuildUI(ConfigEntry<string> entry)
+        {
+            if (entry.LogicalType.IsEnum)
+            {
+                ModSettingBuilder.DropdownBuild(entry);
+            }
+        }
+
+        internal void BuildUITyped<TEnum>(ConfigEntry<TEnum> entry)
+            where TEnum : Enum
+        {
+            ModSettingBuilder.DropdownBuild(entry);
         }
     }
 }

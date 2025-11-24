@@ -1,4 +1,5 @@
-﻿using JmcModLib.Core;
+﻿using JmcModLib.Config.UI;
+using JmcModLib.Core;
 using System;
 using System.Collections.Generic;
 using System.Reflection;
@@ -6,40 +7,52 @@ using System.Runtime.CompilerServices;
 
 namespace JmcModLib.Utils
 {
+    internal static class TestModLogger
+    {
+        private const string ButtonText = "点击输出";
+        private const string Group = "日志库测试";
+
+        [UIButton("测试Trace输出", ButtonText, Group)]
+        public static void Test() => ModLogger.Trace("测试Trace");
+
+        [UIButton("测试Debug输出", ButtonText, Group)]
+        public static void TestDebug() => ModLogger.Debug("测试Debug");
+        [UIButton("测试Info输出", ButtonText, Group)]
+        public static void TestInfo() => ModLogger.Info("测试Info");
+
+        [UIButton("测试Warn输出", ButtonText, Group)]
+        public static void TestWarn() => ModLogger.Warn("测试Warn", new InvalidOperationException("这是一个测试异常"));
+        [UIButton("测试Error输出", ButtonText, Group)]
+        public static void TestError() => ModLogger.Error("测试Error", new InvalidOperationException("这是一个测试异常"));
+    };
+
+        
+
     /// <summary>
     /// 打印级别
     /// </summary>
     public enum LogLevel
     {
-        /// <summary>
-        /// 主要用于打印出函数入函数
-        /// </summary>
-        Trace = 0,
+        /// <summary> 不打印任何，低于任何等级 </summary>
+        None = int.MinValue,
 
-        /// <summary>
-        /// Debug
-        /// </summary>
-        Debug = 1,
+        /// <summary> 主要用于打印出函数入函数 </summary>
+        Trace = 1,
 
-        /// <summary>
-        /// Info
-        /// </summary>
-        Info = 2,
+        /// <summary> Debug </summary>
+        Debug = 2,
 
-        /// <summary>
-        /// Warn
-        /// </summary>
-        Warn = 3,
+        /// <summary> Info </summary>
+        Info = 3,
 
-        /// <summary>
-        /// Error
-        /// </summary>
-        Error = 4,
+        /// <summary> Warn </summary>
+        Warn = 4,
 
-        /// <summary>
-        /// None
-        /// </summary>
-        None = int.MaxValue
+        /// <summary> Error </summary>
+        Error = 5,
+
+        /// <summary> 高于所有等级 </summary>
+        All = int.MaxValue
     }
 
     /// <summary>
@@ -48,6 +61,7 @@ namespace JmcModLib.Utils
     [Flags]
     public enum LogFormatFlags : uint
     {
+        /// <summary> 不显示任何东西，占位 </summary>
         None = 0,
         /// <summary>显示时间戳</summary>
         Timestamp = 1 << 0,
@@ -105,6 +119,7 @@ namespace JmcModLib.Utils
             {
                 config = new AssemblyLoggerConfig();
                 _assemblyConfigs[asm] = config;
+                Debug($"为 {ModRegistry.GetTag(asm)} 新建日志配置成功");
             }
             return config;
         }
@@ -202,7 +217,7 @@ namespace JmcModLib.Utils
         /// <summary>
         /// 根据格式配置格式化输出内容
         /// </summary>
-        private static string Format(Assembly asm, LogFormatFlags formatFlags, string level, string message, string caller, string file, int line)
+        private static string Format(Assembly asm, LogFormatFlags formatFlags, string level, string? message, string caller, string file, int line)
         {
             var parts = new System.Text.StringBuilder();
 
@@ -255,23 +270,26 @@ namespace JmcModLib.Utils
             {
                 parts.Append(": ");
             }
-            parts.Append(message);
+            
+            if (!string.IsNullOrEmpty(message))
+            {
+                parts.Append(message);
+            }
 
             return parts.ToString();
         }
 
         /// <summary>
-        /// 手动指定等级输出日志
+        /// 手动指定等级输出日志，为空不打印
         /// </summary>
-        public static void Log(LogLevel level, string message,
+        public static void Log(LogLevel? level = null, string? message = null,
             Assembly? asm = null,
             [CallerMemberName] string caller = "",
             [CallerFilePath] string file = "",
             [CallerLineNumber] int line = 0)
         {
             asm ??= Assembly.GetCallingAssembly();
-
-            if (!ShouldLog(asm, level, out var formatFlags)) return;
+            if (level == null || !ShouldLog(asm, (LogLevel)level!, out var formatFlags)) return;
 
             string text = Format(asm, formatFlags, level.ToString().ToUpper(), message, caller, file, line);
             switch (level)
@@ -295,7 +313,7 @@ namespace JmcModLib.Utils
         /// <summary>
         /// 使用Trace输出（使用调用 Assembly 的配置）
         /// </summary>
-        public static void Trace(string msg, Assembly? asm = null, [CallerMemberName] string caller = "", [CallerFilePath] string file = "", [CallerLineNumber] int line = 0)
+        public static void Trace(string? msg = null, Assembly? asm = null, [CallerMemberName] string caller = "", [CallerFilePath] string file = "", [CallerLineNumber] int line = 0)
         {
             asm ??= Assembly.GetCallingAssembly();
             Log(LogLevel.Trace, msg, asm, caller, file, line);
@@ -304,7 +322,7 @@ namespace JmcModLib.Utils
         /// <summary>
         /// 使用Debug输出（使用调用 Assembly 的配置）
         /// </summary>
-        public static void Debug(string msg, Assembly? asm = null, [CallerMemberName] string caller = "", [CallerFilePath] string file = "", [CallerLineNumber] int line = 0)
+        public static void Debug(string? msg = null, Assembly? asm = null, [CallerMemberName] string caller = "", [CallerFilePath] string file = "", [CallerLineNumber] int line = 0)
         {
             asm ??= Assembly.GetCallingAssembly();
             Log(LogLevel.Debug, msg, asm, caller, file, line);
@@ -313,7 +331,7 @@ namespace JmcModLib.Utils
         /// <summary>
         /// Info输出（使用调用 Assembly 的配置）
         /// </summary>
-        public static void Info(string msg, Assembly? asm = null, [CallerMemberName] string caller = "", [CallerFilePath] string file = "", [CallerLineNumber] int line = 0)
+        public static void Info(string? msg = null, Assembly? asm = null, [CallerMemberName] string caller = "", [CallerFilePath] string file = "", [CallerLineNumber] int line = 0)
         {
             asm ??= Assembly.GetCallingAssembly();
             Log(LogLevel.Info, msg, asm, caller, file, line);
@@ -322,7 +340,7 @@ namespace JmcModLib.Utils
         /// <summary>
         /// Warn输出（使用调用 Assembly 的配置）
         /// </summary>
-        public static void Warn(string msg, Exception? ex = null, Assembly? asm = null, [CallerMemberName] string caller = "", [CallerFilePath] string file = "", [CallerLineNumber] int line = 0)
+        public static void Warn(string? msg = null, Exception? ex = null, Assembly? asm = null, [CallerMemberName] string caller = "", [CallerFilePath] string file = "", [CallerLineNumber] int line = 0)
         {
             asm ??= Assembly.GetCallingAssembly();
             Log(LogLevel.Warn, msg + (ex != null ? $"\n{ex}" : ""), asm, caller, file, line);
@@ -331,7 +349,7 @@ namespace JmcModLib.Utils
         /// <summary>
         /// Error输出，其中若传递异常，会换行并输出异常（使用调用 Assembly 的配置）
         /// </summary>
-        public static void Error(string msg, Exception? ex = null, Assembly? asm = null, [CallerMemberName] string caller = "", [CallerFilePath] string file = "", [CallerLineNumber] int line = 0)
+        public static void Error(string? msg = null, Exception? ex = null, Assembly? asm = null, [CallerMemberName] string caller = "", [CallerFilePath] string file = "", [CallerLineNumber] int line = 0)
         {
             asm ??= Assembly.GetCallingAssembly();
             Log(LogLevel.Error, msg + (ex != null ? $"\n{ex}" : ""), asm, caller, file, line);

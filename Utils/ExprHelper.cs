@@ -331,7 +331,7 @@ public static class ExprHelper
                             throw new ArgumentNullException(nameof(target), $"实例字段 {fi.Name} 的 target 不能为 null");
 
                         // --- 实例字段 ---
-                        // getter: (object obj) => (T)((YourType)obj).Field
+                        // getter: (object obj) => (TUI)((YourType)obj).Field
                         var getterMethod = new DynamicMethod(
                             $"get_{fi.Name}_{Guid.NewGuid():N}",
                             typeof(T),
@@ -351,7 +351,7 @@ public static class ExprHelper
                         var getterRaw = (Func<object, T>)getterMethod.CreateDelegate(typeof(Func<object, T>));
                         getter = () => getterRaw(target);
 
-                        // setter: (object obj, T value) => ((YourType)obj).Field = value
+                        // setter: (object obj, TUI value) => ((YourType)obj).Field = value
                         var setterMethod = new DynamicMethod(
                             $"set_{fi.Name}_{Guid.NewGuid():N}",
                             typeof(void),

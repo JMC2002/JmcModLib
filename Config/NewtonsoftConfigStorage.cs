@@ -172,7 +172,7 @@ namespace JmcModLib.Config
                 return Enum.Parse(targetType, raw.ToString()!);
             }
 
-            // 可空<T> 处理
+            // 可空<TUI> 处理
             var underlying = Nullable.GetUnderlyingType(targetType);
             if (underlying != null)
             {
