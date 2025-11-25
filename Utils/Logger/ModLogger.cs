@@ -1,30 +1,12 @@
-﻿using JmcModLib.Config.UI;
-using JmcModLib.Core;
+﻿using JmcModLib.Core;
 using System;
 using System.Collections.Generic;
 using System.Reflection;
 using System.Runtime.CompilerServices;
+using static UnityEngine.Rendering.DebugUI;
 
 namespace JmcModLib.Utils
 {
-    internal static class TestModLogger
-    {
-        private const string ButtonText = "点击输出";
-        private const string Group = "日志库测试";
-
-        [UIButton("测试Trace输出", ButtonText, Group)]
-        public static void Test() => ModLogger.Trace("测试Trace");
-
-        [UIButton("测试Debug输出", ButtonText, Group)]
-        public static void TestDebug() => ModLogger.Debug("测试Debug");
-        [UIButton("测试Info输出", ButtonText, Group)]
-        public static void TestInfo() => ModLogger.Info("测试Info");
-
-        [UIButton("测试Warn输出", ButtonText, Group)]
-        public static void TestWarn() => ModLogger.Warn("测试Warn", new InvalidOperationException("这是一个测试异常"));
-        [UIButton("测试Error输出", ButtonText, Group)]
-        public static void TestError() => ModLogger.Error("测试Error", new InvalidOperationException("这是一个测试异常"));
-    };
 
         
 
@@ -50,6 +32,12 @@ namespace JmcModLib.Utils
 
         /// <summary> Error </summary>
         Error = 5,
+
+        /// <summary> Fatal 错误，在Debug模式下会抛出异常，在Release模式下会打印信息 </summary>
+        Fatal = 6,
+
+        /// <summary> 默认等级 </summary>
+        Default = Info,
 
         /// <summary> 高于所有等级 </summary>
         All = int.MaxValue
@@ -79,7 +67,7 @@ namespace JmcModLib.Utils
         /// <summary>默认格式：TAG + 时间戳 + 等级 + 调用方法 + 行号</summary>
         Default = Tag | Timestamp | Level | Caller | LineNumber,
         /// <summary>完整格式：包含所有信息</summary>
-        Full = Tag | Timestamp | Level | Caller | LineNumber | FilePath,
+        All = Tag | Timestamp | Level | Caller | LineNumber | FilePath,
         /// <summary>精简格式：只有等级和消息</summary>
         Minimal = Level
     }
@@ -103,12 +91,24 @@ namespace JmcModLib.Utils
     /// <summary>
     /// 一个打印类
     /// </summary>
-    public static class ModLogger
+    public static partial class ModLogger
     {
         // 全局配置
         private static readonly LogLevel _globalMinLevel = LogLevel.Info;
         private static readonly LogFormatFlags _globalFormatFlags = LogFormatFlags.Default;
         private static readonly Dictionary<Assembly, AssemblyLoggerConfig> _assemblyConfigs = [];
+        private static readonly Dictionary<Assembly, bool> DebugCache = [];
+
+        private static bool IsAssemblyDebugBuild(Assembly asm)
+        {
+            if (DebugCache.TryGetValue(asm, out var result))
+                return result;
+
+            var attr = asm.GetCustomAttribute<System.Diagnostics.DebuggableAttribute>();
+            result = attr != null && (attr.IsJITTrackingEnabled || !attr.IsJITOptimizerDisabled);
+            DebugCache[asm] = result;
+            return result;
+        }
 
         /// <summary>
         /// 获取或创建指定 Assembly 的配置
@@ -127,11 +127,15 @@ namespace JmcModLib.Utils
         /// <summary>
         /// 注册 Assembly 的元信息（供 ModRegistry 调用）
         /// </summary>
-        internal static void RegisterAssembly(Assembly assembly, LogLevel minLevel = LogLevel.Info)
+        internal static void RegisterAssembly(Assembly assembly, LogLevel minLevel,
+                                              LogFormatFlags logFormat,
+                                              LogConfigUIFlags buildFlags)
         {
-            if (assembly == null) return;
+            Fatal(new ArgumentNullException(nameof(assembly)), "尝试为 null Assembly 注册日志配置");
             var config = GetOrCreateConfig(assembly);
             config.MinLevel = minLevel;
+            SetFormatFlags(logFormat, assembly);
+            BuildLoggerUI.BuildUI(assembly, buildFlags);
         }
 
         /// <summary>
@@ -164,20 +168,40 @@ namespace JmcModLib.Utils
         }
 
         /// <summary>
-        /// 获取当前调用 Assembly 的最低日志等级
+        /// 判断当前调用 Assembly 是否包含指定日志格式标志
+        /// </summary>
+        public static bool HasFormatFlag(LogFormatFlags flag, Assembly? asm = null)
+        {
+            asm ??= Assembly.GetCallingAssembly();
+            var config = GetOrCreateConfig(asm);
+            return (config.FormatFlags & flag) != 0;
+        }
+
+        /// <summary>
+        /// 将当前调用 Assembly 的指定日志格式标志取反
+        /// </summary>
+        public static void ToggleFormatFlag(LogFormatFlags flag, Assembly? asm = null)
+        {
+            asm ??= Assembly.GetCallingAssembly();
+            var config = GetOrCreateConfig(asm);
+            config.FormatFlags ^= flag;
+        }
+
+        /// <summary>
+        /// 获取当前调用 Assembly 的最低日志等级，若不存在，则设为默认并返回
         /// </summary>
         /// <param name="asm"> 留空则获取调用者 Assembly 的配置 </param>
         /// <returns>
-        /// 返回日志等级，若未注册则返回 null
+        /// 返回日志等级，若未注册则设置为默认等级并返回
         /// </returns>
-        public static LogLevel? GetLogLevel(Assembly? asm = null)
+        public static LogLevel GetLogLevel(Assembly? asm = null)
         {
             asm ??= Assembly.GetCallingAssembly();
             if (_assemblyConfigs.TryGetValue(asm, out var config))
             {
-                return config.MinLevel;
+                SetMinLevel(LogLevel.Default, asm);
             }
-            return null;
+            return config.MinLevel;
         }
 
         /// <summary>
@@ -354,5 +378,33 @@ namespace JmcModLib.Utils
             asm ??= Assembly.GetCallingAssembly();
             Log(LogLevel.Error, msg + (ex != null ? $"\n{ex}" : ""), asm, caller, file, line);
         }
+
+        /// <summary>
+        /// Fatal输出，在Debug模式下会直接抛出异常，在Release模式下会打印异常信息
+        /// </summary>
+        /// <param name="ex"> 待处理的异常 </param>
+        /// <param name="msg"> 打印的附加信息 </param>
+        /// <param name="asm"> 程序集，留空则为调用者 </param>
+        /// <param name="caller"> 调用者函数名，留空自动填充 </param>
+        /// <param name="file"> 调用者函数名，留空自动填充 </param>
+        /// <param name="line"> 调用者函数名，留空自动填充 </param>
+        public static void Fatal(Exception ex, string? msg = null, Assembly? asm = null,
+            [CallerMemberName] string caller = "",
+            [CallerFilePath] string file = "",
+            [CallerLineNumber] int line = 0)
+        {
+            asm ??= Assembly.GetCallingAssembly();
+
+            if (IsAssemblyDebugBuild(asm))
+            {
+                Log(LogLevel.Fatal, msg, asm, caller, file, line);
+                throw ex;
+            }
+            else
+            {
+                Log(LogLevel.Fatal, msg + (ex != null ? $"\n{ex}" : ""), asm, caller, file, line);
+            }
+        }
+
     }
 }
