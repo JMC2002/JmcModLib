@@ -1,7 +1,6 @@
 ﻿using JmcModLib.Config.UI.ModSetting;
 using JmcModLib.Utils;
 using System;
-using System.Diagnostics;
 using System.Reflection;
 using UnityEngine;
 
@@ -275,11 +274,6 @@ namespace JmcModLib.Config.UI
             where TEnum : Enum
         {
             ModSettingBuilder.DropdownBuild(entry);
-        }
-
-        private string GetDebuggerDisplay()
-        {
-            return ToString();
         }
     }
 }
