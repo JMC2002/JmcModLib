@@ -8,7 +8,7 @@ namespace JmcModLib.Config.UI
 {
     internal static class ConfigUIManager
     {
-        // Assembly → Group → UIEntry
+        // Assembly → GroupName → UIEntry
         private static readonly Dictionary<Assembly, Dictionary<string, List<PendingUIEntry<BaseEntry, UIBaseAttribute>>>> _pending
             = [];
 
