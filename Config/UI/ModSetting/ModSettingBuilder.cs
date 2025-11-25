@@ -6,8 +6,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
-using UI;
-using Unity.Burst.Intrinsics;
 using UnityEngine;
 
 namespace JmcModLib.Config.UI.ModSetting
