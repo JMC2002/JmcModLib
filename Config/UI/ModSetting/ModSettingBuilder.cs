@@ -242,8 +242,8 @@ namespace JmcModLib.Config.UI.ModSetting
 
             ModSettingAPI.AddButton(info,
                                     $"JmcModLibGen.{modinfo!.Name}.Reset",
-                                    $"重置所有选项到默认值（重启游戏或）",
-                                    L10n.Get("重置", Assembly.GetExecutingAssembly()),
+                                    L10n.Get("重置所有选项到默认值"),
+                                    L10n.Get("重置"),
                                     () => ConfigUIManager.ResetAsm(asm));   // 只重置注册了UI的Config
         }
     }
