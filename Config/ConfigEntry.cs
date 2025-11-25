@@ -88,6 +88,23 @@ namespace JmcModLib.Config
                            UIConfigAttribute? uiAttr)
             : base(asm, attr.Group, attr.DisplayName)
         {
+            (this.getter, this.setter, this.action) = TraitAccessors(member, method);
+
+            LogicalType = logicalType;
+            DefaultValue = getter();
+            _currentValue = DefaultValue;
+            this.uiAttr = uiAttr;
+        }
+
+        /// <summary>
+        /// 从 MemberAccessor 和 MethodAccessor 萃取出 getter、setter 和 change 方法，并检查合法性。
+        /// </summary>
+        internal static (Func<T> getter, Action<T> setter, Action<T>? change) 
+            TraitAccessors(MemberAccessor member, MethodAccessor? method = null)
+        {
+            Func<T> getter; 
+            Action<T> setter; 
+            Action<T>? action = null;
             if (!member.IsStatic)
                 throw new ArgumentException(
                     $"构造{member.Name}出错: 不允许使用MemberAccessor/MethodAccessor构造非静态Config");
@@ -96,19 +113,18 @@ namespace JmcModLib.Config
                 throw new ArgumentException(
                     $"构造{member.Name}出错: ConfigEntry 需要可读写的成员");
 
-            LogicalType = logicalType;
 
             if (method != null)
             {
-                if (!ConfigAttribute.IsValidMethod(method.Member, UIType, out var lvl, out var error))
+                if (!ConfigAttribute.IsValidMethod(method.Member, typeof(T), out var lvl, out var error))
                     throw new ArgumentException($"构造{member.Name}出错: {error}");
                 else
                 {
                     ModLogger.Log(lvl, error);
                     if (method.TypedDelegate is Action<T> change)
-                        this.action = change;
+                        action = change;
                     else
-                        this.action = method.InvokeStaticVoid;
+                        action = v => method.InvokeStaticVoid();
                 }
             }
 
@@ -117,15 +133,12 @@ namespace JmcModLib.Config
             else
                 getter = () => (T)member.GetValue(null)!;
 
-            DefaultValue = getter();
-            _currentValue = DefaultValue;
-
-            if (member.TypedSetter is Action<T> action)
-                setter = action;
+            if (member.TypedSetter is Action<T> act)
+                setter = act;
             else
                 setter = value => member.SetValue(value);
 
-            this.uiAttr = uiAttr;
+            return (getter, setter, action);
         }
 
         public override bool Reset()
