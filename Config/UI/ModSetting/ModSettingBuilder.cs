@@ -2,6 +2,7 @@
 using JmcModLib.Core;
 using JmcModLib.Utils;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
@@ -73,16 +74,27 @@ namespace JmcModLib.Config.UI.ModSetting
                                     entry.SetTypedValue);
         }
 
-        internal static void DropdownBuild(ConfigEntry<string> entry)
+        internal static void DropdownBuild(ConfigEntry<string> entry, UIDropdownAttribute uiAttr)
         {
             var asm = entry.Assembly;
             if (!TryGetModInfo(asm, out var info))
                 return;
 
-            if (entry.LogicalType.IsEnum)
+            var type = entry.LogicalType;
+            if (type.IsEnum)
             {
-                // 枚举的所有选项
-                var options = Enum.GetNames(entry.LogicalType).ToList();
+                // 获取枚举所有值（按数值排序）转成名称列表
+                List<string> options = [.. Enum.GetValues(type)
+                                               .Cast<object>()           
+                                               .OrderBy(v => (IComparable)Convert.ChangeType(v, Enum.GetUnderlyingType(type)))
+                                               .Select(v => v.ToString()!)];
+
+                // 如果有排除列表 → 过滤
+                if (uiAttr.Exclude is { Length: > 0 })
+                {
+                    var exclude = new HashSet<string>(uiAttr.Exclude, StringComparer.OrdinalIgnoreCase);
+                    options = [.. options.Where(o => !exclude.Contains(o))];
+                }
 
                 // 添加 UI
                 ModSettingAPI.AddDropdownList(info,

@@ -1,6 +1,7 @@
 ﻿using JmcModLib.Config.UI.ModSetting;
 using JmcModLib.Utils;
 using System;
+using System.Diagnostics;
 using System.Reflection;
 using UnityEngine;
 
@@ -248,8 +249,10 @@ namespace JmcModLib.Config.UI
     /// <summary>
     /// 添加一个下拉框属性，仅支持枚举类型
     /// </summary>
-    public sealed class UIDropdownAttribute : UIConverterAttribute<string>
+    /// <param name="exclude">要排除的枚举选项，字符串表示，不检查是否存在此枚举项</param>
+    public sealed class UIDropdownAttribute(string[]? exclude = null) : UIConverterAttribute<string>
     {
+        internal string[]? Exclude { get; } = exclude;
         internal override bool IsValid(ConfigEntry entry)
             => entry.UIType == UIType && entry.LogicalType.IsEnum;
 
@@ -264,7 +267,7 @@ namespace JmcModLib.Config.UI
         {
             if (entry.LogicalType.IsEnum)
             {
-                ModSettingBuilder.DropdownBuild(entry);
+                ModSettingBuilder.DropdownBuild(entry, this);
             }
         }
 
@@ -272,6 +275,11 @@ namespace JmcModLib.Config.UI
             where TEnum : Enum
         {
             ModSettingBuilder.DropdownBuild(entry);
+        }
+
+        private string GetDebuggerDisplay()
+        {
+            return ToString();
         }
     }
 }
