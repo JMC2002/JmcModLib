@@ -1,10 +1,8 @@
-﻿using JmcModLib.Config.Entry;
-using JmcModLib.Config.UI;
+﻿using JmcModLib.Config.UI;
 using JmcModLib.Reflection;
 using JmcModLib.Utils;
 using System;
 using System.Reflection;
-using Unity.VisualScripting;
 
 namespace JmcModLib.Config
 {
@@ -20,9 +18,10 @@ namespace JmcModLib.Config
             MemberAccessor acc,
             MethodAccessor? method,
             ConfigAttribute attr,
-            Type logicType)
+            Type logicType,
+            UIConfigAttribute<T>? uiAttr)
         {
-            return new ConfigEntry<T>(asm, acc, method, attr, logicType);
+            return new ConfigEntry<T>(asm, acc, method, attr, logicType, uiAttr);
         }
 
         private static ConfigEntry<TUI> CreateTypedWithConvert<TUI, TLogical>(
@@ -93,14 +92,8 @@ namespace JmcModLib.Config
                     change.Invoke(s);
                 }
 
-                return new ConfigEntry<TUI>(asm, 
-                                            attr.DisplayName, 
-                                            attr.Group, 
-                                            getter(), 
-                                            getter, 
-                                            setter,
-                                            change == null ? null : action, 
-                                            logicalType);
+                return new ConfigEntry<TUI>(asm, attr.DisplayName, attr.Group, getter(), getter, setter,
+                                            change == null ? null : action, logicalType, uiAttr);
             }
             else
                 throw new ArgumentException("UINeedCovertAttribute 类型不正确");
@@ -123,7 +116,7 @@ namespace JmcModLib.Config
             {
                 var memberType = acc.MemberType;
                 var closed = CreateTypedMethod.MakeGeneric(memberType);
-                return (ConfigEntry)closed.Invoke(null, asm, acc, method, attr, memberType)!;
+                return (ConfigEntry)closed.Invoke(null, asm, acc, method, attr, memberType, uiAttr)!;
             }
         }
     }
