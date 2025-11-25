@@ -43,6 +43,7 @@ namespace JmcModLib.Config
         private static readonly IConfigStorage _defaultStorage =
             new NewtonsoftConfigStorage(ConfigDir);
 
+        private static HashSet<Assembly> hadScan = [];
         /// <summary>
         /// 某个ASM有配置项并且扫描完毕后广播
         /// </summary>
@@ -89,8 +90,12 @@ namespace JmcModLib.Config
         public static void RegisterAllInAssembly(Assembly? asm = null)
         {
             asm ??= Assembly.GetCallingAssembly();
-            if (_entries.ContainsKey(asm))
-                return; // 已注册
+            if (hadScan.Contains(asm))
+            {
+                ModLogger.Debug("跳过重复扫描程序集 " + ModRegistry.GetTag(asm) + " 的配置项。");
+                return;
+            }
+            hadScan.Add(asm);
 
             foreach (var type in asm.GetTypes())
             {
@@ -209,7 +214,7 @@ namespace JmcModLib.Config
             asm ??= Assembly.GetCallingAssembly();
             if (!_entries.ContainsKey(asm))
                 return; // 未注册
-
+            hadScan.Remove(asm);
             ConfigUIManager.Unregister(asm);
             SaveAllInAssembly(asm);
             ClearAssemblyCache(asm);
