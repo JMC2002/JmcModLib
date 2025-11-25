@@ -1,12 +1,8 @@
-﻿using Duckov.Modding.UI;
-using JmcModLib.Config.UI.ModSetting;
-using JmcModLib.Core;
-using JmcModLib.Reflection;
+﻿using JmcModLib.Config.UI.ModSetting;
 using JmcModLib.Utils;
 using System;
 using System.Reflection;
 using UnityEngine;
-using UnityEngine.SocialPlatforms;
 
 namespace JmcModLib.Config.UI
 {
