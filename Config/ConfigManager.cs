@@ -406,7 +406,7 @@ namespace JmcModLib.Config
                                                     Action<T>? action = null)
         {
             asm ??= Assembly.GetCallingAssembly();
-            var entry = new ConfigEntry<T>(asm, displayName, group, getter(), getter, setter, action, typeof(T), uiAttr);
+            var entry = ConfigEntryFactory.Create(asm, displayName, group, getter(), getter, setter, action, typeof(T), uiAttr);
             RegisterEntry(entry);
             if (uiAttr != null)
                 ConfigUIManager.RegisterEntry(entry, uiAttr);

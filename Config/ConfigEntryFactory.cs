@@ -3,6 +3,7 @@ using JmcModLib.Reflection;
 using JmcModLib.Utils;
 using System;
 using System.Reflection;
+using Unity.VisualScripting;
 
 namespace JmcModLib.Config
 {
@@ -12,6 +13,8 @@ namespace JmcModLib.Config
             MethodAccessor.Get(typeof(ConfigEntryFactory), nameof(CreateTypedGeneric));
         private static readonly MethodAccessor CreateTypedWithConvertMethod =
             MethodAccessor.Get(typeof(ConfigEntryFactory), nameof(CreateTypedWithConvert));
+        private static readonly MethodAccessor CreateTypedWithConvertActionMethod =
+            MethodAccessor.Get(typeof(ConfigEntryFactory), nameof(CreateTypedWithConvertAction));
 
         private static ConfigEntry<T> CreateTypedGeneric<T>(
             Assembly asm,
@@ -24,36 +27,15 @@ namespace JmcModLib.Config
             return new ConfigEntry<T>(asm, acc, method, attr, logicType, uiAttr);
         }
 
-        private static ConfigEntry<TUI> CreateTypedWithConvert<TUI, TLogical>(
+        private static ConfigEntry<TUI> CreateTypedWithConvertAction<TUI, TLogical>(
             Assembly asm,
-            MemberAccessor member,
-            MethodAccessor? method,
-            ConfigAttribute attr,
+            string displayName,
+            string group,
+            Func<TLogical> getterOri,
+            Action<TLogical> setterOri,
+            Action<TLogical>? change,
             UINeedCovertAttribute uiAttr)
         {
-            if (!member.IsStatic)
-                throw new ArgumentException(
-                    $"构造{member.Name}出错: 不允许使用MemberAccessor/MethodAccessor构造非静态Config");
-
-            if (!member.CanRead || !member.CanWrite)
-                throw new ArgumentException(
-                    $"构造{member.Name}出错: ConfigEntry 需要可读写的成员");
-
-            Action<TLogical>? change = null;
-            if (method != null)
-            {
-                if (!ConfigAttribute.IsValidMethod(method.Member, typeof(TLogical), out var lvl, out var error))
-                    throw new ArgumentException($"构造{member.Name}出错: {error}");
-                else
-                {
-                    ModLogger.Log(lvl, error);
-                    if (method.TypedDelegate is Action<TLogical> t)
-                        change = t;
-                    else
-                        change = v => method.InvokeStaticVoid(v);
-                }
-            }
-
             Type logicalType = typeof(TLogical);
             if (uiAttr is UIConverterAttribute<TUI> covAttr)
             {
@@ -67,36 +49,47 @@ namespace JmcModLib.Config
                     catch (Exception ex)
                     {
                         throw new ArgumentException(
-                            $"设置配置项 {attr.DisplayName} 时由转换出错: {ex.Message}", ex);
+                            $"设置配置项 {displayName} 时转换出错: {ex.Message}", ex);
                     }
                     try
                     {
-                        member.SetValue(s);
+                        setterOri(s);
                     }
                     catch (Exception ex)
                     {
                         throw new ArgumentException(
-                            $"设置配置项 {attr.DisplayName} 时出错: {ex.Message}", ex);
+                            $"设置配置项 {displayName} 时出错: {ex.Message}", ex);
                     }
                 }
 
                 TUI getter()
                 {
-                    TLogical s = member.GetValue<TLogical>()!;
+                    TLogical s = getterOri()!;
                     return covAttr.ToUI(s);
                 }
 
-                void action (TUI v)
+                void action(TUI v)
                 {
                     TLogical s = (TLogical)covAttr.FromUI(v, logicalType);
                     change.Invoke(s);
                 }
 
-                return new ConfigEntry<TUI>(asm, attr.DisplayName, attr.Group, getter(), getter, setter,
-                                            change == null ? null : action, logicalType, uiAttr);
+                return new ConfigEntry<TUI>(asm, displayName, group, getter(), getter, setter,
+                                            change == null ? null : action, logicalType, covAttr);
             }
             else
                 throw new ArgumentException("UINeedCovertAttribute 类型不正确");
+        }
+
+        private static ConfigEntry<TUI> CreateTypedWithConvert<TUI, TLogical>(
+            Assembly asm,
+            MemberAccessor member,
+            MethodAccessor? method,
+            ConfigAttribute attr,
+            UINeedCovertAttribute uiAttr)
+        {
+            var (getter, setter, change) = ConfigEntry<TLogical>.TraitAccessors(member, method);
+            return CreateTypedWithConvertAction<TUI, TLogical>(asm, attr.DisplayName, attr.Group, getter, setter, change, uiAttr);
         }
 
         public static ConfigEntry Create(
@@ -117,6 +110,27 @@ namespace JmcModLib.Config
                 var memberType = acc.MemberType;
                 var closed = CreateTypedMethod.MakeGeneric(memberType);
                 return (ConfigEntry)closed.Invoke(null, asm, acc, method, attr, memberType, uiAttr)!;
+            }
+        }
+
+        public static ConfigEntry Create<T>(Assembly asm,
+                           string displayName,
+                           string group,
+                           T defaultValue,
+                           Func<T> getter,
+                           Action<T> setter,
+                           Action<T>? action,
+                           Type logicType,
+                           UIConfigAttribute? uiAttr)
+        {
+            if (uiAttr != null && uiAttr is UINeedCovertAttribute covAttr)
+            {
+                var closed = CreateTypedWithConvertActionMethod.MakeGeneric(covAttr.UIType, typeof(T));
+                return (ConfigEntry)closed.Invoke(null, asm, displayName, group, getter, setter, action, uiAttr)!;
+            }
+            else
+            {
+                return new ConfigEntry<T>(asm, displayName, group, defaultValue, getter, setter, action, logicType, uiAttr);
             }
         }
     }
