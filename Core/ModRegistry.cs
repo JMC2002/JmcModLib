@@ -56,7 +56,11 @@ namespace JmcModLib.Core
         /// <param name="version">MOD的版本号，留空或填null则会被默认置为1.0.0</param>
         /// <param name="level">期待显示的默认打印级别，留空则打印Info及以上</param>
         /// <param name="assembly">程序集，留空自动获取</param>
-        public static void Register(ModInfo info, string? name = null, string? version = null, LogLevel level = LogLevel.Info, Assembly? assembly = null)
+        public static void Register(ModInfo info, string? name = null, string? version = null,
+                                    LogLevel level = ModLogger.DefaultLogLevel,
+                                    LogFormatFlags tagFlags = LogFormatFlags.Default,
+                                    LogConfigUIFlags uIFlags = LogConfigUIFlags.Default,
+                                    Assembly? assembly = null)
         {
             assembly ??= Assembly.GetCallingAssembly();
             if (IsRegistered(assembly))
@@ -76,9 +80,9 @@ namespace JmcModLib.Core
             _mods[assembly] = new Modinfo(info, name ?? info.displayName ?? assembly.FullName, version ?? "1.0.0");
             // ConfigManager.RegisterAllInAssembly(assembly);
 
-            ModLogger.RegisterAssembly(assembly, level);
-            ModLogger.Debug($"{GetTag(assembly)} 注册成功");
+            ModLogger.RegisterAssembly(assembly, level, tagFlags, uIFlags);
             OnRegistered?.Invoke(assembly);
+            ModLogger.Debug($"{GetTag(assembly)} 注册成功");
         }
 
         /// <summary>

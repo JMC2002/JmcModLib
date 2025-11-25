@@ -8,7 +8,7 @@ using static UnityEngine.Rendering.DebugUI;
 namespace JmcModLib.Utils
 {
 
-        
+
 
     /// <summary>
     /// 打印级别
@@ -35,9 +35,6 @@ namespace JmcModLib.Utils
 
         /// <summary> Fatal 错误，在Debug模式下会抛出异常，在Release模式下会打印信息 </summary>
         Fatal = 6,
-
-        /// <summary> 默认等级 </summary>
-        Default = Info,
 
         /// <summary> 高于所有等级 </summary>
         All = int.MaxValue
@@ -99,6 +96,8 @@ namespace JmcModLib.Utils
         private static readonly Dictionary<Assembly, AssemblyLoggerConfig> _assemblyConfigs = [];
         private static readonly Dictionary<Assembly, bool> DebugCache = [];
 
+        /// <summary> 默认等级 </summary>
+        public const LogLevel DefaultLogLevel = LogLevel.Info;
         private static bool IsAssemblyDebugBuild(Assembly asm)
         {
             if (DebugCache.TryGetValue(asm, out var result))
@@ -200,7 +199,7 @@ namespace JmcModLib.Utils
             asm ??= Assembly.GetCallingAssembly();
             if (_assemblyConfigs.TryGetValue(asm, out var config))
             {
-                SetMinLevel(LogLevel.Default, asm);
+                SetMinLevel(DefaultLogLevel, asm);
             }
             return config.MinLevel;
         }
@@ -295,7 +294,7 @@ namespace JmcModLib.Utils
             {
                 parts.Append(": ");
             }
-            
+
             if (!string.IsNullOrEmpty(message))
             {
                 parts.Append(message);
