@@ -185,6 +185,7 @@ namespace JmcModLib.Utils
             asm ??= Assembly.GetCallingAssembly();
             var config = GetOrCreateConfig(asm);
             config.FormatFlags ^= flag;
+            Debug($"已将 {ModRegistry.GetTag(asm)} 的日志格式标志 {flag} 取反，当前状态：{(config.FormatFlags & flag) != 0}");
         }
 
         /// <summary>
@@ -406,5 +407,18 @@ namespace JmcModLib.Utils
             }
         }
 
+        /// <summary>
+        /// 当 condition 为 true 时，执行 Fatal 操作
+        /// </summary>
+        public static void FatalIf(bool condition, Exception ex, string? msg = null, Assembly? asm = null,
+            [CallerMemberName] string caller = "",
+            [CallerFilePath] string file = "",
+            [CallerLineNumber] int line = 0)
+        {
+            if (condition)
+            {
+                Fatal(ex, msg, asm, caller, file, line);
+            }
+        }
     }
 }
