@@ -299,7 +299,7 @@ namespace JmcModLib.Config.UI.ModSetting
             MethodInfo? methodInfo = GetStaticPublicMethodInfo(GET_VALUE);
             if (methodInfo == null) return false;
             MethodInfo genericMethod = methodInfo.MakeGenericMethod(typeof(T));
-            genericMethod.Invoke(null, new object[] { modInfo, key, callback! });
+            genericMethod.Invoke(null, [modInfo, key, callback!]);
             return true;
         }
 
