@@ -97,7 +97,7 @@ namespace JmcModLib.Utils
         private static readonly Dictionary<Assembly, bool> DebugCache = [];
 
         /// <summary> 默认等级 </summary>
-        public const LogLevel DefaultLogLevel = LogLevel.Info;
+        public const LogLevel DefaultLogLevel = LogLevel.Trace;
         private static bool IsAssemblyDebugBuild(Assembly asm)
         {
             if (DebugCache.TryGetValue(asm, out var result))
@@ -197,8 +197,9 @@ namespace JmcModLib.Utils
         public static LogLevel GetLogLevel(Assembly? asm = null)
         {
             asm ??= Assembly.GetCallingAssembly();
-            if (_assemblyConfigs.TryGetValue(asm, out var config))
+            if (!_assemblyConfigs.TryGetValue(asm, out var config))
             {
+                Trace($"查询{ModRegistry.GetTag(asm)}的日志等级，但是未找到，设置为默认值{DefaultLogLevel}");
                 SetMinLevel(DefaultLogLevel, asm);
             }
             return config.MinLevel;
