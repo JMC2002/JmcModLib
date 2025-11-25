@@ -12,6 +12,7 @@ namespace JmcModLib.Config
     /// 
     public sealed class ButtonEntry : BaseEntry
     {
+        private Action action1;
         public ButtonEntry(Assembly asm,
                            MethodAccessor method,
                            string group,
@@ -22,9 +23,9 @@ namespace JmcModLib.Config
                 throw new ArgumentException($"方法不符合 UIButtonAttribute 的要求: {errorMessage}");
             ModLogger.Log(lvl, errorMessage);
             if (method.TypedDelegate is Action action)
-                OnInvoke += action;
+                action1 = action;
             else
-                OnInvoke += method.InvokeStaticVoid;
+                action1 = method.InvokeStaticVoid;
         }
 
         /// <summary>
@@ -36,14 +37,12 @@ namespace JmcModLib.Config
                            string displayName)
             : base(asm, group, displayName)
         {
-            OnInvoke += action;
+            action1 = action;
         }
 
         public void Invoke()
         {
-            OnInvoke?.Invoke();
+            action1.Invoke();
         }
-
-        public event Action? OnInvoke;
     }
 }
