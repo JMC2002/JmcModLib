@@ -300,10 +300,16 @@ namespace JmcModLib.Config
         private static void SaveAllInAssembly(Assembly asm)
         {
             if (asm == null) throw new ArgumentNullException(nameof(asm));
-            if (!_entries.ContainsKey(asm)) return;
 
-            var storage = GetStorage(asm);
-            storage.Flush(asm);
+            if (_lookup.TryGetValue(asm, out var entries))  
+                foreach (var entry in entries.Values)       
+                    entry.SyncFromData();   // 遍历所有entry，检查getter得到的值与文件内容是否一致
+                                            // 不一致则写入文件，防止子MOD处修改了值但是未保存
+            else
+                return;                     // 若asm无配置项，直接返回
+
+            var storage = GetStorage(asm);  // 否则，获取存储后端
+            storage.Flush(asm);             // 并将缓冲区写入文件
         }
 
         // -------------- Reset --------------------------
