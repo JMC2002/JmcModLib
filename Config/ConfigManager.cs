@@ -7,6 +7,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Reflection;
 using UnityEngine;
 
@@ -158,7 +159,7 @@ namespace JmcModLib.Config
             lookupDict[entry.Key] = entry;
 
             // 同步配置项（文件中有就读文件中的值，没有就写入）
-            entry.Sync();
+            entry.SyncFromFile();
         }
 
         private static ConfigEntry? BuildConfigEntry(Assembly asm, Type type, MemberAccessor acc)
@@ -377,38 +378,54 @@ namespace JmcModLib.Config
             SetValue(entry, value);
         }
 
-        public static void Register<T>(string DisplayName, 
-                                       string? Group = ConfigAttribute.DefaultGroup, 
-                                       UIConfigAttribute<T>? uiAttr = null, 
-                                       Action<T>? action = null, Assembly? asm = null)
+        /// <summary>
+        /// 注册一个按钮，相关文本将自动调用本地化文件
+        /// </summary>
+        /// <param name="description"> 按钮的描述文本 </param>
+        /// <param name="action"> 按钮的行为 </param>
+        /// <param name="buttonText"> 按钮上的文本 </param>
+        /// <param name="group"> 按钮所在的组，留空为默认 </param>
+        /// <param name="asm"> 注册的Assembly集，留空为调用者 </param>
+        /// <returns> 返回按钮的Key </returns>
+        public static string RegisterButton(string description, Action action, string buttonText = "按钮",
+                                            string group = ConfigAttribute.DefaultGroup, Assembly? asm = null)
         {
             asm ??= Assembly.GetCallingAssembly();
-            // var acc = new ConfigAccessor(action,)
+            var buttonEntry = new ButtonEntry(asm, action, group, description);
+            var uiAttr = new UIButtonAttribute(description, buttonText, group);
+            ConfigUIManager.RegisterEntry(buttonEntry, uiAttr);
+            return buttonEntry.Key;
         }
 
-        public static void Register(string DisplayName,
-                                    Action action,
-                                    string buttonText = "按钮",
-                                    string group = ConfigAttribute.DefaultGroup,
-                                    Assembly? asm = null)
+        /// <summary>
+        /// 通过对象注册单条配置信息的实现
+        /// </summary>
+        private static string RegisterConfigImpl<T>(Assembly asm, string displayName, Func<T> getter, Action<T> setter,
+                                                    UIConfigAttribute? uiAttr = null,
+                                                    string group = ConfigAttribute.DefaultGroup,
+                                                    Action<T>? action = null)
         {
             asm ??= Assembly.GetCallingAssembly();
-//             var buttonEntry = new ButtonEntry(asm, null!, MethodAccessor.FromDelegate(action), group);
+            var entry = new ConfigEntry<T>(asm, displayName, group, getter(), getter, setter, action, typeof(T), uiAttr);
+            RegisterEntry(entry);
+            if (uiAttr != null)
+                ConfigUIManager.RegisterEntry(entry, uiAttr);
+            return entry.Key;
         }
 
-        public static string Register<T>(string DisplayName, 
-                                       T defaultValue,
-                                       string Group = ConfigAttribute.DefaultGroup,
-                                       UIConfigAttribute<T>? uiAttr = null,
-                                       Action<T>? action = null, Assembly? asm = null)
+        /// <summary>
+        /// 通过值注册单条配置信息的实现
+        /// </summary>
+        private static string RegisterConfigImpl<T>(Assembly asm, string displayName, T defaultValue,
+                                                    string Group = ConfigAttribute.DefaultGroup,
+                                                    UIConfigAttribute? uiAttr = null, Action<T>? action = null)
         {
-            asm ??= Assembly.GetCallingAssembly();
             var storage = GetStorage(asm);
-            var key = BaseEntry.GetKey(DisplayName, Group);
+            var key = BaseEntry.GetKey(displayName, Group);
 
             T getter()
             {
-                if (storage.TryLoad(DisplayName, Group, typeof(T), out object? value, asm))
+                if (storage.TryLoad(displayName, Group, typeof(T), out object? value, asm))
                     return (T)value!;
                 ModLogger.Warn($"尝试读取 {key} 值失败，返回默认值");
                 return defaultValue;
@@ -416,20 +433,156 @@ namespace JmcModLib.Config
 
             void setter(T v)
             {
-                storage.Save(DisplayName, Group, v, asm);
+                storage.Save(displayName, Group, v, asm);
             }
 
             // 若首次建立，则写入默认值
-            if (!storage.TryLoad(DisplayName, Group, typeof(T), out object? nowValue, asm))
+            if (!storage.TryLoad(displayName, Group, typeof(T), out object? nowValue, asm))
             {
                 setter(defaultValue);
             }
-            var entry = new ConfigEntry<T>(asm, DisplayName, Group, defaultValue, getter, setter, action, typeof(T));
+            return RegisterConfigImpl(asm, displayName, getter, setter, uiAttr, Group, action);
+        }
 
-            if (uiAttr != null)
-                ConfigUIManager.RegisterEntry(entry, uiAttr);
+        /// <summary>
+        /// 仅注册配置项，不绑定任何UI，仅用于持久化
+        /// </summary>
+        /// <remarks> 可为实例对象，但应当自行维护生命周期，保证自注册至MOD卸载期间不被销毁。 </remarks>
+        /// <typeparam name="T"> 注册的值的类型 </typeparam>
+        /// <param name="displayName"> 用作在持久化文本中的条目名称 </param>
+        /// <param name="getter"> 维护的值的getter，在设置初始值以及卸载阶段调用一次以同步文件 </param>
+        /// <param name="setter"> 维护的值的setter，用户若需要在代码中改值，最好使用GetValue(key)，但直接修改自己的值也会在最后保存文件时同步保存，只是不能同步UI </param>
+        /// <param name="group"> 值所在的组，若不需要分组则留空 </param>
+        /// <param name="asm"> 注册的程序集，留空则为调用者本身 </param>
+        /// <returns> 返回配置项的Key，可以通过GetValue/SetValue函数查询系统内的值 </returns>
+        public static string RegisterConfig<T>(string displayName, Func<T> getter, Action<T> setter,
+                                               string group = ConfigAttribute.DefaultGroup, Assembly? asm = null)
+            => RegisterConfigImpl(asm ?? Assembly.GetCallingAssembly(), displayName, getter, setter, null, group, null);
 
-            return key;
+        /// <summary>
+        /// 通过getter/setter 注册一个配置项。
+        /// </summary>
+        /// <remarks> 可为实例对象，但应当自行维护生命周期，保证自注册至MOD卸载期间不被销毁。 </remarks>
+        /// <typeparam name="T"> 注册的值的类型 </typeparam>
+        /// <param name="uiAttr"> 需要注册UI的Attribute，相关文本将自动调用本地化文件 </param>
+        /// <param name="displayName"> 显示文本，用于保存以及显示在UI系统里 </param>
+        /// <param name="getter"> 维护的值的getter，在设置初始值以及卸载阶段调用一次以同步文件 </param>
+        /// <param name="setter"> 维护的值的setter，用户若需要在代码中改值，最好使用GetValue(key)，但直接修改自己的值也会在最后保存文件时同步保存，只是不能同步UI </param>
+        /// <param name="group"> 值所在的组，若不需要分组则留空 </param>
+        /// <param name="action"> 若需注册UI且需要额外的回调函数，则填入，若不需要则留空，此处禁止调用ConfigManager的SetVal </param>
+        /// <param name="asm"> 注册的程序集，留空则为调用者本身 </param>
+        /// <returns> 返回配置项的Key，可以通过GetValue/SetValue函数查询系统内的值 </returns>
+        public static string RegisterConfig<T>(UIConfigAttribute<T> uiAttr, string displayName, Func<T> getter,
+                                               Action<T> setter, string group = ConfigAttribute.DefaultGroup,
+                                               Action<T>? action = null, Assembly? asm = null)
+            => RegisterConfigImpl(asm ??= Assembly.GetCallingAssembly(), displayName, getter, setter, uiAttr, group, action);
+
+        /// <summary>
+        /// 通过枚举值注册一个下拉列表，将自动从枚举值的所有选项生成下拉列表。
+        /// </summary>
+        /// <typeparam name="TEnum"> 用于配置的枚举类型 </typeparam>
+        /// <param name="uiAttr"> 需要注册UI的Attribute，相关文本将自动调用本地化文件 </param>
+        /// <param name="displayName"> 显示文本，用于保存以及显示在UI系统里 </param>
+        /// <param name="getter"> 维护的值的getter，在设置初始值以及卸载阶段调用一次以同步文件 </param>
+        /// <param name="setter"> 维护的值的setter，用户若需要在代码中改值，最好使用GetValue(key)，但直接修改自己的值也会在最后保存文件时同步保存，只是不能同步UI </param>
+        /// <param name="group"> 值所在的组，若不需要分组则留空 </param>
+        /// <param name="action"> 若需注册UI且需要额外的回调函数，则填入，若不需要则留空，此处禁止调用ConfigManager的SetVal </param>
+        /// <param name="asm"> 注册的程序集，留空则为调用者本身 </param>
+        /// <returns> 返回配置项的Key，可以通过GetValue/SetValue函数查询系统内的值 </returns>
+        public static string RegisterConfig<TEnum>(UIDropdownAttribute uiAttr, string displayName, Func<TEnum> getter,
+                                                             Action<TEnum> setter,
+                                                     string group = ConfigAttribute.DefaultGroup,
+                                                     Action<TEnum>? action = null, Assembly? asm = null)
+            where TEnum : Enum 
+            => RegisterConfigImpl(asm ?? Assembly.GetCallingAssembly(), displayName, getter, setter, uiAttr, group, action);
+
+        /// <summary>
+        /// 直接通过值注册一个配置项，由此MOD自行维护该值的生命周期，可通过 GetValue/SetValue 查询修改。
+        /// </summary>
+        /// <typeparam name="T"> 注册的配置项类型 </typeparam>
+        /// <param name="uiAttr"> 需要注册UI的Attribute，相关文本将自动调用本地化文件 </param>
+        /// <param name="displayName"> 显示文本，用于保存以及显示在UI系统里 </param>
+        /// <param name="defaultValue"> 默认值 </param>
+        /// <param name="group"> 值所在的组，若不需要分组则留空 </param>
+        /// <param name="action"> 若需注册UI且需要额外的回调函数，则填入，若不需要则留空，此处禁止调用ConfigManager的SetVal </param>
+        /// <param name="asm"> 注册的程序集，留空则为调用者本身 </param>
+        /// <returns> 返回配置项的Key，可以通过GetValue/SetValue函数查询系统内的值 </returns>
+        public static string RegisterConfig<T>(UIConfigAttribute<T> uiAttr, string displayName, T defaultValue,
+                                               string group = ConfigAttribute.DefaultGroup, Action<T>? action = null,
+                                               Assembly? asm = null)
+            => RegisterConfigImpl(asm ?? Assembly.GetCallingAssembly(), displayName, defaultValue, group, uiAttr, action);
+
+        /// <summary>
+        /// 用一个枚举值生成下拉列表注册一个配置项，由此MOD自行维护该值的生命周期，可通过 GetValue/SetValue 查询修改。
+        /// </summary>
+        /// <typeparam name="TEnum"> 用于配置的枚举类型 </typeparam>
+        /// <param name="uiAttr"> 需要注册UI的Attribute，相关文本将自动调用本地化文件 </param>
+        /// <param name="displayName"> 显示文本，用于保存以及显示在UI系统里 </param>
+        /// <param name="defaultValue"> 默认枚举值 </param>
+        /// <param name="group"> 值所在的组，若不需要分组则留空 </param>
+        /// <param name="action"> 若需注册UI且需要额外的回调函数，则填入，若不需要则留空，此处禁止调用ConfigManager的SetVal </param>
+        /// <param name="asm"> 注册的程序集，留空则为调用者本身 </param>
+        /// <returns> 返回配置项的Key，可以通过GetValue/SetValue函数查询系统内的值 </returns>
+        public static string RegisterConfig<TEnum>(UIDropdownAttribute uiAttr, string displayName, TEnum defaultValue,
+                                                                     string group = ConfigAttribute.DefaultGroup,
+                                                             Action<TEnum>? action = null, Assembly? asm = null)
+                    where TEnum : Enum
+                    => RegisterConfigImpl(asm ?? Assembly.GetCallingAssembly(), displayName, defaultValue, group, uiAttr, action);
+       
+        /// <summary>
+        /// 通过形如 `() => ClassName.StaticName / () => InstanceName.FieldName` 的表达式注册一个配置项，字段/属性/静态/实例均可。
+        /// </summary>
+        /// <remarks> 可为实例对象，但应当自行维护生命周期，保证自注册至MOD卸载期间不被销毁。 </remarks>
+        /// <typeparam name="T"> 注册的配置项类型 </typeparam>
+        /// <param name="uiAttr"> 需要注册UI的Attribute，相关文本将自动调用本地化文件 </param>
+        /// <param name="displayName"> 显示文本，用于保存以及显示在UI系统里 </param>
+        /// <param name="expr"> 形如 `() => ClassName.StaticName / () => InstanceName.FieldName` 的表达式 </param>
+        /// <param name="group"> 值所在的组，若不需要分组则留空 </param>
+        /// <param name="action"> 若需注册UI且需要额外的回调函数，则填入，若不需要则留空，此处禁止调用ConfigManager的SetVal </param>
+        /// <param name="asm"> 注册的程序集，留空则为调用者本身 </param>
+        /// <returns> 返回配置项的Key，可以通过GetValue/SetValue函数查询系统内的值 </returns>
+        /// <exception cref="ArgumentException"> 传递的表达式不合法 </exception>
+        public static string RegisterConfig<T>(UIConfigAttribute<T> uiAttr, string displayName, Expression<Func<T>> expr,
+                                               string group = ConfigAttribute.DefaultGroup, Action<T>? action = null,
+                                               Assembly? asm = null)
+        {
+            try
+            {
+                var (getter, setter) = ExprHelper.GetOrCreateAccessors(expr);
+                return RegisterConfig(uiAttr, displayName, getter, setter, group, action, asm);
+            }
+            catch (Exception ex)
+            {
+                throw new ArgumentException($"{ModRegistry.GetTag(asm)}: 注册条目 {displayName} 时出现问题", ex); 
+            }
+        }
+
+        /// <summary>
+        /// 通过形如 `() => ClassName.StaticName / () => InstanceName.FieldName` 的表达式注册一个下拉列表，字段/属性/静态/实例均可。
+        /// </summary>
+        /// <typeparam name="TEnum"> 用于配置的枚举类型 </typeparam>
+        /// <param name="uiAttr"> 需要注册UI的Attribute，相关文本将自动调用本地化文件 </param>
+        /// <param name="displayName"> 显示文本，用于保存以及显示在UI系统里 </param>
+        /// <param name="expr"> 形如 `() => ClassName.StaticName / () => InstanceName.FieldName` 的表达式 </param>
+        /// <param name="group"> 值所在的组，若不需要分组则留空 </param>
+        /// <param name="action"> 若需注册UI且需要额外的回调函数，则填入，若不需要则留空，此处禁止调用ConfigManager的SetVal </param>
+        /// <param name="asm"> 注册的程序集，留空则为调用者本身 </param>
+        /// <returns> 返回配置项的Key，可以通过GetValue/SetValue函数查询系统内的值 </returns>
+        public static string RegisterConfig<TEnum>(UIDropdownAttribute uiAttr, string displayName,
+                                                     Expression<Func<TEnum>> expr,
+                                                     string group = ConfigAttribute.DefaultGroup,
+                                                     Action<TEnum>? action = null, Assembly? asm = null)
+            where TEnum : Enum
+        {
+            try
+            {
+                var (getter, setter) = ExprHelper.GetOrCreateAccessors(expr);
+                return RegisterConfig(uiAttr, displayName, getter, setter, group, action, asm);
+            }
+            catch (Exception ex)
+            {
+                throw new ArgumentException($"{ModRegistry.GetTag(asm)}: 注册条目 {displayName} 时出现问题", ex);
+            }
         }
     }
 }
