@@ -105,6 +105,11 @@
             存储的实际类型，比如将enum存为string，则返回string
             </summary>
         </member>
+        <member name="M:JmcModLib.Config.ConfigEntry.SyncFromData">
+            <summary>
+            通过Getter获取当前值并保存到文件
+            </summary>
+        </member>
         <member name="P:JmcModLib.Config.ConfigEntry`1.LogicalType">
             <summary>
             数据的原类型，比如传入enum -> string中的enum，若不会额外转换，直接返回TargetType。
@@ -120,9 +125,19 @@
             字段/属性最初的默认值，用于 Reset。
             </summary>
         </member>
-        <member name="M:JmcModLib.Config.ConfigEntry`1.Sync">
+        <member name="M:JmcModLib.Config.ConfigEntry`1.TraitAccessors(JmcModLib.Reflection.MemberAccessor,JmcModLib.Reflection.MethodAccessor)">
+            <summary>
+            从 MemberAccessor 和 MethodAccessor 萃取出 getter、setter 和 change 方法，并检查合法性。
+            </summary>
+        </member>
+        <member name="M:JmcModLib.Config.ConfigEntry`1.SyncFromFile">
             <summary>
             同步某一个配置项
+            </summary>
+        </member>
+        <member name="M:JmcModLib.Config.ConfigEntry`1.SyncFromData">
+            <summary>
+            从getter获取当前值并保存到文件，一般用于Entry销毁时对比使用，以防子MOD内部直接修改了配置的值但未持久化
             </summary>
         </member>
         <member name="T:JmcModLib.Config.ConfigManager">
@@ -198,6 +213,123 @@
             <param name="value">新的值</param>
             <param name="asm">指定程序集，留空则为调用者</param>
             <returns>如果Key不存在，会输出一条Warn并返回空，否则返回对应值</returns>
+        </member>
+        <member name="M:JmcModLib.Config.ConfigManager.RegisterButton(System.String,System.Action,System.String,System.String,System.Reflection.Assembly)">
+            <summary>
+            注册一个按钮，相关文本将自动调用本地化文件
+            </summary>
+            <param name="description"> 按钮的描述文本 </param>
+            <param name="action"> 按钮的行为 </param>
+            <param name="buttonText"> 按钮上的文本 </param>
+            <param name="group"> 按钮所在的组，留空为默认 </param>
+            <param name="asm"> 注册的Assembly集，留空为调用者 </param>
+            <returns> 返回按钮的Key </returns>
+        </member>
+        <member name="M:JmcModLib.Config.ConfigManager.RegisterConfigImpl``1(System.Reflection.Assembly,System.String,System.Func{``0},System.Action{``0},JmcModLib.Config.UI.UIConfigAttribute,System.String,System.Action{``0})">
+            <summary>
+            通过对象注册单条配置信息的实现
+            </summary>
+        </member>
+        <member name="M:JmcModLib.Config.ConfigManager.RegisterConfigImpl``1(System.Reflection.Assembly,System.String,``0,System.String,JmcModLib.Config.UI.UIConfigAttribute,System.Action{``0})">
+            <summary>
+            通过值注册单条配置信息的实现
+            </summary>
+        </member>
+        <member name="M:JmcModLib.Config.ConfigManager.RegisterConfig``1(System.String,System.Func{``0},System.Action{``0},System.String,System.Reflection.Assembly)">
+            <summary>
+            仅注册配置项，不绑定任何UI，仅用于持久化
+            </summary>
+            <remarks> 可为实例对象，但应当自行维护生命周期，保证自注册至MOD卸载期间不被销毁。 </remarks>
+            <typeparam name="T"> 注册的值的类型 </typeparam>
+            <param name="displayName"> 用作在持久化文本中的条目名称 </param>
+            <param name="getter"> 维护的值的getter，在设置初始值以及卸载阶段调用一次以同步文件 </param>
+            <param name="setter"> 维护的值的setter，用户若需要在代码中改值，最好使用GetValue(key)，但直接修改自己的值也会在最后保存文件时同步保存，只是不能同步UI </param>
+            <param name="group"> 值所在的组，若不需要分组则留空 </param>
+            <param name="asm"> 注册的程序集，留空则为调用者本身 </param>
+            <returns> 返回配置项的Key，可以通过GetValue/SetValue函数查询系统内的值 </returns>
+        </member>
+        <member name="M:JmcModLib.Config.ConfigManager.RegisterConfig``1(JmcModLib.Config.UI.UIConfigAttribute{``0},System.String,System.Func{``0},System.Action{``0},System.String,System.Action{``0},System.Reflection.Assembly)">
+            <summary>
+            通过getter/setter 注册一个配置项。
+            </summary>
+            <remarks> 可为实例对象，但应当自行维护生命周期，保证自注册至MOD卸载期间不被销毁。 </remarks>
+            <typeparam name="T"> 注册的值的类型 </typeparam>
+            <param name="uiAttr"> 需要注册UI的Attribute，相关文本将自动调用本地化文件 </param>
+            <param name="displayName"> 显示文本，用于保存以及显示在UI系统里 </param>
+            <param name="getter"> 维护的值的getter，在设置初始值以及卸载阶段调用一次以同步文件 </param>
+            <param name="setter"> 维护的值的setter，用户若需要在代码中改值，最好使用GetValue(key)，但直接修改自己的值也会在最后保存文件时同步保存，只是不能同步UI </param>
+            <param name="group"> 值所在的组，若不需要分组则留空 </param>
+            <param name="action"> 若需注册UI且需要额外的回调函数，则填入，若不需要则留空，此处禁止调用ConfigManager的SetVal </param>
+            <param name="asm"> 注册的程序集，留空则为调用者本身 </param>
+            <returns> 返回配置项的Key，可以通过GetValue/SetValue函数查询系统内的值 </returns>
+        </member>
+        <member name="M:JmcModLib.Config.ConfigManager.RegisterConfig``1(JmcModLib.Config.UI.UIDropdownAttribute,System.String,System.Func{``0},System.Action{``0},System.String,System.Action{``0},System.Reflection.Assembly)">
+            <summary>
+            通过枚举值注册一个下拉列表，将自动从枚举值的所有选项生成下拉列表。
+            </summary>
+            <typeparam name="TEnum"> 用于配置的枚举类型 </typeparam>
+            <param name="uiAttr"> 需要注册UI的Attribute，相关文本将自动调用本地化文件 </param>
+            <param name="displayName"> 显示文本，用于保存以及显示在UI系统里 </param>
+            <param name="getter"> 维护的值的getter，在设置初始值以及卸载阶段调用一次以同步文件 </param>
+            <param name="setter"> 维护的值的setter，用户若需要在代码中改值，最好使用GetValue(key)，但直接修改自己的值也会在最后保存文件时同步保存，只是不能同步UI </param>
+            <param name="group"> 值所在的组，若不需要分组则留空 </param>
+            <param name="action"> 若需注册UI且需要额外的回调函数，则填入，若不需要则留空，此处禁止调用ConfigManager的SetVal </param>
+            <param name="asm"> 注册的程序集，留空则为调用者本身 </param>
+            <returns> 返回配置项的Key，可以通过GetValue/SetValue函数查询系统内的值 </returns>
+        </member>
+        <member name="M:JmcModLib.Config.ConfigManager.RegisterConfig``1(JmcModLib.Config.UI.UIConfigAttribute{``0},System.String,``0,System.String,System.Action{``0},System.Reflection.Assembly)">
+            <summary>
+            直接通过值注册一个配置项，由此MOD自行维护该值的生命周期，可通过 GetValue/SetValue 查询修改。
+            </summary>
+            <typeparam name="T"> 注册的配置项类型 </typeparam>
+            <param name="uiAttr"> 需要注册UI的Attribute，相关文本将自动调用本地化文件 </param>
+            <param name="displayName"> 显示文本，用于保存以及显示在UI系统里 </param>
+            <param name="defaultValue"> 默认值 </param>
+            <param name="group"> 值所在的组，若不需要分组则留空 </param>
+            <param name="action"> 若需注册UI且需要额外的回调函数，则填入，若不需要则留空，此处禁止调用ConfigManager的SetVal </param>
+            <param name="asm"> 注册的程序集，留空则为调用者本身 </param>
+            <returns> 返回配置项的Key，可以通过GetValue/SetValue函数查询系统内的值 </returns>
+        </member>
+        <member name="M:JmcModLib.Config.ConfigManager.RegisterConfig``1(JmcModLib.Config.UI.UIDropdownAttribute,System.String,``0,System.String,System.Action{``0},System.Reflection.Assembly)">
+            <summary>
+            用一个枚举值生成下拉列表注册一个配置项，由此MOD自行维护该值的生命周期，可通过 GetValue/SetValue 查询修改。
+            </summary>
+            <typeparam name="TEnum"> 用于配置的枚举类型 </typeparam>
+            <param name="uiAttr"> 需要注册UI的Attribute，相关文本将自动调用本地化文件 </param>
+            <param name="displayName"> 显示文本，用于保存以及显示在UI系统里 </param>
+            <param name="defaultValue"> 默认枚举值 </param>
+            <param name="group"> 值所在的组，若不需要分组则留空 </param>
+            <param name="action"> 若需注册UI且需要额外的回调函数，则填入，若不需要则留空，此处禁止调用ConfigManager的SetVal </param>
+            <param name="asm"> 注册的程序集，留空则为调用者本身 </param>
+            <returns> 返回配置项的Key，可以通过GetValue/SetValue函数查询系统内的值 </returns>
+        </member>
+        <member name="M:JmcModLib.Config.ConfigManager.RegisterConfig``1(JmcModLib.Config.UI.UIConfigAttribute{``0},System.String,System.Linq.Expressions.Expression{System.Func{``0}},System.String,System.Action{``0},System.Reflection.Assembly)">
+            <summary>
+            通过形如 `() => ClassName.StaticName / () => InstanceName.FieldName` 的表达式注册一个配置项，字段/属性/静态/实例均可。
+            </summary>
+            <remarks> 可为实例对象，但应当自行维护生命周期，保证自注册至MOD卸载期间不被销毁。 </remarks>
+            <typeparam name="T"> 注册的配置项类型 </typeparam>
+            <param name="uiAttr"> 需要注册UI的Attribute，相关文本将自动调用本地化文件 </param>
+            <param name="displayName"> 显示文本，用于保存以及显示在UI系统里 </param>
+            <param name="expr"> 形如 `() => ClassName.StaticName / () => InstanceName.FieldName` 的表达式 </param>
+            <param name="group"> 值所在的组，若不需要分组则留空 </param>
+            <param name="action"> 若需注册UI且需要额外的回调函数，则填入，若不需要则留空，此处禁止调用ConfigManager的SetVal </param>
+            <param name="asm"> 注册的程序集，留空则为调用者本身 </param>
+            <returns> 返回配置项的Key，可以通过GetValue/SetValue函数查询系统内的值 </returns>
+            <exception cref="T:System.ArgumentException"> 传递的表达式不合法 </exception>
+        </member>
+        <member name="M:JmcModLib.Config.ConfigManager.RegisterConfig``1(JmcModLib.Config.UI.UIDropdownAttribute,System.String,System.Linq.Expressions.Expression{System.Func{``0}},System.String,System.Action{``0},System.Reflection.Assembly)">
+            <summary>
+            通过形如 `() => ClassName.StaticName / () => InstanceName.FieldName` 的表达式注册一个下拉列表，字段/属性/静态/实例均可。
+            </summary>
+            <typeparam name="TEnum"> 用于配置的枚举类型 </typeparam>
+            <param name="uiAttr"> 需要注册UI的Attribute，相关文本将自动调用本地化文件 </param>
+            <param name="displayName"> 显示文本，用于保存以及显示在UI系统里 </param>
+            <param name="expr"> 形如 `() => ClassName.StaticName / () => InstanceName.FieldName` 的表达式 </param>
+            <param name="group"> 值所在的组，若不需要分组则留空 </param>
+            <param name="action"> 若需注册UI且需要额外的回调函数，则填入，若不需要则留空，此处禁止调用ConfigManager的SetVal </param>
+            <param name="asm"> 注册的程序集，留空则为调用者本身 </param>
+            <returns> 返回配置项的Key，可以通过GetValue/SetValue函数查询系统内的值 </returns>
         </member>
         <member name="T:JmcModLib.Config.IConfigStorage">
             <summary>
@@ -644,6 +776,13 @@
             <summary>
             添加一个下拉框属性，仅支持枚举类型
             </summary>
+            <param name="exclude">要排除的枚举选项，字符串表示，不检查是否存在此枚举项</param>
+        </member>
+        <member name="M:JmcModLib.Config.UI.UIDropdownAttribute.#ctor(System.String[])">
+            <summary>
+            添加一个下拉框属性，仅支持枚举类型
+            </summary>
+            <param name="exclude">要排除的枚举选项，字符串表示，不检查是否存在此枚举项</param>
         </member>
         <member name="M:JmcModLib.Config.UI.UIDropdownAttribute.FromUI(System.String,System.Type)">
             <summary>
@@ -672,7 +811,7 @@
             反注册 MOD 时触发。
             </summary>
         </member>
-        <member name="M:JmcModLib.Core.ModRegistry.Register(Duckov.Modding.ModInfo,System.String,System.String,JmcModLib.Utils.LogLevel,System.Reflection.Assembly)">
+        <member name="M:JmcModLib.Core.ModRegistry.Register(Duckov.Modding.ModInfo,System.String,System.String,JmcModLib.Utils.LogLevel,JmcModLib.Utils.LogFormatFlags,JmcModLib.Utils.LogConfigUIFlags,System.Reflection.Assembly)">
             <summary>
             调用Register注册元信息，至少需要在OnAfterSetup及以后调用
             </summary>
@@ -1255,6 +1394,12 @@
         <member name="F:JmcModLib.Utils.LogLevel.Error">
             <summary> Error </summary>
         </member>
+        <member name="F:JmcModLib.Utils.LogLevel.Fatal">
+            <summary> Fatal 错误，在Debug模式下会抛出异常，在Release模式下会打印信息 </summary>
+        </member>
+        <member name="F:JmcModLib.Utils.LogLevel.Default">
+            <summary> 默认等级 </summary>
+        </member>
         <member name="F:JmcModLib.Utils.LogLevel.All">
             <summary> 高于所有等级 </summary>
         </member>
@@ -1287,7 +1432,7 @@
         <member name="F:JmcModLib.Utils.LogFormatFlags.Default">
             <summary>默认格式：TAG + 时间戳 + 等级 + 调用方法 + 行号</summary>
         </member>
-        <member name="F:JmcModLib.Utils.LogFormatFlags.Full">
+        <member name="F:JmcModLib.Utils.LogFormatFlags.All">
             <summary>完整格式：包含所有信息</summary>
         </member>
         <member name="F:JmcModLib.Utils.LogFormatFlags.Minimal">
@@ -1318,7 +1463,7 @@
             获取或创建指定 Assembly 的配置
             </summary>
         </member>
-        <member name="M:JmcModLib.Utils.ModLogger.RegisterAssembly(System.Reflection.Assembly,JmcModLib.Utils.LogLevel)">
+        <member name="M:JmcModLib.Utils.ModLogger.RegisterAssembly(System.Reflection.Assembly,JmcModLib.Utils.LogLevel,JmcModLib.Utils.LogFormatFlags,JmcModLib.Utils.LogConfigUIFlags)">
             <summary>
             注册 Assembly 的元信息（供 ModRegistry 调用）
             </summary>
@@ -1338,13 +1483,23 @@
             设置当前调用 Assembly 的日志格式
             </summary>
         </member>
+        <member name="M:JmcModLib.Utils.ModLogger.HasFormatFlag(JmcModLib.Utils.LogFormatFlags,System.Reflection.Assembly)">
+            <summary>
+            判断当前调用 Assembly 是否包含指定日志格式标志
+            </summary>
+        </member>
+        <member name="M:JmcModLib.Utils.ModLogger.ToggleFormatFlag(JmcModLib.Utils.LogFormatFlags,System.Reflection.Assembly)">
+            <summary>
+            将当前调用 Assembly 的指定日志格式标志取反
+            </summary>
+        </member>
         <member name="M:JmcModLib.Utils.ModLogger.GetLogLevel(System.Reflection.Assembly)">
             <summary>
-            获取当前调用 Assembly 的最低日志等级
+            获取当前调用 Assembly 的最低日志等级，若不存在，则设为默认并返回
             </summary>
             <param name="asm"> 留空则获取调用者 Assembly 的配置 </param>
             <returns>
-            返回日志等级，若未注册则返回 null
+            返回日志等级，若未注册则设置为默认等级并返回
             </returns>
         </member>
         <member name="M:JmcModLib.Utils.ModLogger.GetFormatFlags(System.Reflection.Assembly)">
@@ -1394,6 +1549,22 @@
         <member name="M:JmcModLib.Utils.ModLogger.Error(System.String,System.Exception,System.Reflection.Assembly,System.String,System.String,System.Int32)">
             <summary>
             Error输出，其中若传递异常，会换行并输出异常（使用调用 Assembly 的配置）
+            </summary>
+        </member>
+        <member name="M:JmcModLib.Utils.ModLogger.Fatal(System.Exception,System.String,System.Reflection.Assembly,System.String,System.String,System.Int32)">
+            <summary>
+            Fatal输出，在Debug模式下会直接抛出异常，在Release模式下会打印异常信息
+            </summary>
+            <param name="ex"> 待处理的异常 </param>
+            <param name="msg"> 打印的附加信息 </param>
+            <param name="asm"> 程序集，留空则为调用者 </param>
+            <param name="caller"> 调用者函数名，留空自动填充 </param>
+            <param name="file"> 调用者函数名，留空自动填充 </param>
+            <param name="line"> 调用者函数名，留空自动填充 </param>
+        </member>
+        <member name="M:JmcModLib.Utils.ModLogger.FatalIf(System.Boolean,System.Exception,System.String,System.Reflection.Assembly,System.String,System.String,System.Int32)">
+            <summary>
+            当 condition 为 true 时，执行 Fatal 操作
             </summary>
         </member>
         <member name="T:JmcModLib.Utils.ReflectionHelper">

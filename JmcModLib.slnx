@@ -4,9 +4,6 @@
     <BuildType Name="Release" />
     <BuildType Name="全量复制" />
   </Configurations>
-  <Project Path="../Template/TemplateMod.csproj">
-    <BuildType Solution="全量复制|*" Project="Debug" />
-  </Project>
   <Project Path="JmcModLib.csproj">
     <BuildType Solution="全量复制|*" Project="Release" />
     <Build Solution="全量复制|*" Project="false" />

@@ -36,10 +36,11 @@ namespace JmcModLib
         /// </summary>
         protected override void OnAfterSetup()
         {
-            Core.VersionInfo.modInfo = info;
+            VersionInfo.modInfo = info;
             // ModSettingLinker.Init();
             ModRegistry.Init();
-            ModRegistry.Register(Core.VersionInfo.modInfo, VersionInfo.Name, VersionInfo.Version, ModConfig.logLevel);
+            ModRegistry.Register(VersionInfo.modInfo, VersionInfo.Name, VersionInfo.Version, 
+                                 LogLevel.Trace, LogFormatFlags.All, LogConfigUIFlags.All);
             ModLogger.Info("模组已启用");
         }
 
