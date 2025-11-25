@@ -154,6 +154,7 @@ namespace JmcModLib.Utils
             asm ??= Assembly.GetCallingAssembly();
             var config = GetOrCreateConfig(asm);
             config.MinLevel = level;
+            Debug($"已将 {ModRegistry.GetTag(asm)} 的日志等级设置为 {level}");
         }
 
         /// <summary>
