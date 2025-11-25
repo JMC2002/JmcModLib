@@ -131,11 +131,10 @@ namespace JmcModLib.Utils
                                               LogFormatFlags logFormat,
                                               LogConfigUIFlags buildFlags)
         {
-            Fatal(new ArgumentNullException(nameof(assembly)), "尝试为 null Assembly 注册日志配置");
-            var config = GetOrCreateConfig(assembly);
-            config.MinLevel = minLevel;
-            SetFormatFlags(logFormat, assembly);
-            BuildLoggerUI.BuildUI(assembly, buildFlags);
+            FatalIf(assembly == null, new ArgumentNullException(nameof(assembly)), "尝试为 null Assembly 注册日志配置");
+            SetMinLevel(minLevel, assembly!);
+            SetFormatFlags(logFormat, assembly!);
+            BuildLoggerUI.BuildUI(assembly!, buildFlags);
         }
 
         /// <summary>
