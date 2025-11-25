@@ -40,7 +40,6 @@ namespace JmcModLib
             // ModSettingLinker.Init();
             ModRegistry.Init();
             ModRegistry.Register(Core.VersionInfo.modInfo, VersionInfo.Name, VersionInfo.Version, ModConfig.logLevel);
-            ConfigManager.RegisterAllInAssembly();
             ModLogger.Info("模组已启用");
         }
 
