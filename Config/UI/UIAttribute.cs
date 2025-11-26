@@ -218,11 +218,17 @@ namespace JmcModLib.Config.UI
         }
     }
 
-
+    /// <summary>
+    /// 需要转换的 UI 配置属性基类。
+    /// </summary>
     public abstract class UINeedCovertAttribute : UIConfigAttribute
     {
     }
 
+    /// <summary>
+    /// 强类型的需要转换的 UI 配置属性基类。
+    /// </summary>
+    /// <typeparam name="T"> 转换到的目标类型 </typeparam>
     public abstract class UIConverterAttribute<T> : UINeedCovertAttribute
     {
         internal override Type UIType => typeof(T);
@@ -251,10 +257,15 @@ namespace JmcModLib.Config.UI
     /// <param name="exclude">要排除的枚举选项，字符串表示，不检查是否存在此枚举项</param>
     public sealed class UIDropdownAttribute(string[]? exclude = null) : UIConverterAttribute<string>
     {
-        internal string[]? Exclude { get; } = exclude;
+        internal string[]? Exclude { get; } = exclude;  // 排除选项一般不太长，且只在构建UI建立一次，故不需要HashSet
         internal override bool IsValid(ConfigEntry entry)
             => entry.UIType == UIType && entry.LogicalType.IsEnum;
 
+        /// <summary>
+        /// 从原始数据转UI数据（Enum转字符串）
+        /// </summary>
+        /// <param name="logicalValue"></param>
+        /// <returns></returns>
         public override string ToUI(object logicalValue)
                     => logicalValue?.ToString()!;
         /// <summary>
