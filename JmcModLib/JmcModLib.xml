@@ -26,7 +26,6 @@
             <summary>
             Button 类型的配置项条目
             </summary>
-            
         </member>
         <member name="M:JmcModLib.Config.ButtonEntry.#ctor(System.Reflection.Assembly,System.Action,System.String,System.String)">
             <summary>
@@ -762,6 +761,17 @@
             </remarks>
             <param name="characterLimit">输入字符限制</param>
         </member>
+        <member name="T:JmcModLib.Config.UI.UINeedCovertAttribute">
+            <summary>
+            需要转换的 UI 配置属性基类。
+            </summary>
+        </member>
+        <member name="T:JmcModLib.Config.UI.UIConverterAttribute`1">
+            <summary>
+            强类型的需要转换的 UI 配置属性基类。
+            </summary>
+            <typeparam name="T"> 转换到的目标类型 </typeparam>
+        </member>
         <member name="M:JmcModLib.Config.UI.UIConverterAttribute`1.ToUI(System.Object)">
             <summary>
             将原始数据转换为UI层/存储层需要的数据
@@ -783,6 +793,13 @@
             添加一个下拉框属性，仅支持枚举类型
             </summary>
             <param name="exclude">要排除的枚举选项，字符串表示，不检查是否存在此枚举项</param>
+        </member>
+        <member name="M:JmcModLib.Config.UI.UIDropdownAttribute.ToUI(System.Object)">
+            <summary>
+            从原始数据转UI数据（Enum转字符串）
+            </summary>
+            <param name="logicalValue"></param>
+            <returns></returns>
         </member>
         <member name="M:JmcModLib.Config.UI.UIDropdownAttribute.FromUI(System.String,System.Type)">
             <summary>
@@ -1063,6 +1080,16 @@
             成员数据类型（不是MemberTypes）
             </summary>
         </member>
+        <member name="P:JmcModLib.Reflection.MemberAccessor.TypedGetter">
+            <summary>
+            强类型委托，当ref/ref-like/索引器/不可读时为空
+            </summary>
+        </member>
+        <member name="P:JmcModLib.Reflection.MemberAccessor.TypedSetter">
+            <summary>
+            强类型委托，当ref/ref-like/索引器/不可写时为空
+            </summary>
+        </member>
         <member name="M:JmcModLib.Reflection.MemberAccessor.GetValue(System.Object)">
             <summary>
             获取值。
@@ -1102,6 +1129,26 @@
             <exception cref="T:System.InvalidOperationException">如果不是索引器属性或成员不可写</exception>
             <exception cref="T:System.ArgumentNullException">如果非静态情况下 target 为空</exception>
             <exception cref="T:System.ArgumentException">如果索引器参数数量不匹配</exception>
+        </member>
+        <member name="M:JmcModLib.Reflection.MemberAccessor.GetValue``2(``0)">
+            <summary>
+            泛型特化
+            </summary>
+        </member>
+        <member name="M:JmcModLib.Reflection.MemberAccessor.SetValue``2(``0,``1)">
+            <summary>
+            泛型特化
+            </summary>
+        </member>
+        <member name="M:JmcModLib.Reflection.MemberAccessor.GetValue``1">
+            <summary>
+            静态重载特化
+            </summary>
+        </member>
+        <member name="M:JmcModLib.Reflection.MemberAccessor.SetValue``1(``0)">
+            <summary>
+            静态成员设置值特化
+            </summary>
         </member>
         <member name="M:JmcModLib.Reflection.MemberAccessor.Get(System.Type,System.String)">
             <summary>
@@ -1627,6 +1674,29 @@
             <param name="asm"></param>
             <returns></returns>
         </member>
+        <member name="T:JmcModLib.Utils.LogConfigUIFlags">
+            <summary>
+            标记要构建的日志配置UI元素
+            </summary>
+        </member>
+        <member name="F:JmcModLib.Utils.LogConfigUIFlags.None">
+            <summary>无 </summary>
+        </member>
+        <member name="F:JmcModLib.Utils.LogConfigUIFlags.LogLevel">
+            <summary>日志等级选项下拉列表 </summary>
+        </member>
+        <member name="F:JmcModLib.Utils.LogConfigUIFlags.FormatFlags">
+            <summary>格式标志复选框 </summary>
+        </member>
+        <member name="F:JmcModLib.Utils.LogConfigUIFlags.TestButtons">
+            <summary>测试按钮 </summary>
+        </member>
+        <member name="F:JmcModLib.Utils.LogConfigUIFlags.Default">
+            <summary>默认选项（日志等级 + 格式标志） </summary>
+        </member>
+        <member name="F:JmcModLib.Utils.LogConfigUIFlags.All">
+            <summary>所有选项 </summary>
+        </member>
         <member name="T:JmcModLib.Utils.LogLevel">
             <summary>
             打印级别
@@ -1723,6 +1793,35 @@
         <member name="M:JmcModLib.Utils.ModLogger.GetOrCreateConfig(System.Reflection.Assembly)">
             <summary>
             获取或创建指定 Assembly 的配置
+            </summary>
+        </member>
+        <member name="T:JmcModLib.Utils.ModLogger.ColorMode">
+            <summary>
+            颜色模式（订阅最多的那个控制台用不了，留接口）
+            </summary>
+        </member>
+        <member name="F:JmcModLib.Utils.ModLogger.ColorMode.None">
+            <summary> 无 </summary>
+        </member>
+        <member name="F:JmcModLib.Utils.ModLogger.ColorMode.Unity">
+            <summary> Unity </summary>
+        </member>
+        <member name="F:JmcModLib.Utils.ModLogger.ColorMode.Ansi">
+            <summary> Ansi </summary>
+        </member>
+        <member name="T:JmcModLib.Utils.ModLogger.ModLoggerColor">
+            <summary>
+            控制输出的颜色，需要终端支持
+            </summary>
+        </member>
+        <member name="F:JmcModLib.Utils.ModLogger.ModLoggerColor.Mode">
+            <summary>
+            当前颜色模式
+            </summary>
+        </member>
+        <member name="M:JmcModLib.Utils.ModLogger.ModLoggerColor.ColorizeLevel(JmcModLib.Utils.LogLevel,System.String)">
+            <summary>
+            根据打印等级渲染对应的颜色
             </summary>
         </member>
         <member name="M:JmcModLib.Utils.ModLogger.RegisterAssembly(System.Reflection.Assembly,JmcModLib.Utils.LogLevel,JmcModLib.Utils.LogFormatFlags,JmcModLib.Utils.LogConfigUIFlags)">

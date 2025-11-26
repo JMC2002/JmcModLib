@@ -8,7 +8,7 @@ namespace JmcModLib.Config
     /// <summary>
     /// 所有配置条目的基类
     /// </summary>
-    public abstract class BaseEntry(Assembly asm, string group, string displayName)
+    internal abstract class BaseEntry(Assembly asm, string group, string displayName)
     {
         internal Assembly Assembly { get; } = asm;
         internal virtual string Key { get; } = GetKey(displayName, group);

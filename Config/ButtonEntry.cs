@@ -9,8 +9,7 @@ namespace JmcModLib.Config
     /// <summary>
     /// Button 类型的配置项条目
     /// </summary>
-    /// 
-    public sealed class ButtonEntry : BaseEntry
+    internal sealed class ButtonEntry : BaseEntry
     {
         private Action action1;
         public ButtonEntry(Assembly asm,

@@ -145,19 +145,14 @@ namespace JmcModLib.Core
         /// <summary>
         /// 判断是否已注册
         /// </summary>
-        public static bool IsRegistered()
-            => IsRegistered(Assembly.GetCallingAssembly());
-
-        /// <summary>
-        /// 判断是否已注册
-        /// </summary>
-        public static bool IsRegistered(Assembly assembly)
-            => _mods.ContainsKey(assembly);
+        public static bool IsRegistered(Assembly? assembly = null)
+            => _mods.ContainsKey(assembly ?? Assembly.GetCallingAssembly());
 
         /// <summary>
         /// 反注册程序集的MOD信息，留空则反注册调用者的程序集
         /// </summary>
-        public static void UnRegister(Assembly? assembly = null)
+        /// <remarks> 原本的API，现已internal </remarks>
+        internal static void UnRegister(Assembly? assembly = null)
         {
             assembly ??= Assembly.GetCallingAssembly();
             if (!IsRegistered(assembly))
@@ -189,15 +184,6 @@ namespace JmcModLib.Core
         {
             assembly ??= Assembly.GetCallingAssembly();
             return _mods.TryGetValue(assembly, out var info) ? info : null;
-        }
-
-        /// <summary>
-        /// 设置程序集的打印等级，默认为调用者
-        /// </summary>
-        public static void SetLogLevel(LogLevel level, Assembly? assembly = null)
-        {
-            assembly ??= Assembly.GetCallingAssembly();
-            ModLogger.SetMinLevel(level, assembly);
         }
 
         /// <summary>

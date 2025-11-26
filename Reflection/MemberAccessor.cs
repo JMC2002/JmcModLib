@@ -41,8 +41,15 @@ namespace JmcModLib.Reflection
         // 静态成员：Getter=Func<TValue>         Setter=Action<TValue>
         private readonly Delegate? typedGetter;
         private readonly Delegate? typedSetter;
-
+        
+        /// <summary>
+        /// 强类型委托，当ref/ref-like/索引器/不可读时为空
+        /// </summary>
         public Delegate? TypedGetter => typedGetter;
+
+        /// <summary>
+        /// 强类型委托，当ref/ref-like/索引器/不可写时为空
+        /// </summary>
         public Delegate? TypedSetter => typedSetter;
 
         // 如果是索引器，这里会持有 index 参数
@@ -356,6 +363,9 @@ namespace JmcModLib.Reflection
         // =============================================
         // 泛型语法糖（非索引器）
         // =============================================
+        /// <summary>
+        /// 泛型特化
+        /// </summary>
         public TValue GetValue<TTarget, TValue>(TTarget target)
         {
             if (indexParams != null)
@@ -373,6 +383,9 @@ namespace JmcModLib.Reflection
             return raw is null ? default! : (TValue)raw;
         }
 
+        /// <summary>
+        /// 泛型特化
+        /// </summary>
         public void SetValue<TTarget, TValue>(TTarget target, TValue value)
         {
             if (indexParams != null)
@@ -389,6 +402,9 @@ namespace JmcModLib.Reflection
                 setter(target, value);
         }
 
+       /// <summary>
+       /// 静态重载特化
+       /// </summary>
         public TValue GetValue<TValue>()
         {
             if (!IsStatic)
@@ -401,6 +417,9 @@ namespace JmcModLib.Reflection
             return raw is null ? default! : (TValue)raw;
         }
 
+        /// <summary>
+        /// 静态成员设置值特化
+        /// </summary>
         public void SetValue<TValue>(TValue value)
         {
             if (!IsStatic)

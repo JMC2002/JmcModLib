@@ -4,8 +4,8 @@
 
 ## 1. 角色与职责
 - 提供基于 Assembly 的日志记录（支持等级与格式标签过滤）。
-- 统一输出格式，包含 `ModRegistry.GetTag(asm)` 与调用源信息（文件/行/成员）。
-- 提供 UI 集成（最低打印等级、格式标签开关），由 `BuildLoggerUI` 生成默认界面。
+- 统一输出格式，包含Mod名、版本号与调用源信息（文件/行/成员）。
+- 提供 UI 集成（最低打印等级、格式标签开关），可在注册时使用`LogConfigUIFlags`选择生成配置界面。
 
 ## 2. 等级与格式
 - 日志等级：`Trace` < `Debug` < `Info` < `Warn` < `Error` < `Fatal`
