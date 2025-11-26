@@ -405,9 +405,8 @@ namespace JmcModLib.Config
         /// <summary>
         /// 通过对象注册单条配置信息的实现
         /// </summary>
-        private static string RegisterConfigImpl<T>(Assembly asm, string displayName, T defaultValue, Func<T> getter, Action<T> setter,
-                                                    UIConfigAttribute? uiAttr,
-                                                    string group,
+        private static string RegisterConfigImpl<T>(Assembly asm, string displayName, T defaultValue, Func<T> getter,
+                                                    Action<T> setter, UIConfigAttribute? uiAttr, string group,
                                                     Action<T>? action)
         {
             var entry = ConfigEntryFactory.Create(asm, displayName, group, defaultValue, getter, setter, action, typeof(T), uiAttr);
