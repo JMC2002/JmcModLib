@@ -237,6 +237,13 @@ namespace JmcModLib.Utils
                 Fatal(new ArgumentNullException(nameof(assembly)), "尝试为 null Assembly 注册日志配置");
                 return;
             }
+
+            if (_assemblyConfigs.ContainsKey(assembly))
+            {
+                Debug($"Assembly {ModRegistry.GetTag(assembly)} 已注册日志配置，跳过重复注册（若手动阻塞了ModRegistry，这是正常的）");
+                return;
+            }
+
             SetMinLevel(minLevel, assembly);
             SetFormatFlags(logFormat, assembly);
             BuildLoggerUI.BuildUI(assembly, buildFlags);
