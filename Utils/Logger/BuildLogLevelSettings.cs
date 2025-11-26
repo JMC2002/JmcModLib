@@ -14,14 +14,14 @@ namespace JmcModLib.Utils
                 //ConfigManager.RegisterConfig(new UIDropdownAttribute(),
                 //                             "最低打印等级",
                 //                             () => { return ModLogger.GetLogLevel(asm); },
-                //                             lvl => { ModLogger.SetMinLevel(lvl, asm); },
+                //                             lvl => { ModLogger.SetLogLevel(lvl, asm); },
                 //                             DefaultGroup,
                 //                             asm: asm);
                 ConfigManager.RegisterConfig(new UIDropdownAttribute(),
                                              "最低打印等级",
                                              ModLogger.GetLogLevel(asm),
                                              DefaultGroup,
-                                             lvl => { ModLogger.SetMinLevel(lvl, asm); },
+                                             lvl => { ModLogger.SetLogLevel(lvl, asm); },
                                              asm);
             }
         }

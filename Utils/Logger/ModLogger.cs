@@ -240,7 +240,7 @@ namespace JmcModLib.Utils
                 return;
             }
 
-            SetMinLevel(minLevel, assembly);
+            SetLogLevel(minLevel, assembly);
             SetFormatFlags(logFormat, assembly);
             BuildLoggerUI.BuildUI(assembly, buildFlags);
         }
@@ -257,7 +257,7 @@ namespace JmcModLib.Utils
         /// <summary>
         /// 设置当前调用 Assembly 的最低日志等级
         /// </summary>
-        public static void SetMinLevel(LogLevel level, Assembly? asm = null)
+        public static void SetLogLevel(LogLevel level, Assembly? asm = null)
         {
             asm ??= Assembly.GetCallingAssembly();
             var config = GetOrCreateConfig(asm);
@@ -317,7 +317,7 @@ namespace JmcModLib.Utils
             if (!_assemblyConfigs.TryGetValue(asm, out var config))
             {
                 Trace($"查询{ModRegistry.GetTag(asm)}的日志等级，但是未找到，设置为默认值{DefaultLogLevel}");
-                SetMinLevel(DefaultLogLevel, asm);
+                SetLogLevel(DefaultLogLevel, asm);
             }
             return config.MinLevel;
         }
