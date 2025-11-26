@@ -225,7 +225,7 @@
             <param name="asm"> 注册的Assembly集，留空为调用者 </param>
             <returns> 返回按钮的Key </returns>
         </member>
-        <member name="M:JmcModLib.Config.ConfigManager.RegisterConfigImpl``1(System.Reflection.Assembly,System.String,System.Func{``0},System.Action{``0},JmcModLib.Config.UI.UIConfigAttribute,System.String,System.Action{``0})">
+        <member name="M:JmcModLib.Config.ConfigManager.RegisterConfigImpl``1(System.Reflection.Assembly,System.String,``0,System.Func{``0},System.Action{``0},JmcModLib.Config.UI.UIConfigAttribute,System.String,System.Action{``0})">
             <summary>
             通过对象注册单条配置信息的实现
             </summary>
