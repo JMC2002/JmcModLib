@@ -405,13 +405,12 @@ namespace JmcModLib.Config
         /// <summary>
         /// 通过对象注册单条配置信息的实现
         /// </summary>
-        private static string RegisterConfigImpl<T>(Assembly asm, string displayName, Func<T> getter, Action<T> setter,
-                                                    UIConfigAttribute? uiAttr = null,
-                                                    string group = ConfigAttribute.DefaultGroup,
-                                                    Action<T>? action = null)
+        private static string RegisterConfigImpl<T>(Assembly asm, string displayName, T defaultValue, Func<T> getter, Action<T> setter,
+                                                    UIConfigAttribute? uiAttr,
+                                                    string group,
+                                                    Action<T>? action)
         {
-            asm ??= Assembly.GetCallingAssembly();
-            var entry = ConfigEntryFactory.Create(asm, displayName, group, getter(), getter, setter, action, typeof(T), uiAttr);
+            var entry = ConfigEntryFactory.Create(asm, displayName, group, defaultValue, getter, setter, action, typeof(T), uiAttr);
             RegisterEntry(entry);
             if (uiAttr != null)
                 ConfigUIManager.RegisterEntry(entry, uiAttr);
@@ -435,18 +434,23 @@ namespace JmcModLib.Config
                 ModLogger.Warn($"尝试读取 {key} 值失败，返回默认值");
                 return defaultValue;
             }
+            
+            void setter(T v) { }    // 由于Set包装了Save语义，此处不再Save
 
-            void setter(T v)
+            try
             {
-                storage.Save(displayName, Group, v, asm);
+                // 若首次建立，则写入默认值
+                if (!storage.TryLoad(displayName, Group, typeof(T), out object? nowValue, asm))
+                {
+                    storage.Save(displayName, Group, nowValue, asm);
+                }
+                return RegisterConfigImpl(asm, displayName, defaultValue, getter, setter, uiAttr, Group, action);
             }
-
-            // 若首次建立，则写入默认值
-            if (!storage.TryLoad(displayName, Group, typeof(T), out object? nowValue, asm))
+            catch (Exception ex)
             {
-                setter(defaultValue);
+                ModLogger.Error($"{ModRegistry.GetTag(asm)} 注册配置项 {key} 时出现问题", ex);
+                return default!;
             }
-            return RegisterConfigImpl(asm, displayName, getter, setter, uiAttr, Group, action);
         }
 
         /// <summary>
@@ -462,7 +466,7 @@ namespace JmcModLib.Config
         /// <returns> 返回配置项的Key，可以通过GetValue/SetValue函数查询系统内的值 </returns>
         public static string RegisterConfig<T>(string displayName, Func<T> getter, Action<T> setter,
                                                string group = ConfigAttribute.DefaultGroup, Assembly? asm = null)
-            => RegisterConfigImpl(asm ?? Assembly.GetCallingAssembly(), displayName, getter, setter, null, group, null);
+            => RegisterConfigImpl(asm ?? Assembly.GetCallingAssembly(), displayName, getter(), getter, setter, null, group, null);
 
         /// <summary>
         /// 通过getter/setter 注册一个配置项。
@@ -480,10 +484,10 @@ namespace JmcModLib.Config
         public static string RegisterConfig<T>(UIConfigAttribute<T> uiAttr, string displayName, Func<T> getter,
                                                Action<T> setter, string group = ConfigAttribute.DefaultGroup,
                                                Action<T>? action = null, Assembly? asm = null)
-            => RegisterConfigImpl(asm ??= Assembly.GetCallingAssembly(), displayName, getter, setter, uiAttr, group, action);
+            => RegisterConfigImpl(asm ?? Assembly.GetCallingAssembly(), displayName, getter(), getter, setter, uiAttr, group, action);
 
         /// <summary>
-        /// 通过枚举值注册一个下拉列表，将自动从枚举值的所有选项生成下拉列表。
+        /// 通过枚举值注册一个下拉列表，将自动从枚举值生成下拉列表。
         /// </summary>
         /// <typeparam name="TEnum"> 用于配置的枚举类型 </typeparam>
         /// <param name="uiAttr"> 需要注册UI的Attribute，相关文本将自动调用本地化文件 </param>
@@ -495,11 +499,10 @@ namespace JmcModLib.Config
         /// <param name="asm"> 注册的程序集，留空则为调用者本身 </param>
         /// <returns> 返回配置项的Key，可以通过GetValue/SetValue函数查询系统内的值 </returns>
         public static string RegisterConfig<TEnum>(UIDropdownAttribute uiAttr, string displayName, Func<TEnum> getter,
-                                                             Action<TEnum> setter,
-                                                     string group = ConfigAttribute.DefaultGroup,
-                                                     Action<TEnum>? action = null, Assembly? asm = null)
+                                                   Action<TEnum> setter, string group = ConfigAttribute.DefaultGroup,
+                                                   Action<TEnum>? action = null, Assembly? asm = null)
             where TEnum : Enum 
-            => RegisterConfigImpl(asm ?? Assembly.GetCallingAssembly(), displayName, getter, setter, uiAttr, group, action);
+            => RegisterConfigImpl(asm ?? Assembly.GetCallingAssembly(), displayName, getter(), getter, setter, uiAttr, group, action);
 
         /// <summary>
         /// 直接通过值注册一个配置项，由此MOD自行维护该值的生命周期，可通过 GetValue/SetValue 查询修改。
@@ -529,8 +532,8 @@ namespace JmcModLib.Config
         /// <param name="asm"> 注册的程序集，留空则为调用者本身 </param>
         /// <returns> 返回配置项的Key，可以通过GetValue/SetValue函数查询系统内的值 </returns>
         public static string RegisterConfig<TEnum>(UIDropdownAttribute uiAttr, string displayName, TEnum defaultValue,
-                                                                     string group = ConfigAttribute.DefaultGroup,
-                                                             Action<TEnum>? action = null, Assembly? asm = null)
+                                                   string group = ConfigAttribute.DefaultGroup,
+                                                   Action<TEnum>? action = null, Assembly? asm = null)
                     where TEnum : Enum
                     => RegisterConfigImpl(asm ?? Assembly.GetCallingAssembly(), displayName, defaultValue, group, uiAttr, action);
        

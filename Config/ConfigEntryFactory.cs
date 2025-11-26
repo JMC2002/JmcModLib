@@ -29,6 +29,7 @@ namespace JmcModLib.Config
             Assembly asm,
             string displayName,
             string group,
+            TLogical defaultOri,
             Func<TLogical> getterOri,
             Action<TLogical> setterOri,
             Action<TLogical>? change,
@@ -37,6 +38,17 @@ namespace JmcModLib.Config
             Type logicalType = typeof(TLogical);
             if (uiAttr is UIConverterAttribute<TUI> covAttr)
             {
+                TUI defaultValue;
+                try
+                {
+                    defaultValue = covAttr.ToUI(defaultOri!);
+
+                }
+                catch (Exception ex)
+                {
+                    throw new ArgumentException(
+                        $"创建配置项 {displayName} 时转换默认值出错: {ex.Message}", ex);
+                }
                 void setter(TUI v)
                 {
                     TLogical s;
@@ -72,7 +84,7 @@ namespace JmcModLib.Config
                     change.Invoke(s);
                 }
 
-                return new ConfigEntry<TUI>(asm, displayName, group, getter(), getter, setter,
+                return new ConfigEntry<TUI>(asm, displayName, group, defaultValue, getter, setter,
                                             change == null ? null : action, logicalType, covAttr);
             }
             else
@@ -87,7 +99,7 @@ namespace JmcModLib.Config
             UINeedCovertAttribute uiAttr)
         {
             var (getter, setter, change) = ConfigEntry<TLogical>.TraitAccessors(member, method);
-            return CreateTypedWithConvertAction<TUI, TLogical>(asm, attr.DisplayName, attr.Group, getter, setter, change, uiAttr);
+            return CreateTypedWithConvertAction<TUI, TLogical>(asm, attr.DisplayName, attr.Group, getter(), getter, setter, change, uiAttr);
         }
 
         public static ConfigEntry Create(
@@ -124,7 +136,7 @@ namespace JmcModLib.Config
             if (uiAttr != null && uiAttr is UINeedCovertAttribute covAttr)
             {
                 var closed = CreateTypedWithConvertActionMethod.MakeGeneric(covAttr.UIType, typeof(T));
-                return (ConfigEntry)closed.Invoke(null, asm, displayName, group, getter, setter, action, uiAttr)!;
+                return (ConfigEntry)closed.Invoke(null, asm, displayName, group, defaultValue, getter, setter, action, uiAttr)!;
             }
             else
             {

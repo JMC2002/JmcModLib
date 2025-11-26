@@ -63,7 +63,7 @@ namespace JmcModLib.Config
         public ConfigEntry(Assembly asm,
                            string displayName,
                            string group,
-                           T defaultValue,
+                           T defaultValue,      // 由于此版本可能由用户手动传入默认值构造，初次getter可能与默认值不符，因此需要单独提供默认值信息
                            Func<T> getter,
                            Action<T> setter,
                            Action<T>? action,
@@ -188,10 +188,13 @@ namespace JmcModLib.Config
             var now = _currentValue;
             var storage = ConfigManager.GetStorage(Assembly);
             // 获取已保存的值
-            if (storage.TryLoad(DisplayName, Group, UIType, out var value, Assembly))
+            if (storage.TryLoad(DisplayName, Group, UIType, out var loaded, Assembly))
             {
-                if (value is not T loaded || EqualityComparer<T>.Default.Equals(loaded, now))
+                if (EqualityComparer<T>.Default.Equals((T)loaded!, now))
+                {
+                    ModLogger.Trace($"{ModRegistry.GetTag(Assembly)}: 读取到 {Key} 的值为 {loaded}，与当前值 {now} 相等，跳过写入");
                     return; // 相等则不处理
+                }
                 try
                 {
                     SetTypedValue((T)loaded!);
