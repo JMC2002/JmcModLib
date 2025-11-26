@@ -230,10 +230,14 @@ namespace JmcModLib.Utils
                                               LogFormatFlags logFormat,
                                               LogConfigUIFlags buildFlags)
         {
-            FatalIf(assembly == null, new ArgumentNullException(nameof(assembly)), "尝试为 null Assembly 注册日志配置");
-            SetMinLevel(minLevel, assembly!);
-            SetFormatFlags(logFormat, assembly!);
-            BuildLoggerUI.BuildUI(assembly!, buildFlags);
+            if (assembly == null)
+            {
+                Fatal(new ArgumentNullException(nameof(assembly)), "尝试为 null Assembly 注册日志配置");
+                return;
+        }
+            SetMinLevel(minLevel, assembly);
+            SetFormatFlags(logFormat, assembly);
+            BuildLoggerUI.BuildUI(assembly, buildFlags);
         }
 
         /// <summary>
@@ -503,21 +507,7 @@ namespace JmcModLib.Utils
             }
             else
             {
-                Log(LogLevel.Fatal, msg + (ex != null ? $"\n{ex}" : ""), asm, caller, file, line);
-            }
-        }
-
-        /// <summary>
-        /// 当 condition 为 true 时，执行 Fatal 操作
-        /// </summary>
-        public static void FatalIf(bool condition, Exception ex, string? msg = null, Assembly? asm = null,
-            [CallerMemberName] string caller = "",
-            [CallerFilePath] string file = "",
-            [CallerLineNumber] int line = 0)
-        {
-            if (condition)
-            {
-                Fatal(ex, msg, asm, caller, file, line);
+                Log(LogLevel.Fatal, msg + (ex != null ? $"\n{ex.Message}" : ""), asm, caller, file, line);
             }
         }
     }
