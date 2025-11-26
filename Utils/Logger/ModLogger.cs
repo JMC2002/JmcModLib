@@ -107,7 +107,7 @@ namespace JmcModLib.Utils
                 return result;
 
             var attr = asm.GetCustomAttribute<System.Diagnostics.DebuggableAttribute>();
-            result = attr != null && (attr.IsJITTrackingEnabled || !attr.IsJITOptimizerDisabled);
+            result = attr != null && (attr.IsJITTrackingEnabled || attr.IsJITOptimizerDisabled);
             DebugCache[asm] = result;
             return result;
         }
