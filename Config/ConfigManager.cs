@@ -427,6 +427,9 @@ namespace JmcModLib.Config
             var storage = GetStorage(asm);
             var key = BaseEntry.GetKey(displayName, Group);
 
+            if (defaultValue == null)
+                throw new ArgumentNullException(nameof(defaultValue), $"通过值注册 {key} 传入的参数为空，跳过注册");
+
             T getter()
             {
                 if (storage.TryLoad(displayName, Group, typeof(T), out object? value, asm))
@@ -505,7 +508,7 @@ namespace JmcModLib.Config
             => RegisterConfigImpl(asm ?? Assembly.GetCallingAssembly(), displayName, getter(), getter, setter, uiAttr, group, action);
 
         /// <summary>
-        /// 直接通过值注册一个配置项，由此MOD自行维护该值的生命周期，可通过 GetValue/SetValue 查询修改。
+        /// 直接通过非空值注册一个配置项，由此MOD自行维护该值的生命周期，可通过 GetValue/SetValue 查询修改。
         /// </summary>
         /// <typeparam name="T"> 注册的配置项类型 </typeparam>
         /// <param name="uiAttr"> 需要注册UI的Attribute，相关文本将自动调用本地化文件 </param>
@@ -521,7 +524,7 @@ namespace JmcModLib.Config
             => RegisterConfigImpl(asm ?? Assembly.GetCallingAssembly(), displayName, defaultValue, group, uiAttr, action);
 
         /// <summary>
-        /// 用一个枚举值生成下拉列表注册一个配置项，由此MOD自行维护该值的生命周期，可通过 GetValue/SetValue 查询修改。
+        /// 用一个非空枚举值生成下拉列表注册一个配置项，由此MOD自行维护该值的生命周期，可通过 GetValue/SetValue 查询修改。
         /// </summary>
         /// <typeparam name="TEnum"> 用于配置的枚举类型 </typeparam>
         /// <param name="uiAttr"> 需要注册UI的Attribute，相关文本将自动调用本地化文件 </param>
