@@ -265,7 +265,7 @@
         </member>
         <member name="M:JmcModLib.Config.ConfigManager.RegisterConfig``1(JmcModLib.Config.UI.UIDropdownAttribute,System.String,System.Func{``0},System.Action{``0},System.String,System.Action{``0},System.Reflection.Assembly)">
             <summary>
-            通过枚举值注册一个下拉列表，将自动从枚举值的所有选项生成下拉列表。
+            通过枚举值注册一个下拉列表，将自动从枚举值生成下拉列表。
             </summary>
             <typeparam name="TEnum"> 用于配置的枚举类型 </typeparam>
             <param name="uiAttr"> 需要注册UI的Attribute，相关文本将自动调用本地化文件 </param>
@@ -1081,6 +1081,106 @@
             <exception cref="T:System.ArgumentNullException"> 实例方法需要实例对象 </exception>
             <exception cref="T:System.InvalidOperationException"> 泛型方法需要先MakeGeneric(...)  </exception>
         </member>
+        <member name="M:JmcModLib.Reflection.MethodAccessor.Invoke(System.Object)">
+            <summary>
+            无参特化
+            </summary>
+        </member>
+        <member name="M:JmcModLib.Reflection.MethodAccessor.Invoke(System.Object,System.Object)">
+            <summary>
+            单参特化
+            </summary>
+        </member>
+        <member name="M:JmcModLib.Reflection.MethodAccessor.Invoke(System.Object,System.Object,System.Object)">
+            <summary>
+            二参特化
+            </summary>
+        </member>
+        <member name="M:JmcModLib.Reflection.MethodAccessor.Invoke(System.Object,System.Object,System.Object,System.Object)">
+            <summary>
+            三参特化
+            </summary>
+        </member>
+        <member name="M:JmcModLib.Reflection.MethodAccessor.Invoke``2(``0)">
+            <summary>
+            无参特化强类型版本
+            </summary>
+        </member>
+        <member name="M:JmcModLib.Reflection.MethodAccessor.Invoke``3(``0,``1)">
+            <summary>
+            单参特化强类型版本
+            </summary>
+        </member>
+        <member name="M:JmcModLib.Reflection.MethodAccessor.Invoke``4(``0,``1,``2)">
+            <summary>
+            二参特化强类型版本
+            </summary>
+        </member>
+        <member name="M:JmcModLib.Reflection.MethodAccessor.Invoke``5(``0,``1,``2,``3)">
+            <summary>
+            三参特化强类型版本
+            </summary>
+        </member>
+        <member name="M:JmcModLib.Reflection.MethodAccessor.InvokeVoid``1(``0)">
+            <summary>
+            无返回值特化的强类型版本
+            </summary>
+        </member>
+        <member name="M:JmcModLib.Reflection.MethodAccessor.InvokeVoid``2(``0,``1)">
+            <summary>
+            无返回值特化的强类型版本
+            </summary>
+        </member>
+        <member name="M:JmcModLib.Reflection.MethodAccessor.InvokeVoid``3(``0,``1,``2)">
+            <summary>
+            无返回值特化的强类型版本
+            </summary>
+        </member>
+        <member name="M:JmcModLib.Reflection.MethodAccessor.InvokeVoid``4(``0,``1,``2,``3)">
+            <summary>
+            无返回值特化的强类型版本
+            </summary>
+        </member>
+        <member name="M:JmcModLib.Reflection.MethodAccessor.InvokeStatic``1">
+            <summary>
+            静态特化的强类型版本
+            </summary>
+        </member>
+        <member name="M:JmcModLib.Reflection.MethodAccessor.InvokeStatic``2(``0)">
+            <summary>
+            静态特化的强类型版本
+            </summary>
+        </member>
+        <member name="M:JmcModLib.Reflection.MethodAccessor.InvokeStatic``3(``0,``1)">
+            <summary>
+            静态特化的强类型版本
+            </summary>
+        </member>
+        <member name="M:JmcModLib.Reflection.MethodAccessor.InvokeStatic``4(``0,``1,``2)">
+            <summary>
+            静态特化的强类型版本
+            </summary>
+        </member>
+        <member name="M:JmcModLib.Reflection.MethodAccessor.InvokeStaticVoid">
+            <summary>
+            静态无返回值特化的强类型版本
+            </summary>
+        </member>
+        <member name="M:JmcModLib.Reflection.MethodAccessor.InvokeStaticVoid``1(``0)">
+            <summary>
+            静态无返回值特化的强类型版本
+            </summary>
+        </member>
+        <member name="M:JmcModLib.Reflection.MethodAccessor.InvokeStaticVoid``2(``0,``1)">
+            <summary>
+            静态无返回值特化的强类型版本
+            </summary>
+        </member>
+        <member name="M:JmcModLib.Reflection.MethodAccessor.InvokeStaticVoid``3(``0,``1,``2)">
+            <summary>
+            静态无返回值特化的强类型版本
+            </summary>
+        </member>
         <member name="M:JmcModLib.Reflection.MethodAccessor.CreateInvoker(System.Reflection.MethodInfo)">
             <summary>
             创建方法调用委托
@@ -1397,9 +1497,6 @@
         <member name="F:JmcModLib.Utils.LogLevel.Fatal">
             <summary> Fatal 错误，在Debug模式下会抛出异常，在Release模式下会打印信息 </summary>
         </member>
-        <member name="F:JmcModLib.Utils.LogLevel.Default">
-            <summary> 默认等级 </summary>
-        </member>
         <member name="F:JmcModLib.Utils.LogLevel.All">
             <summary> 高于所有等级 </summary>
         </member>
@@ -1428,6 +1525,12 @@
         </member>
         <member name="F:JmcModLib.Utils.LogFormatFlags.Tag">
             <summary>显示 TAG（从 ModRegistry 获取）</summary>
+        </member>
+        <member name="F:JmcModLib.Utils.LogFormatFlags.StackTrace">
+            <summary>显示调用栈（仅函数名）</summary>
+        </member>
+        <member name="F:JmcModLib.Utils.LogFormatFlags.Colored">
+            <summary>彩色输出（仅限支持的终端）</summary>
         </member>
         <member name="F:JmcModLib.Utils.LogFormatFlags.Default">
             <summary>默认格式：TAG + 时间戳 + 等级 + 调用方法 + 行号</summary>
@@ -1458,6 +1561,9 @@
             一个打印类
             </summary>
         </member>
+        <member name="F:JmcModLib.Utils.ModLogger.DefaultLogLevel">
+            <summary> 默认等级 </summary>
+        </member>
         <member name="M:JmcModLib.Utils.ModLogger.GetOrCreateConfig(System.Reflection.Assembly)">
             <summary>
             获取或创建指定 Assembly 的配置
@@ -1481,6 +1587,11 @@
         <member name="M:JmcModLib.Utils.ModLogger.SetFormatFlags(JmcModLib.Utils.LogFormatFlags,System.Reflection.Assembly)">
             <summary>
             设置当前调用 Assembly 的日志格式
+            </summary>
+        </member>
+        <member name="M:JmcModLib.Utils.ModLogger.HasFormatFlag(JmcModLib.Utils.LogFormatFlags,JmcModLib.Utils.LogFormatFlags)">
+            <summary>
+            判断两个日志格式是否相交
             </summary>
         </member>
         <member name="M:JmcModLib.Utils.ModLogger.HasFormatFlag(JmcModLib.Utils.LogFormatFlags,System.Reflection.Assembly)">
@@ -1516,7 +1627,7 @@
             判断是否应该输出日志
             </summary>
         </member>
-        <member name="M:JmcModLib.Utils.ModLogger.Format(System.Reflection.Assembly,JmcModLib.Utils.LogFormatFlags,System.String,System.String,System.String,System.String,System.Int32)">
+        <member name="M:JmcModLib.Utils.ModLogger.Format(System.Reflection.Assembly,JmcModLib.Utils.LogFormatFlags,JmcModLib.Utils.LogLevel,System.String,System.String,System.String,System.Int32)">
             <summary>
             根据格式配置格式化输出内容
             </summary>

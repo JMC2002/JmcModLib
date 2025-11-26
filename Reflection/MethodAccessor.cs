@@ -1,12 +1,10 @@
-﻿using JmcModLib.Utils;
-using System;
-using System.Collections.Generic;
+﻿using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Reflection;
 using System.Reflection.Emit;
-using System.Linq.Expressions;
-using Unity.VisualScripting.Dependencies.NCalc;
 using System.Runtime.CompilerServices;
 
 namespace JmcModLib.Reflection
@@ -402,6 +400,9 @@ namespace JmcModLib.Reflection
         // 快速调用以重载形式集成（0–3 个参数）
         // 当可用时会路由到预编译的快速委托，否则回退到使用 params object?[] 的路径。
 
+        /// <summary>
+        /// 无参特化
+        /// </summary>
         public object? Invoke(object? instance)
         {
             if (_fastInvoker0 != null)
@@ -413,6 +414,9 @@ namespace JmcModLib.Reflection
             return Invoke(instance, []);
         }
 
+        /// <summary>
+        /// 单参特化
+        /// </summary>
         public object? Invoke(object? instance, object? a0)
         {
             if (_fastInvoker1 != null)
@@ -424,6 +428,9 @@ namespace JmcModLib.Reflection
             return Invoke(instance, [a0]);
         }
 
+        /// <summary>
+        /// 二参特化
+        /// </summary>
         public object? Invoke(object? instance, object? a0, object? a1)
         {
             if (_fastInvoker2 != null)
@@ -435,6 +442,9 @@ namespace JmcModLib.Reflection
             return Invoke(instance, [a0, a1]);
         }
 
+        /// <summary>
+        /// 三参特化
+        /// </summary>
         public object? Invoke(object? instance, object? a0, object? a1, object? a2)
         {
             if (_fastInvoker3 != null)
@@ -449,6 +459,9 @@ namespace JmcModLib.Reflection
         // =============================================
         // 泛型语法糖 (强类型委托优先)
         // =============================================
+        /// <summary>
+        /// 无参特化强类型版本
+        /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public TResult Invoke<TTarget, TResult>(TTarget instance)
         {
@@ -467,6 +480,9 @@ namespace JmcModLib.Reflection
             return ret is null ? default! : (TResult)ret;
         }
 
+         /// <summary>
+         /// 单参特化强类型版本
+         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public TResult Invoke<TTarget, T1, TResult>(TTarget instance, T1 a1)
         {
@@ -484,6 +500,9 @@ namespace JmcModLib.Reflection
             return ret is null ? default! : (TResult)ret;
         }
 
+        /// <summary>
+        /// 二参特化强类型版本
+        /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public TResult Invoke<TTarget, T1, T2, TResult>(TTarget instance, T1 a1, T2 a2)
         {
@@ -501,6 +520,9 @@ namespace JmcModLib.Reflection
             return ret is null ? default! : (TResult)ret;
         }
 
+        /// <summary>
+        /// 三参特化强类型版本
+        /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public TResult Invoke<TTarget, T1, T2, T3, TResult>(TTarget instance, T1 a1, T2 a2, T3 a3)
         {
@@ -518,7 +540,9 @@ namespace JmcModLib.Reflection
             return ret is null ? default! : (TResult)ret;
         }
 
-        // 专门用于 void 返回方法的强类型语法糖，避免与返回 TResult 的泛型重载冲突
+        /// <summary>
+        /// 无返回值特化的强类型版本
+        /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void InvokeVoid<TTarget>(TTarget instance)
         {
@@ -538,6 +562,9 @@ namespace JmcModLib.Reflection
             Invoke(instance);
         }
 
+        /// <summary>
+        /// 无返回值特化的强类型版本
+        /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void InvokeVoid<TTarget, T1>(TTarget instance, T1 a1)
         {
@@ -557,6 +584,9 @@ namespace JmcModLib.Reflection
             Invoke(instance, a1);
         }
 
+        /// <summary>
+        /// 无返回值特化的强类型版本
+        /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void InvokeVoid<TTarget, T1, T2>(TTarget instance, T1 a1, T2 a2)
         {
@@ -576,6 +606,9 @@ namespace JmcModLib.Reflection
             Invoke(instance, a1, a2);
         }
 
+        /// <summary>
+        /// 无返回值特化的强类型版本
+        /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void InvokeVoid<TTarget, T1, T2, T3>(TTarget instance, T1 a1, T2 a2, T3 a3)
         {
@@ -595,7 +628,9 @@ namespace JmcModLib.Reflection
             Invoke(instance, a1, a2, a3);
         }
 
-        // 静态方法专用 (使用不同方法名避免与已有 Invoke 重载冲突)
+        /// <summary>
+        /// 静态特化的强类型版本
+        /// </summary>
         public TResult InvokeStatic<TResult>()
         {
             if (!IsStatic)
@@ -605,6 +640,9 @@ namespace JmcModLib.Reflection
             return (TResult?)Invoke(null)!;
         }
 
+        /// <summary>
+        /// 静态特化的强类型版本
+        /// </summary>
         public TResult InvokeStatic<T1, TResult>(T1 a1)
         {
             if (!IsStatic)
@@ -614,6 +652,9 @@ namespace JmcModLib.Reflection
             return (TResult?)Invoke(null, a1)!;
         }
 
+        /// <summary>
+        /// 静态特化的强类型版本
+        /// </summary>
         public TResult InvokeStatic<T1, T2, TResult>(T1 a1, T2 a2)
         {
             if (!IsStatic)
@@ -623,6 +664,9 @@ namespace JmcModLib.Reflection
             return (TResult?)Invoke(null, a1, a2)!;
         }
 
+        /// <summary>
+        /// 静态特化的强类型版本
+        /// </summary>
         public TResult InvokeStatic<T1, T2, T3, TResult>(T1 a1, T2 a2, T3 a3)
         {
             if (!IsStatic)
@@ -632,7 +676,9 @@ namespace JmcModLib.Reflection
             return (TResult?)Invoke(null, a1, a2, a3)!;
         }
 
-        // 静态 void 方法语法糖 (0..3 参数)
+        /// <summary>
+        /// 静态无返回值特化的强类型版本
+        /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void InvokeStaticVoid()
         {
@@ -652,6 +698,9 @@ namespace JmcModLib.Reflection
             Invoke(null);
         }
 
+        /// <summary>
+        /// 静态无返回值特化的强类型版本
+        /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void InvokeStaticVoid<T1>(T1 a1)
         {
@@ -671,6 +720,9 @@ namespace JmcModLib.Reflection
             Invoke(null, a1);
         }
 
+        /// <summary>
+        /// 静态无返回值特化的强类型版本
+        /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void InvokeStaticVoid<T1, T2>(T1 a1, T2 a2)
         {
@@ -690,6 +742,9 @@ namespace JmcModLib.Reflection
             Invoke(null, a1, a2);
         }
 
+        /// <summary>
+        /// 静态无返回值特化的强类型版本
+        /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void InvokeStaticVoid<T1, T2, T3>(T1 a1, T2 a2, T3 a3)
         {
