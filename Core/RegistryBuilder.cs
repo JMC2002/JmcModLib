@@ -67,6 +67,7 @@ namespace JmcModLib.Core
             }
 
             _registedLogger = true;
+
             ModLogger.RegisterAssembly(_assembly, level, tagFlags, uIFlags);
             return this;
         }
