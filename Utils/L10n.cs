@@ -61,7 +61,7 @@ namespace JmcModLib.Utils
         /// <param name="langFolderRelative">存放本地化csv的相对路径，默认为“Lang”</param>
         /// <param name="fallbackLang">指定某语言文件不存在时的备份语言，默认为英语</param>
         /// <param name="assembly">程序集，默认为调用者</param>
-        public static void Register(string langFolderRelative = "Lang"
+        internal static void Register(string langFolderRelative = "Lang"
                                   , SystemLanguage fallbackLang = SystemLanguage.English
                                   , Assembly? assembly = null)
         {
@@ -73,7 +73,7 @@ namespace JmcModLib.Utils
                 return;
             }
 
-            var Tag = Core.ModRegistry.GetTag(assembly);
+            var Tag = ModRegistry.GetTag(assembly);
             if (Tag == null)
                 ModLogger.Warn("程序集未注册");
             else
@@ -132,7 +132,7 @@ namespace JmcModLib.Utils
         /// 反注册当前程序集的本地化数据。
         /// </summary>
         /// <param name="assembly">程序集，默认为调用者</param>
-        public static void UnRegister(Assembly? assembly = null)
+        private static void UnRegister(Assembly? assembly = null)
         {
             assembly ??= Assembly.GetCallingAssembly();
 
@@ -186,16 +186,6 @@ namespace JmcModLib.Utils
             ModLogger.Warn($"{tag}: 未找到 key = \"{key}\" 对应的本地化文本，返回 key 本身。");
 
             return key; // fallback to key
-        }
-
-        /// <summary>
-        /// 卸载当前程序集的本地化
-        /// </summary>
-        public static void Unregister(Assembly? assembly = null)
-        {
-            assembly ??= Assembly.GetCallingAssembly();
-            _localizedTables.Remove(assembly);
-            _basePaths.Remove(assembly);
         }
 
         /// <summary>
