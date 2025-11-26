@@ -7,9 +7,6 @@ using static UnityEngine.Rendering.DebugUI;
 
 namespace JmcModLib.Utils
 {
-
-
-
     /// <summary>
     /// 打印级别
     /// </summary>
@@ -60,6 +57,12 @@ namespace JmcModLib.Utils
         FilePath = 1 << 4,
         /// <summary>显示 TAG（从 ModRegistry 获取）</summary>
         Tag = 1 << 5,
+
+        /// <summary>显示调用栈（仅函数名）</summary>
+        StackTrace = 1 << 6,
+
+        /// <summary>彩色输出（仅限支持的终端）</summary>
+        Colored = 1 << 7,
 
         /// <summary>默认格式：TAG + 时间戳 + 等级 + 调用方法 + 行号</summary>
         Default = Tag | Timestamp | Level | Caller | LineNumber,
@@ -122,6 +125,103 @@ namespace JmcModLib.Utils
             }
             return config;
         }
+
+        private static string GetCallStackPath(int maxDepth = 5)
+        {
+            var st = new System.Diagnostics.StackTrace(skipFrames: 4, fNeedFileInfo: false);
+            var frames = st.GetFrames();
+            if (frames == null) return "";
+
+            var names = new List<string>();
+
+            for (int i = 0; i < frames.Length && i < maxDepth; i++)
+            {
+                var method = frames[i].GetMethod();
+                if (method == null) continue;
+
+                string name = method.Name;
+
+                // 去掉编译器生成的方法等
+                if (name.StartsWith("<")) continue;
+
+                names.Add(name);
+            }
+
+            return string.Join(" -> ", names);
+        }
+
+        public enum ColorMode
+        {
+            None,
+            Unity,
+            Ansi
+        }
+
+        public static class ModLoggerColor
+        {
+            public static ColorMode Mode = ColorMode.Unity; // 你可以在设置里切换模式
+
+            [UIButton("切换颜色模式", "切换")]
+            public static void SwitchColorMode()
+            {
+                Mode = Mode switch
+                {
+                    ColorMode.Unity => ColorMode.Ansi,
+                    ColorMode.Ansi => ColorMode.None,
+                    _ => ColorMode.Unity
+                };
+            }
+
+            private static string LevelHex(LogLevel level) => level switch
+            {
+                LogLevel.Trace => "#888888",
+                LogLevel.Debug => "#7fbfff",
+                LogLevel.Info => "white",
+                LogLevel.Warn => "yellow",
+                LogLevel.Error => "red",
+                LogLevel.Fatal => "#ff55ff",
+                _ => "white"
+            };
+
+            private static string LevelAnsi(LogLevel level) => level switch
+            {
+                LogLevel.Trace => "90",   // 灰
+                LogLevel.Debug => "94",   // 蓝
+                LogLevel.Info => "97",   // 白
+                LogLevel.Warn => "93",   // 黄
+                LogLevel.Error => "91",   // 红
+                LogLevel.Fatal => "95",   // 品红
+                _ => "97"
+            };
+
+            public static string ColorizeLevel(LogLevel level, string msg)
+            {
+                return Mode switch
+                {
+                    ColorMode.Unity => $"<color={LevelHex(level)}>{msg}</color>",
+                    ColorMode.Ansi => $"\u001b[{LevelAnsi(level)}m{msg}\u001b[0m",
+                    _ => msg
+                };
+            }
+        }
+
+
+        //private static string LevelColor(LogLevel level) => level switch
+        //{
+        //    LogLevel.Trace => "#888888",
+        //    LogLevel.Debug => "#7fbfff",
+        //    LogLevel.Info => "white",
+        //    LogLevel.Warn => "yellow",
+        //    LogLevel.Error => "red",
+        //    LogLevel.Fatal => "#ff55ff",
+        //    _ => "white"
+        //};
+
+        //private static string ColorizeLevel(LogLevel level, string msg)
+        //{
+        //    string color = LevelColor(level);
+        //    return $"<color={color}>{msg}</color>";
+        //}
 
         /// <summary>
         /// 注册 Assembly 的元信息（供 ModRegistry 调用）

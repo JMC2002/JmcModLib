@@ -17,7 +17,9 @@ namespace JmcModLib.Utils
                 { LogFormatFlags.Level,      "显示日志等级" },
                 { LogFormatFlags.FilePath,   "显示文件路径" },
                 { LogFormatFlags.Caller,     "显示调用函数" },
-                { LogFormatFlags.LineNumber, "显示行号" }
+                { LogFormatFlags.LineNumber, "显示行号" },
+                { LogFormatFlags.StackTrace, "显示调用栈" },
+                { LogFormatFlags.Colored, "彩色输出（仅限支持的终端）" },
             };
 
             private static void Factory(Assembly asm, LogFormatFlags flag)
