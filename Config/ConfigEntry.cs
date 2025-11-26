@@ -229,8 +229,9 @@ namespace JmcModLib.Config
         {
             var now = getter();
             var old = _currentValue;
-            if (EqualityComparer<T>.Default.Equals(now, old)) // 若新旧值相等
+            if (EqualityComparer<T>.Default.Equals(now, old))  // 若新旧值相等
                 return;                                        // 则不处理
+            ModLogger.Info($"{ModRegistry.GetTag(Assembly)}: 发现 {Key} 的值被修改为 {now}，尝试保存到文件");
             SetTypedValue(now);                                // 否则保存当前值
             if (uiAttr != null && !uiAttr.IsValid(this))       // 检查值是否合法
             {
@@ -293,7 +294,7 @@ namespace JmcModLib.Config
             _currentValue = value;
             try
             {
-                ModLogger.Debug($"设置 {Key}: {_currentValue} → {value}");
+                ModLogger.Debug($"设置 {Key}: {old} → {value}");
                 setter(value);
                 _currentValue = value;
                 Save(value);
