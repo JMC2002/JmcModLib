@@ -2,7 +2,7 @@
 
 namespace JmcModLib.Config.Entry
 {
-    public interface IConfigAccessor
+    internal interface IConfigAccessor
     {
         Type UIType { get; }
         object? GetValue();
@@ -12,7 +12,7 @@ namespace JmcModLib.Config.Entry
         event Action<object?>? OnChanged;
     }
 
-    public interface IConfigAccessor<T> : IConfigAccessor
+    internal interface IConfigAccessor<T> : IConfigAccessor
     {
         new T GetValue();
         void SetValue(T value);
