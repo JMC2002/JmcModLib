@@ -1,4 +1,5 @@
-﻿using JmcModLib.Core;
+﻿using JmcModLib.Config.UI;
+using JmcModLib.Core;
 using System;
 using System.Collections.Generic;
 using System.Reflection;
@@ -100,7 +101,7 @@ namespace JmcModLib.Utils
         private static readonly Dictionary<Assembly, bool> DebugCache = [];
 
         /// <summary> 默认等级 </summary>
-        public const LogLevel DefaultLogLevel = LogLevel.Trace;
+        public const LogLevel DefaultLogLevel = LogLevel.Info;
         private static bool IsAssemblyDebugBuild(Assembly asm)
         {
             if (DebugCache.TryGetValue(asm, out var result))
@@ -122,6 +123,7 @@ namespace JmcModLib.Utils
                 config = new AssemblyLoggerConfig();
                 _assemblyConfigs[asm] = config;
                 Debug($"为 {ModRegistry.GetTag(asm)} 新建日志配置成功");
+
             }
             return config;
         }
@@ -223,6 +225,7 @@ namespace JmcModLib.Utils
         //    return $"<color={color}>{msg}</color>";
         //}
 
+
         /// <summary>
         /// 注册 Assembly 的元信息（供 ModRegistry 调用）
         /// </summary>
@@ -234,7 +237,7 @@ namespace JmcModLib.Utils
             {
                 Fatal(new ArgumentNullException(nameof(assembly)), "尝试为 null Assembly 注册日志配置");
                 return;
-        }
+            }
             SetMinLevel(minLevel, assembly);
             SetFormatFlags(logFormat, assembly);
             BuildLoggerUI.BuildUI(assembly, buildFlags);
@@ -271,13 +274,21 @@ namespace JmcModLib.Utils
         }
 
         /// <summary>
+        /// 判断两个日志格式是否相交
+        /// </summary>
+        public static bool HasFormatFlag(LogFormatFlags flag1, LogFormatFlags flag2)
+        {
+            return (flag1 & flag2) != 0;
+        }
+
+        /// <summary>
         /// 判断当前调用 Assembly 是否包含指定日志格式标志
         /// </summary>
         public static bool HasFormatFlag(LogFormatFlags flag, Assembly? asm = null)
         {
             asm ??= Assembly.GetCallingAssembly();
             var config = GetOrCreateConfig(asm);
-            return (config.FormatFlags & flag) != 0;
+            return HasFormatFlag(config.FormatFlags, flag);
         }
 
         /// <summary>
@@ -346,7 +357,7 @@ namespace JmcModLib.Utils
         /// <summary>
         /// 根据格式配置格式化输出内容
         /// </summary>
-        private static string Format(Assembly asm, LogFormatFlags formatFlags, string level, string? message, string caller, string file, int line)
+        private static string Format(Assembly asm, LogFormatFlags formatFlags, LogLevel level, string? message, string caller, string file, int line)
         {
             var parts = new System.Text.StringBuilder();
 
@@ -369,7 +380,7 @@ namespace JmcModLib.Utils
             if ((formatFlags & LogFormatFlags.Level) != 0)
             {
                 parts.Append('[');
-                parts.Append(level);
+                parts.Append(level.ToString().ToUpper());
                 parts.Append("] ");
             }
 
@@ -402,7 +413,17 @@ namespace JmcModLib.Utils
 
             if (!string.IsNullOrEmpty(message))
             {
-                parts.Append(message);
+                if (HasFormatFlag(formatFlags, LogFormatFlags.Colored))
+                    parts.Append(ModLoggerColor.ColorizeLevel(level, message));
+                else
+                    parts.Append(message);
+            }
+
+            if (HasFormatFlag(formatFlags, LogFormatFlags.StackTrace))
+            {
+                parts.AppendLine();
+                parts.Append("Call Stack: ");
+                parts.Append(GetCallStackPath());
             }
 
             return parts.ToString();
@@ -420,7 +441,7 @@ namespace JmcModLib.Utils
             asm ??= Assembly.GetCallingAssembly();
             if (level == null || !ShouldLog(asm, (LogLevel)level!, out var formatFlags)) return;
 
-            string text = Format(asm, formatFlags, level.ToString().ToUpper(), message, caller, file, line);
+            string text = Format(asm, formatFlags, (LogLevel)level!, message, caller, file, line);
             switch (level)
             {
                 case LogLevel.Trace:
@@ -434,6 +455,7 @@ namespace JmcModLib.Utils
                     break;
 
                 case LogLevel.Error:
+                case LogLevel.Fatal:
                     UnityEngine.Debug.LogError(text);
                     break;
             }
@@ -499,7 +521,7 @@ namespace JmcModLib.Utils
             [CallerLineNumber] int line = 0)
         {
             asm ??= Assembly.GetCallingAssembly();
-
+            string callPath = GetCallStackPath();
             if (IsAssemblyDebugBuild(asm))
             {
                 Log(LogLevel.Fatal, msg, asm, caller, file, line);
