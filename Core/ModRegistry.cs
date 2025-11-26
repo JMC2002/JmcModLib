@@ -18,8 +18,8 @@ namespace JmcModLib.Core
     /// </summary>
     public static class ModRegistry
     {
-        private static readonly Dictionary<Assembly, Modinfo> _mods = new();
-        private static readonly Dictionary<string, Assembly> _pathToAssembly = new();
+        private static readonly Dictionary<Assembly, Modinfo> _mods = [];
+        private static readonly Dictionary<string, Assembly> _pathToAssembly = [];
 
         /// <summary>
         /// 当一个 MOD 完成注册后触发。
