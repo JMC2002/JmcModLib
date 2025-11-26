@@ -343,6 +343,15 @@ namespace JmcModLib.Config
         // -------------- Direct GetValue/SetValue ------------------
 
         /// <summary>
+        /// 通过显示名称和组名获取Key
+        /// </summary>
+        /// <param name="displayName"> 显示名称 </param>
+        /// <param name="group"> 组名，可选 </param>
+        /// <returns> 直接构造一个key，不检验是否存在 </returns>
+        public static string GetKey(string displayName, string group = ConfigAttribute.DefaultGroup)
+            => BaseEntry.GetKey(displayName, group);
+
+        /// <summary>
         /// 获取Key对应变量的值，如果Key不存在，会输出一条Warn
         /// </summary>
         /// <param name="key">目标变量的Key，可以通过BaseEntry.GetKey构造</param>
@@ -373,7 +382,6 @@ namespace JmcModLib.Config
         /// <param name="key">目标变量的Key，可以通过ConfigEntry.GetKey构造</param>
         /// <param name="value">新的值</param>
         /// <param name="asm">指定程序集，留空则为调用者</param>
-        /// <returns>如果Key不存在，会输出一条Warn并返回空，否则返回对应值</returns>
         public static void SetValue(string key, object? value, Assembly? asm = null)
         {
             asm ??= Assembly.GetCallingAssembly();
