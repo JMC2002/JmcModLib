@@ -1,6 +1,5 @@
 ﻿using JmcModLib.Config;
 using System;
-using System.Diagnostics;
 using System.Reflection;
 
 namespace JmcModLib.Utils

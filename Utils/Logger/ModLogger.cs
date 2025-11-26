@@ -123,7 +123,6 @@ namespace JmcModLib.Utils
                 config = new AssemblyLoggerConfig();
                 _assemblyConfigs[asm] = config;
                 Debug($"为 {ModRegistry.GetTag(asm)} 新建日志配置成功");
-
             }
             return config;
         }
@@ -521,7 +520,7 @@ namespace JmcModLib.Utils
             [CallerLineNumber] int line = 0)
         {
             asm ??= Assembly.GetCallingAssembly();
-            string callPath = GetCallStackPath();
+
             if (IsAssemblyDebugBuild(asm))
             {
                 Log(LogLevel.Fatal, msg, asm, caller, file, line);
