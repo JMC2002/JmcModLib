@@ -151,23 +151,35 @@ namespace JmcModLib.Utils
             return string.Join(" -> ", names);
         }
 
+        /// <summary>
+        /// 颜色模式（订阅最多的那个控制台用不了，留接口）
+        /// </summary>
         public enum ColorMode
         {
+            /// <summary> 无 </summary>
             None,
+            /// <summary> Unity </summary>
             Unity,
+            /// <summary> Ansi </summary>
             Ansi
         }
 
-        public static class ModLoggerColor
+        /// <summary>
+        /// 控制输出的颜色，需要终端支持
+        /// </summary>
+        internal static class ModLoggerColor
         {
-            public static ColorMode Mode = ColorMode.Unity; // 你可以在设置里切换模式
+            /// <summary>
+            /// 当前颜色模式
+            /// </summary>
+            internal static ColorMode Mode = ColorMode.None; // 订阅最多的用不了，先默认禁用
 
             [UIButton("切换颜色模式", "切换")]
-            public static void SwitchColorMode()
+            private static void SwitchColorMode()
             {
                 Mode = Mode switch
                 {
-                    ColorMode.Unity => ColorMode.Ansi,
+                    ColorMode.Unity => ColorMode.Ansi,      // 轮换
                     ColorMode.Ansi => ColorMode.None,
                     _ => ColorMode.Unity
                 };
@@ -195,7 +207,10 @@ namespace JmcModLib.Utils
                 _ => "97"
             };
 
-            public static string ColorizeLevel(LogLevel level, string msg)
+            /// <summary>
+            /// 根据打印等级渲染对应的颜色
+            /// </summary>
+            internal static string ColorizeLevel(LogLevel level, string msg)
             {
                 return Mode switch
                 {
@@ -205,25 +220,6 @@ namespace JmcModLib.Utils
                 };
             }
         }
-
-
-        //private static string LevelColor(LogLevel level) => level switch
-        //{
-        //    LogLevel.Trace => "#888888",
-        //    LogLevel.Debug => "#7fbfff",
-        //    LogLevel.Info => "white",
-        //    LogLevel.Warn => "yellow",
-        //    LogLevel.Error => "red",
-        //    LogLevel.Fatal => "#ff55ff",
-        //    _ => "white"
-        //};
-
-        //private static string ColorizeLevel(LogLevel level, string msg)
-        //{
-        //    string color = LevelColor(level);
-        //    return $"<color={color}>{msg}</color>";
-        //}
-
 
         /// <summary>
         /// 注册 Assembly 的元信息（供 ModRegistry 调用）
