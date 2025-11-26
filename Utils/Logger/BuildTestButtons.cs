@@ -1,5 +1,6 @@
 ﻿using JmcModLib.Config;
 using System;
+using System.Diagnostics;
 using System.Reflection;
 
 namespace JmcModLib.Utils
@@ -11,11 +12,11 @@ namespace JmcModLib.Utils
             private const string ButtonText = "点击输出";
             private const string GroupName  = "日志库测试";
 
-            private static void TestDebug(Assembly asm) => ModLogger.Debug("测试Debug");
-            private static void TestTrace(Assembly asm) => ModLogger.Trace("测试Trace");
-            private static void TestInfo(Assembly asm) => ModLogger.Info("测试Info");
-            private static void TestWarn(Assembly asm) => ModLogger.Warn("测试Warn", new InvalidOperationException("这是一个测试异常"));
-            private static void TestError(Assembly asm) => ModLogger.Error("测试Error", new InvalidOperationException("这是一个测试异常"));
+            private static void TestDebug(Assembly asm) => ModLogger.Debug("测试Debug", asm);
+            private static void TestTrace(Assembly asm) => ModLogger.Trace("测试Trace", asm);
+            private static void TestInfo(Assembly asm) => ModLogger.Info("测试Info", asm);
+            private static void TestWarn(Assembly asm) => ModLogger.Warn("测试Warn", new InvalidOperationException("这是一个测试异常"), asm);
+            private static void TestError(Assembly asm) => ModLogger.Error("测试Error", new InvalidOperationException("这是一个测试异常"), asm);
             private static void TestFatal(Assembly asm)
             {
                 try
