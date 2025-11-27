@@ -109,7 +109,7 @@ namespace JmcModLib.Config.Entry
             ConfigAttribute attr,
             UIConfigAttribute? uiAttr)
         {
-            if (uiAttr != null && uiAttr is UINeedCovertAttribute covAttr)
+            if (uiAttr is not null and UINeedCovertAttribute covAttr)
             {
                 var memberType = acc.MemberType;
                 var closed = CreateTypedWithConvertMethod.MakeGeneric(covAttr.UIType, memberType);
@@ -133,7 +133,7 @@ namespace JmcModLib.Config.Entry
                            Type logicType,
                            UIConfigAttribute? uiAttr)
         {
-            if (uiAttr != null && uiAttr is UINeedCovertAttribute covAttr)
+            if (uiAttr is not null and UINeedCovertAttribute covAttr)
             {
                 var closed = CreateTypedWithConvertActionMethod.MakeGeneric(covAttr.UIType, typeof(T));
                 return (ConfigEntry)closed.Invoke(null, asm, displayName, group, defaultValue, getter, setter, action, uiAttr)!;
