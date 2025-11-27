@@ -38,7 +38,8 @@ namespace JmcModLib
             VersionInfo.modInfo = info;
             ModRegistry.Init();
             ModRegistry.Register(true, VersionInfo.modInfo, VersionInfo.Name, VersionInfo.Version)?
-                       .RegisterLogger(LogLevel.Trace, LogFormatFlags.All, LogConfigUIFlags.All)
+                       .RegisterLogger(uIFlags: LogConfigUIFlags.All)
+                       .RegisterL10n()
                        .Done();
             ModLogger.Info("模组已启用");
         }

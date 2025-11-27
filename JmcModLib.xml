@@ -1630,6 +1630,11 @@
             <param name="asm"></param>
             <returns></returns>
         </member>
+        <member name="M:JmcModLib.Utils.L10n.ExistKey(System.String,System.Reflection.Assembly)">
+            <summary>
+            判断程序集在当前语言是否注册了某个Key
+            </summary>
+        </member>
         <member name="T:JmcModLib.Utils.LogConfigUIFlags">
             <summary>
             标记要构建的日志配置UI元素

@@ -1,20 +1,24 @@
 ﻿Key,Value
-按价值,Nach Wert
-按重量,Nach Gewicht
-按价重比,Wert/Gewicht
-价重比,Wert/Gewicht
-按稀有度,Nach Seltenheit
-按单价,Nach Stückpreis
-按ID,Nach ID
-显示稀有度按钮,Seltenheitsschaltfläche anzeigen
-显示单价按钮,Stückpreisschaltfläche anzeigen
-显示价格按钮,Preisschaltfläche anzeigen
-显示重量按钮,Gewichtsschaltfläche anzeigen
-显示价重比按钮,Wert/Gewicht-Schaltfläche anzeigen
-显示ID按钮,ID-Schaltfläche anzeigen
-显示价格信息,Preisinfo anzeigen
-显示价重比信息,Wert/Gewicht-Info anzeigen
-交换左右键排序方向,Linke/rechte Klicksortierung tauschen
-启用调试日志,Debug-Protokoll aktivieren
-单价,Stückpreis
-显示单价信息,Stückpreisinfo anzeigen
+重置所有选项到默认值,Alle Optionen auf Standard zurücksetzen
+重置,ZURÜCKSETZEN
+复制配置文件夹地址到剪贴板,Konfigurationsordnerpfad in die Zwischenablage kopieren
+复制,Kopieren
+点击输出,Klicken zum Ausgeben
+日志库测试,Logbibliothek-Test
+测试Trace输出,Trace-Ausgabe testen
+测试Debug输出,Debug-Ausgabe testen
+测试Info输出,Info-Ausgabe testen
+测试Warn输出,Warn-Ausgabe testen
+测试Error输出,Error-Ausgabe testen
+测试Fatal输出,Fatal-Ausgabe testen
+最低打印等级,Mindestprotokollstufe
+调试选项,Debug-Optionen
+显示时间戳,Zeitstempel anzeigen
+显示日志等级,Protokollstufe anzeigen
+显示文件路径,Dateipfad anzeigen
+显示调用函数,Aufrufende Funktion anzeigen
+显示行号,Zeilennummer anzeigen
+显示调用栈,Aufrufstapel anzeigen
+彩色输出（仅限支持的终端）,Farbige Ausgabe (nur unterstützte Terminals)
+切换颜色模式,Farbmodus wechseln
+切换,Wechseln

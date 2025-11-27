@@ -143,7 +143,7 @@ namespace JmcModLib.Config.UI.ModSetting
             return IsRegistered(asm) && initialized[asm];
         }
 
-        internal static void UnRegister(Assembly asm)
+        private static void RemoveUI(Assembly asm)
         {
             if (IsInitialized(asm))
             {
@@ -159,13 +159,18 @@ namespace JmcModLib.Config.UI.ModSetting
                 }
                 BeforeRemoveAsm?.Invoke(asm);
             }
+        }
+
+        internal static void UnRegister(Assembly asm)
+        {
+            RemoveUI(asm);
             if (IsRegistered(asm))
                 initialized.Remove(asm);
         }
 
         private static void OnLangChanged(SystemLanguage lang)
         {
-            RemoveAllMod();
+            RemoveAllUI();
             InitAllMod();
         }
 
@@ -244,12 +249,6 @@ namespace JmcModLib.Config.UI.ModSetting
                 return;  // 还没有初始化ModSetting
             }
             ModLogger.Trace($"注册 {ModRegistry.GetTag(asm)} UI");
-            // 保证只在需要的时候才初始化UI，理论上不会走这条分支，除非操作失误
-            if (IsInitialized(asm))
-            {
-                ModLogger.Warn($"已初始化，退出");
-                return;
-            }
             ModSettingBuilder.BuildEntries(asm);
             BuildMeta(asm);
             ModLogger.Debug($"注册 {ModRegistry.GetTag(asm)} UI成功");
@@ -263,6 +262,14 @@ namespace JmcModLib.Config.UI.ModSetting
                        .ForEach(InitMod);
         }
 
+        private static void RemoveAllUI()
+        {
+            foreach (var asm in initialized.Keys)
+            {
+                RemoveUI(asm);
+            }
+        }
+        
         private static void RemoveAllMod()
         {
             foreach (var asm in initialized.Keys.ToList())  // ToList 存快照

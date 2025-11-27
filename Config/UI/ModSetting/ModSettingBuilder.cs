@@ -197,7 +197,7 @@ namespace JmcModLib.Config.UI.ModSetting
                     GroupName = g.Key,
                     Entries = g.Value,
                     UiGroupKey = $"{asm.GetName().Name}.{g.Key}",
-                    Description = g.Key,
+                    Description = L10n.Get(g.Key, L10n.ExistKey(g.Key) ? null : asm),   // 优先用本MOD的本地化组名，防止冲突
                     Keys = g.Value.Select(p => p.Entry.Key).ToList()
                 })
                 .ToList()
@@ -266,7 +266,7 @@ namespace JmcModLib.Config.UI.ModSetting
 
             ModSettingAPI.AddButton(info,
                                     $"JmcModLibGen.{modinfo!.Name}.Copy",
-                                    L10n.Get("复制所有选项到剪贴板"),
+                                    L10n.Get("复制配置文件夹地址到剪贴板"),
                                     L10n.Get("复制"),
                                     ConfigManager.CopyConfigPathToClipboard);
         }

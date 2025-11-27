@@ -1,20 +1,24 @@
 ﻿Key,Value
-按价值,Por valor
-按重量,Por peso
-按价重比,Valor/Peso
-价重比,Valor/Peso
-按稀有度,Por rareza
-按单价,Por precio unitario
-按ID,Por ID
-显示稀有度按钮,Mostrar botón de rareza
-显示单价按钮,Mostrar botón de precio unitario
-显示价格按钮,Mostrar botón de precio
-显示重量按钮,Mostrar botón de peso
-显示价重比按钮,Mostrar botón Valor/Peso
-显示ID按钮,Mostrar botón de ID
-显示价格信息,Mostrar información de precio
-显示价重比信息,Mostrar información Valor/Peso
-交换左右键排序方向,Intercambiar clic izquierdo/derecho de orden
-启用调试日志,Habilitar registro de depuración
-单价,Precio unitario
-显示单价信息,Mostrar información de precio unitario
+重置所有选项到默认值,Restablecer todas las opciones a los valores predeterminados
+重置,Restablecer
+复制配置文件夹地址到剪贴板,Copiar ruta de la carpeta de configuración al portapapeles
+复制,Copiar
+点击输出,Hacer clic para mostrar salida
+日志库测试,Prueba de la biblioteca de registros
+测试Trace输出,Probar salida Trace
+测试Debug输出,Probar salida Debug
+测试Info输出,Probar salida Info
+测试Warn输出,Probar salida Warn
+测试Error输出,Probar salida Error
+测试Fatal输出,Probar salida Fatal
+最低打印等级,Nivel mínimo de registro
+调试选项,Opciones de depuración
+显示时间戳,Mostrar marca de tiempo
+显示日志等级,Mostrar nivel de registro
+显示文件路径,Mostrar ruta del archivo
+显示调用函数,Mostrar función llamada
+显示行号,Mostrar número de línea
+显示调用栈,Mostrar pila de llamadas
+彩色输出（仅限支持的终端）,Salida en color (solo terminales compatibles)
+切换颜色模式,Cambiar modo de color
+切换,Cambiar

@@ -1,20 +1,24 @@
 ﻿Key,Value
-按价值,Par valeur
-按重量,Par poids
-按价重比,Valeur/Poids
-价重比,Valeur/Poids
-按稀有度,Par rareté
-按单价,Par prix unitaire
-按ID,Par ID
-显示稀有度按钮,Afficher le bouton de rareté
-显示单价按钮,Afficher le bouton de prix unitaire
-显示价格按钮,Afficher le bouton de prix
-显示重量按钮,Afficher le bouton de poids
-显示价重比按钮,Afficher le bouton Valeur/Poids
-显示ID按钮,Afficher le bouton ID
-显示价格信息,Afficher les infos de prix
-显示价重比信息,Afficher les infos Valeur/Poids
-交换左右键排序方向,Inverser le tri clic gauche/droite
-启用调试日志,Activer le journal de débogage
-单价,Prix unitaire
-显示单价信息,Afficher les infos de prix unitaire
+重置所有选项到默认值,Réinitialiser toutes les options par défaut
+重置,Réinitialiser
+复制配置文件夹地址到剪贴板,Copier le chemin du dossier de configuration
+复制,Copier
+点击输出,Cliquer pour afficher
+日志库测试,Test de la bibliothèque de logs
+测试Trace输出,Test de sortie Trace
+测试Debug输出,Test de sortie Debug
+测试Info输出,Test de sortie Info
+测试Warn输出,Test de sortie Warn
+测试Error输出,Test de sortie Error
+测试Fatal输出,Test de sortie Fatal
+最低打印等级,Niveau de log minimal
+调试选项,Options de débogage
+显示时间戳,Afficher l’horodatage
+显示日志等级,Afficher le niveau de log
+显示文件路径,Afficher le chemin du fichier
+显示调用函数,Afficher la fonction appelée
+显示行号,Afficher le numéro de ligne
+显示调用栈,Afficher la pile d’appels
+彩色输出（仅限支持的终端）,Sortie colorée (terminaux compatibles uniquement)
+切换颜色模式,Changer le mode de couleur
+切换,Changer

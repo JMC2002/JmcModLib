@@ -74,7 +74,7 @@ namespace JmcModLib.Utils
             }
 
             var Tag = ModRegistry.GetTag(assembly);
-            if (Tag == null)
+            if (Tag is null)
                 ModLogger.Warn("程序集未注册");
             else
                 ModLogger.Debug($"为{Tag}注册本地化模块");
@@ -126,6 +126,8 @@ namespace JmcModLib.Utils
                     ModLogger.Warn($"未在 {langPath} 中找到任何 .csv 文件。");
                 }
             }
+
+            ModLogger.Info($"成功为注册{ModRegistry.GetTag(assembly)}注册本地化");
         }
 
         /// <summary>
@@ -272,6 +274,15 @@ namespace JmcModLib.Utils
         {
             asm ??= Assembly.GetCallingAssembly();
             return _basePaths.ContainsKey(asm);
+        }
+
+        /// <summary>
+        /// 判断程序集在当前语言是否注册了某个Key
+        /// </summary>
+        public static bool ExistKey(string key, Assembly? asm = null)
+        {
+            asm ??= Assembly.GetCallingAssembly();
+            return _basePaths.ContainsKey(asm) && _localizedTables[asm].ContainsKey(key);
         }
     }
 }

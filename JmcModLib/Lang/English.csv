@@ -1,20 +1,24 @@
 Key,Value
-按价值,Value
-按重量,Weight
-按价重比,Val/Weight
-价重比,Val/Weight
-按稀有度,Rarity
-按单价,Unit Price
-按ID,By ID
-显示稀有度按钮,Show Rarity Button
-显示单价按钮,Show Unit Price Button
-显示价格按钮,Show Price Button
-显示重量按钮,Show Weight Button
-显示价重比按钮,Show Price-to-Weight Button
-显示ID按钮,Show ID Button
-显示价格信息,Show Price Info
-显示价重比信息,Show Price-to-Weight Info
-交换左右键排序方向,Swap Left/Right Click Sorting Direction
-启用调试日志,Enable Debug Log
-单价,Unit Price
-显示单价信息,Show Unit Price Info
+重置所有选项到默认值,Reset all options to default
+重置,Reset
+复制配置文件夹地址到剪贴板,Copy config folder path to clipboard
+复制,Copy
+点击输出,Click to output
+日志库测试,Log library test
+测试Trace输出,Test Trace output
+测试Debug输出,Test Debug output
+测试Info输出,Test Info output
+测试Warn输出,Test Warn output
+测试Error输出,Test Error output
+测试Fatal输出,Test Fatal output
+最低打印等级,Minimum log level
+调试选项,Debug options
+显示时间戳,Show timestamp
+显示日志等级,Show log level
+显示文件路径,Show file path
+显示调用函数,Show calling function
+显示行号,Show line number
+显示调用栈,Show call stack
+彩色输出（仅限支持的终端）,Colored output (supported terminals only)
+切换颜色模式,Switch color mode
+切换,Switch
