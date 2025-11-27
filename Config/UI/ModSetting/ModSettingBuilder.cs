@@ -52,7 +52,7 @@ namespace JmcModLib.Config.UI.ModSetting
 
             ModSettingAPI.AddSlider(info,
                                     entry.Key,
-                                    L10n.Get(entry.DisplayName),
+                                    L10n.Get(entry.DisplayName, asm),
                                     entry.GetTypedValue(),
                                     uiAttr.Min,
                                     uiAttr.Max,
@@ -68,7 +68,7 @@ namespace JmcModLib.Config.UI.ModSetting
 
             ModSettingAPI.AddToggle(info,
                                     entry.Key,
-                                    L10n.Get(entry.DisplayName),
+                                    L10n.Get(entry.DisplayName, asm),
                                     entry.GetTypedValue(),
                                     entry.SetTypedValue);
         }
@@ -98,7 +98,7 @@ namespace JmcModLib.Config.UI.ModSetting
                 // 添加 UI
                 ModSettingAPI.AddDropdownList(info,
                                               entry.Key,
-                                              L10n.Get(entry.DisplayName),
+                                              L10n.Get(entry.DisplayName, asm),
                                               options,
                                               entry.GetTypedValue(),
                                               entry.SetTypedValue);
@@ -128,7 +128,7 @@ namespace JmcModLib.Config.UI.ModSetting
             // 添加 UI
             ModSettingAPI.AddDropdownList(info,
                                           entry.Key,
-                                          L10n.Get(entry.DisplayName),
+                                          L10n.Get(entry.DisplayName, asm),
                                           options,
                                           currentStr,
                                           selected =>
@@ -148,7 +148,7 @@ namespace JmcModLib.Config.UI.ModSetting
 
             ModSettingAPI.AddKeybinding(info,
                                         entry.Key,
-                                        L10n.Get(entry.DisplayName),
+                                        L10n.Get(entry.DisplayName, asm),
                                         entry.GetTypedValue(),
                                         entry.DefaultValue,
                                         entry.SetTypedValue);
@@ -162,7 +162,7 @@ namespace JmcModLib.Config.UI.ModSetting
 
             ModSettingAPI.AddInput(info,
                                     entry.Key,
-                                    L10n.Get(entry.DisplayName),
+                                    L10n.Get(entry.DisplayName, asm),
                                     entry.GetTypedValue(),
                                     uiAttr.CharacterLimit,
                                     entry.SetTypedValue);
