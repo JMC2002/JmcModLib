@@ -23,6 +23,24 @@
 
 本项目有详尽的XML文档注释，引入依赖后在IDE中会有相应的提示。
 
+## 用法速览
+### 注册
+在`OnAfterSetup`后一行`ModRegistry.Register(info, name, version)`即可完成注册
+### 使用
+在静态字段/属性上添加`[Config("配置项名称", group: "分组名称（可选）")]`即可生成一个配置项并持久化存储
+
+在静态方法上添加`[UIButton("描述")]` 即可生成一个按钮UI，点击时会调用这个方法
+
+在标记了`[Config]`的字段/属性上添加`[UIAttribute]`即可生成相应的UI元素（按钮、下拉框、滑动条、开关等）
+
+调用`L10n.Get("key")`即可获取当前系统语言的本地化文本（注册UI时会自动使用本地化文本）
+
+使用`ModLogger.Trace/Debug/Info/Warn/Error/Fatal`即可打印不同等级的日志，并可以自动生成调节打印格式与打印等级的用户设置与UI
+
+使用`MethodAccessor/MemberAccessor.Get+Ivoke/GetValue/SetValue`等API即可方便地进行反射调用，支持泛型/out/ref参数/默认参数/索引器/Attribute，同时自动缓存并提供对应的强类型版本
+
+MOD卸载不需要写任何卸载逻辑，系统会自动完成卸载，并在重连后也不会有问题（包括Setting UI）
+
 # 2. 主要功能
 
 ## 2.1 配置管理器
@@ -50,13 +68,35 @@
 - 同时提供了更好的性能，自动生成缓存，所有调用者都可以共享缓存，同时对于强类型会自动生成委托，经测试百万次双参数方法调用通用接口（93ms）较原始反射调用（581.37ms）耗时减少83.99%、强类型接口（2.13ms)耗时减少99.6%
 - 测试齐全，覆盖各种边界情况；功能齐全，标准库反射能做的都能做
 
-更详细的API说明可以查看[文档](/Docs)或者查看XML注释
+更详细的API说明可以查看[注册器文档](/Docs/ModRegistry.md) / [Config文档](/Docs/ConfigManager.md) / [本地化文档](/Docs/L10n.md) / [日志库文档](/Docs/ModLogger.md) / [反射库文档](/Docs/Reflection.md)或者查看[XML注释](/JmcModLib/JmcModLib.xml)
 
 # 3. 环境依赖与兼容性
 - 本MOD仅依赖`Newtonsoft.Json`，版本为13.0.4，模组已内置
 - 本MOD不直接强依赖于任何UI Mod，但是建议配合`ModSetting`使用以获得配置项UI支持
 - 本MOD不修改游戏任何代码逻辑，理论上不与任何MOD冲突
 - 为获得更好的使用体验，建议将本MOD的排序调到最高
+- 通过观察，`谁偷了我的帧数`MOD加载的情况下会严重影响强类型委托外的反射调用的性能测试，百万次调用测试耗时达到1s（不过这个数量级应该不会在实际使用中出现）
+- 加载顺序上，如果使用反射拿到本MOD的API，可以不依赖加载顺序，不过建议直接强依赖本MOD，并保证本MOD在被依赖MOD之上，本MOD维护的其他Setting UI（暂时只有ModSetting）不需要处理加载顺序
 
 # 4. 其他
-- 
+- API约定：
+	- 所有API中涉及Assembly的参数均可选，默认使用`Assembly.GetCallingAssembly()`返回调用方的程序集性
+
+- AI辅助声明：
+	- 开发过程中使用GPT辅助开发
+	- 生成（除README外的）文档使用GPT生成大体框架，然后手动润色补充
+	- 测试代码与覆盖范围主体部分由GPT生成
+	- MOD内各个字词的翻译文本由GPT生成
+	- MOD图标由GPT生成
+
+- 许可证：
+	- 本MOD采用LGPL-3.0许可证
+
+如果有人用了这个MOD，可以加入群（TODO:还没建）交流反馈
+
+# 5. FAQ
+- Q：为什么叫这个名字？
+- A：因为不想起名字，直接叫ModLib又担心冲突，用我的ID拼上去肯定就不会冲突了
+
+# 6. 最后
+感谢阅读到这里，如果你觉得这个MOD对你有帮助，欢迎给个Star鼓励一下，也欢迎提出任何建议和意见，我会尽量改进和完善这个MOD，谢谢！

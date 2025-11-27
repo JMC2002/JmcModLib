@@ -18,11 +18,7 @@
 builder.RegistLogger(level: LogLevel.Info,
                      tagFlags: LogFormatFlags.Default,
                      uIFlags: LogConfigUIFlags.Default);
-
-// 或直接设置最小等级
-ModRegistry.SetLogLevel(LogLevel.Debug, asm);
 ```
-- `ModLogger.RegisterAssembly(asm, level, tagFlags, uiFlags)`：注册 Assembly 的默认日志行为并可选择生成 UI 配置项。
 
 ## 4. 基本用法
 ```csharp
@@ -36,7 +32,7 @@ ModLogger.Fatal(ex, "致命错误");
 // 指定 Assembly（如在跨库调用时保证归属）
 ModLogger.Info("消息", asm: myAsm);
 ```
-- `Fatal` 用于记录不可恢复的严重错误。若实现中会抛异常，请在调用处做好 `try/catch`（库当前在测试按钮中对 `Fatal` 做了捕获）。
+- `Fatal` 在Debug模式下构建会抛出异常，Release下构建只会打印信息，防止用户运行时崩溃。
 
 ## 5. 输出格式与示例
 统一格式示例：
@@ -44,7 +40,6 @@ ModLogger.Info("消息", asm: myAsm);
 [JmcModLib v1.0.6] [04:44:38] [INFO] BuildTestButtons.cs -> TestFatal (L25): 开始查找Debug模式
 ```
 - 包含 Mod 标签、时间、等级、调用文件、成员与行号、消息文本。
-- 当传入 `Exception` 时，追加异常类型与堆栈信息（按 `tagFlags` 与实现决定）。
 
 ## 6. UI 集成
 `ModLogger` 内置 UI 预制件，由 `BuildLoggerUI` 生成。通过在注册时传入 `LogConfigUIFlags` 进行开关：
@@ -69,11 +64,11 @@ builder.RegistLogger(LogLevel.Info, LogFormatFlags.Default, LogConfigUIFlags.Tes
 ```
 
 ## 7. 最佳实践
-- 为每个 Assembly 显式调用 `RegisterAssembly`，确保独立的日志级别控制。
-- 对可能抛出异常的路径（如 `Fatal` 测试按钮）进行 `try/catch` 以避免影响游戏流程。
-- 在性能敏感场合，注意避免构造复杂字符串（可使用条件判断是否达到最小等级后再构造）。
+- 良好的日志等级维护是开发时的重要工具，既可以帮助开发者调试，又可以避免用户端运行时信息过多，等级过滤既可以节省性能，又可以保证在必要的时候能够看到必要的信息
+- 纯显示调用路径使用`Trace`，调试信息使用`Debug`，用户提示使用`Info`，预料中的可恢复错误使用`Warn`，预料中的不可恢复错误使用`Error`，预料外的错误（如传参不对）使用`Fatal`
+- Error及以上的等级会调用打印堆栈，因此不要大量调用
 
 ## 8. 调试与故障排查
-- 通过 `BuildTestButtons` 的测试按钮检查当前最小等级与输出格式设置是否生效。
-- 如日志被吞，检查 `ModRegistry.SetLogLevel` 与 UI 中的最低等级设置。
-- 若 UI 不显示，确认 `ModRegistry.Done(asm)` 是否已触发以及 `ConfigUIManager` 是否初始化。
+- 通过 `LogConfigUIFlags` 的测试按钮检查当前最小等级与输出格式设置是否生效。
+- 如日志被吞，检查 `ModLogger.GetLogLevel` 与 UI 中的最低等级设置。
+- 若 UI 不显示，确认 `ModRegistry.Done(asm)` 是否已触发。
