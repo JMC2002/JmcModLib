@@ -5,7 +5,7 @@ using System.Reflection;
 
 namespace JmcModLib.Config.Entry
 {
-    static class ConfigEntryFactory
+    internal static class ConfigEntryFactory
     {
         private static readonly MethodAccessor CreateTypedMethod =
             MethodAccessor.Get(typeof(ConfigEntryFactory), nameof(CreateTypedGeneric));

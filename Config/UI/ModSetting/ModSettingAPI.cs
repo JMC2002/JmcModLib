@@ -35,7 +35,7 @@ namespace JmcModLib.Config.UI.ModSetting
         internal static bool IsInit { get; set; }
 
         // 缓存委托避免重复反射
-        private static Dictionary<string, Delegate> methodCache = new Dictionary<string, Delegate>();
+        private static readonly Dictionary<string, Delegate> methodCache = [];
 
         private static readonly string[] methodNames = new[] {
         ADD_DROP_DOWN_LIST,

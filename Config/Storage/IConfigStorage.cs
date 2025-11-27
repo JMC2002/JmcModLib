@@ -11,7 +11,7 @@ namespace JmcModLib.Config.Storage
         /// <summary>
         /// 获取文件名
         /// </summary>
-        public string GetFileName(Assembly? asm = null);
+        string GetFileName(Assembly? asm = null);
 
         /// <summary>
         /// 根据 key 和 group 保存配置值

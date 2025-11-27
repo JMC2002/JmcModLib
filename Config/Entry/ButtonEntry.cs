@@ -11,7 +11,7 @@ namespace JmcModLib.Config.Entry
     /// </summary>
     internal sealed class ButtonEntry : BaseEntry
     {
-        private Action action1;
+        private readonly Action action1;
         public ButtonEntry(Assembly asm,
                            MethodAccessor method,
                            string group,

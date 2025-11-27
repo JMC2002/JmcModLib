@@ -16,7 +16,7 @@ namespace JmcModLib.Config.Storage
     {
         private readonly string _rootFolder;
         private readonly object _globalLock = new();
-        private readonly Dictionary<Assembly, object> _fileLocks = new();
+        private readonly Dictionary<Assembly, object> _fileLocks = [];
 
         // 用作内存缓存，避免频繁读写文件
         // cache: asm -> group -> key -> json-string
@@ -73,30 +73,30 @@ namespace JmcModLib.Config.Storage
         // ------------------ file read/write ------------------
         private class FileWrapper
         {
-            public Dictionary<string, SerializableGroup> groups = new();
+            public Dictionary<string, SerializableGroup> groups = [];
         }
 
         private class SerializableGroup
         {
-            public Dictionary<string, object?> items = new();
+            public Dictionary<string, object?> items = [];
         }
 
         private Dictionary<string, Dictionary<string, object?>> ReadFileRaw(Assembly asm)
         {
             var file = GetFilePath(asm);
             if (!File.Exists(file))
-                return new();
+                return [];
 
             lock (GetFileLock(asm))
             {
                 ModLogger.Debug($"{ModRegistry.GetTag(asm)} 读取配置文件 {file}");
                 var raw = File.ReadAllText(file);
                 if (string.IsNullOrWhiteSpace(raw))
-                    return new();
+                    return [];
 
                 var wrapper = JsonConvert.DeserializeObject<FileWrapper>(raw);
                 if (wrapper == null || wrapper.groups == null)
-                    return new();
+                    return [];
                 var dict = new Dictionary<string, Dictionary<string, object?>>();
 
                 foreach (var g in wrapper.groups)

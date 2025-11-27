@@ -44,7 +44,7 @@ namespace JmcModLib.Config
         private static readonly IConfigStorage _defaultStorage =
             new NewtonsoftConfigStorage(ConfigDir);
 
-        private static HashSet<Assembly> hadScan = [];
+        private static readonly HashSet<Assembly> hadScan = [];
         /// <summary>
         /// 某个ASM有配置项并且扫描完毕后广播
         /// </summary>
