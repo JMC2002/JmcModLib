@@ -6,11 +6,10 @@ using System.Linq.Expressions;
 using System.Reflection;
 using System.Reflection.Emit;
 using System.Runtime.CompilerServices;
-
+using InsCache = System.Collections.Concurrent.ConcurrentDictionary<System.Reflection.Assembly, System.Runtime.CompilerServices.ConditionalWeakTable<object, System.Collections.Concurrent.ConcurrentDictionary<System.Reflection.MemberInfo, ExprHelper.MemberAccessors>>>;
+using InsDict = System.Runtime.CompilerServices.ConditionalWeakTable<object, System.Collections.Concurrent.ConcurrentDictionary<System.Reflection.MemberInfo, ExprHelper.MemberAccessors>>;
 // 实例成员缓存：Assembly -> target -> (MemberInfo -> Accessors)
 using MemDict = System.Collections.Concurrent.ConcurrentDictionary<System.Reflection.MemberInfo, ExprHelper.MemberAccessors>;
-using InsDict = System.Runtime.CompilerServices.ConditionalWeakTable<object, System.Collections.Concurrent.ConcurrentDictionary<System.Reflection.MemberInfo, ExprHelper.MemberAccessors>>;
-using InsCache = System.Collections.Concurrent.ConcurrentDictionary<System.Reflection.Assembly, System.Runtime.CompilerServices.ConditionalWeakTable<object, System.Collections.Concurrent.ConcurrentDictionary<System.Reflection.MemberInfo, ExprHelper.MemberAccessors>>>;
 using StaCache = System.Collections.Concurrent.ConcurrentDictionary<System.Reflection.Assembly, System.Collections.Concurrent.ConcurrentDictionary<System.Reflection.MemberInfo, ExprHelper.MemberAccessors>>;
 
 /// <summary>
@@ -211,7 +210,7 @@ public static class ExprHelper
         else
         {
             var memDict = target == null ? _staCache.GetOrAdd(asm, _ => new())
-                                         : _insCache.GetOrAdd(asm, _ => new()).GetOrCreateValue(target);
+                                         : _insCache.GetOrAdd(asm, _ => []).GetOrCreateValue(target);
 
             bool created = false;
             var accessors = memDict.GetOrAdd(member, _ =>
