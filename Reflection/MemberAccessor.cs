@@ -1,12 +1,9 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
-using System.Linq.Expressions;
-using System.Runtime.CompilerServices;
 
 namespace JmcModLib.Reflection
 {
@@ -41,7 +38,7 @@ namespace JmcModLib.Reflection
         // 静态成员：Getter=Func<TValue>         Setter=Action<TValue>
         private readonly Delegate? typedGetter;
         private readonly Delegate? typedSetter;
-        
+
         /// <summary>
         /// 强类型委托，当ref/ref-like/索引器/不可读时为空
         /// </summary>
@@ -402,9 +399,9 @@ namespace JmcModLib.Reflection
                 setter(target, value);
         }
 
-       /// <summary>
-       /// 静态重载特化
-       /// </summary>
+        /// <summary>
+        /// 静态重载特化
+        /// </summary>
         public TValue GetValue<TValue>()
         {
             if (!IsStatic)

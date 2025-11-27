@@ -204,7 +204,7 @@ namespace JmcModLib.Core
         }
 
         internal static ArgumentOutOfRangeException CreateNotRegisteredException(Assembly assembly, string? name = null,
-                                                                                 [CallerMemberName] string caller = "") 
+                                                                                 [CallerMemberName] string caller = "")
             => new(name ?? nameof(assembly), $"执行 {caller} 时: {GetFallbackTag(assembly)} 未注册");
 
         /// <summary>

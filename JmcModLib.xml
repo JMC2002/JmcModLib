@@ -4,34 +4,6 @@
         <name>JmcModLib</name>
     </assembly>
     <members>
-        <member name="T:JmcModLib.Config.BaseEntry">
-            <summary>
-            所有配置条目的基类
-            </summary>
-        </member>
-        <member name="M:JmcModLib.Config.BaseEntry.#ctor(System.Reflection.Assembly,System.String,System.String)">
-            <summary>
-            所有配置条目的基类
-            </summary>
-        </member>
-        <member name="M:JmcModLib.Config.BaseEntry.GetKey(System.Type,System.String)">
-            <summary>
-            通过 DeclaringType 和 Name 生成唯一 Key（当前asm下唯一）
-            </summary>
-            <param name="declaringType">变量所在的类的类型</param>
-            <param name="Name">变量的名称</param>
-            <returns>返回一个形如{declaringType.FullName}.{Name}的唯一Key</returns>
-        </member>
-        <member name="T:JmcModLib.Config.ButtonEntry">
-            <summary>
-            Button 类型的配置项条目
-            </summary>
-        </member>
-        <member name="M:JmcModLib.Config.ButtonEntry.#ctor(System.Reflection.Assembly,System.Action,System.String,System.String)">
-            <summary>
-            Action 版本用于手动构建按钮
-            </summary>
-        </member>
         <member name="T:JmcModLib.Config.ConfigAttribute">
             <summary>
             标记这个变量/字段是一个配置项
@@ -84,61 +56,6 @@
             <param name="errorMessage">返回错误描述，验证成功返回空</param>
             <returns>如果警告等级在WARN以下返回 true，否则返回 false</returns>
         </member>
-        <member name="T:JmcModLib.Config.ConfigEntry">
-            <summary>
-            承载配置信息的类。
-            </summary>
-        </member>
-        <member name="M:JmcModLib.Config.ConfigEntry.#ctor(System.Reflection.Assembly,System.String,System.String)">
-            <summary>
-            承载配置信息的类。
-            </summary>
-        </member>
-        <member name="P:JmcModLib.Config.ConfigEntry.LogicalType">
-            <summary>
-            数据的原类型，比如传入enum -> string中的enum，若不会额外转换，直接返回TargetType。
-            </summary>
-        </member>
-        <member name="P:JmcModLib.Config.ConfigEntry.UIType">
-            <summary>
-            存储的实际类型，比如将enum存为string，则返回string
-            </summary>
-        </member>
-        <member name="M:JmcModLib.Config.ConfigEntry.SyncFromData">
-            <summary>
-            通过Getter获取当前值并保存到文件
-            </summary>
-        </member>
-        <member name="P:JmcModLib.Config.ConfigEntry`1.LogicalType">
-            <summary>
-            数据的原类型，比如传入enum -> string中的enum，若不会额外转换，直接返回TargetType。
-            </summary>
-        </member>
-        <member name="P:JmcModLib.Config.ConfigEntry`1.UIType">
-            <summary>
-            存储的实际类型，比如将enum存为string，则返回string
-            </summary>
-        </member>
-        <member name="P:JmcModLib.Config.ConfigEntry`1.DefaultValue">
-            <summary>
-            字段/属性最初的默认值，用于 Reset。
-            </summary>
-        </member>
-        <member name="M:JmcModLib.Config.ConfigEntry`1.TraitAccessors(JmcModLib.Reflection.MemberAccessor,JmcModLib.Reflection.MethodAccessor)">
-            <summary>
-            从 MemberAccessor 和 MethodAccessor 萃取出 getter、setter 和 change 方法，并检查合法性。
-            </summary>
-        </member>
-        <member name="M:JmcModLib.Config.ConfigEntry`1.SyncFromFile">
-            <summary>
-            同步某一个配置项
-            </summary>
-        </member>
-        <member name="M:JmcModLib.Config.ConfigEntry`1.SyncFromData">
-            <summary>
-            从getter获取当前值并保存到文件，一般用于Entry销毁时对比使用，以防子MOD内部直接修改了配置的值但未持久化
-            </summary>
-        </member>
         <member name="T:JmcModLib.Config.ConfigManager">
             <summary>
             Config 管理器，负责注册、加载、保存配置项
@@ -149,7 +66,7 @@
             某个ASM有配置项并且扫描完毕后广播
             </summary>
         </member>
-        <member name="M:JmcModLib.Config.ConfigManager.SetStorage(JmcModLib.Config.IConfigStorage,System.Reflection.Assembly)">
+        <member name="M:JmcModLib.Config.ConfigManager.SetStorage(JmcModLib.Config.Storage.IConfigStorage,System.Reflection.Assembly)">
             <summary>
             注册一个 Assembly 的存储实现（子 MOD 可以重写默认存储）
             </summary>
@@ -196,6 +113,14 @@
             重置当前 Assembly 内所有配置项为默认值
             </summary>
         </member>
+        <member name="M:JmcModLib.Config.ConfigManager.GetKey(System.String,System.String)">
+            <summary>
+            通过显示名称和组名获取Key
+            </summary>
+            <param name="displayName"> 显示名称 </param>
+            <param name="group"> 组名，可选 </param>
+            <returns> 直接构造一个key，不检验是否存在 </returns>
+        </member>
         <member name="M:JmcModLib.Config.ConfigManager.GetValue(System.String,System.Reflection.Assembly)">
             <summary>
             获取Key对应变量的值，如果Key不存在，会输出一条Warn
@@ -211,7 +136,6 @@
             <param name="key">目标变量的Key，可以通过ConfigEntry.GetKey构造</param>
             <param name="value">新的值</param>
             <param name="asm">指定程序集，留空则为调用者</param>
-            <returns>如果Key不存在，会输出一条Warn并返回空，否则返回对应值</returns>
         </member>
         <member name="M:JmcModLib.Config.ConfigManager.RegisterButton(System.String,System.Action,System.String,System.String,System.Reflection.Assembly)">
             <summary>
@@ -330,22 +254,105 @@
             <param name="asm"> 注册的程序集，留空则为调用者本身 </param>
             <returns> 返回配置项的Key，可以通过GetValue/SetValue函数查询系统内的值 </returns>
         </member>
-        <member name="T:JmcModLib.Config.IConfigStorage">
+        <member name="T:JmcModLib.Config.Entry.BaseEntry">
+            <summary>
+            所有配置条目的基类
+            </summary>
+        </member>
+        <member name="M:JmcModLib.Config.Entry.BaseEntry.#ctor(System.Reflection.Assembly,System.String,System.String)">
+            <summary>
+            所有配置条目的基类
+            </summary>
+        </member>
+        <member name="M:JmcModLib.Config.Entry.BaseEntry.GetKey(System.Type,System.String)">
+            <summary>
+            通过 DeclaringType 和 Name 生成唯一 Key（当前asm下唯一）
+            </summary>
+            <param name="declaringType">变量所在的类的类型</param>
+            <param name="Name">变量的名称</param>
+            <returns>返回一个形如{declaringType.FullName}.{Name}的唯一Key</returns>
+        </member>
+        <member name="T:JmcModLib.Config.Entry.ButtonEntry">
+            <summary>
+            Button 类型的配置项条目
+            </summary>
+        </member>
+        <member name="M:JmcModLib.Config.Entry.ButtonEntry.#ctor(System.Reflection.Assembly,System.Action,System.String,System.String)">
+            <summary>
+            Action 版本用于手动构建按钮
+            </summary>
+        </member>
+        <member name="T:JmcModLib.Config.Entry.ConfigEntry">
+            <summary>
+            承载配置信息的类。
+            </summary>
+        </member>
+        <member name="M:JmcModLib.Config.Entry.ConfigEntry.#ctor(System.Reflection.Assembly,System.String,System.String)">
+            <summary>
+            承载配置信息的类。
+            </summary>
+        </member>
+        <member name="P:JmcModLib.Config.Entry.ConfigEntry.LogicalType">
+            <summary>
+            数据的原类型，比如传入enum -> string中的enum，若不会额外转换，直接返回TargetType。
+            </summary>
+        </member>
+        <member name="P:JmcModLib.Config.Entry.ConfigEntry.UIType">
+            <summary>
+            存储的实际类型，比如将enum存为string，则返回string
+            </summary>
+        </member>
+        <member name="M:JmcModLib.Config.Entry.ConfigEntry.SyncFromData">
+            <summary>
+            通过Getter获取当前值并保存到文件
+            </summary>
+        </member>
+        <member name="P:JmcModLib.Config.Entry.ConfigEntry`1.LogicalType">
+            <summary>
+            数据的原类型，比如传入enum -> string中的enum，若不会额外转换，直接返回TargetType。
+            </summary>
+        </member>
+        <member name="P:JmcModLib.Config.Entry.ConfigEntry`1.UIType">
+            <summary>
+            存储的实际类型，比如将enum存为string，则返回string
+            </summary>
+        </member>
+        <member name="P:JmcModLib.Config.Entry.ConfigEntry`1.DefaultValue">
+            <summary>
+            字段/属性最初的默认值，用于 Reset。
+            </summary>
+        </member>
+        <member name="M:JmcModLib.Config.Entry.ConfigEntry`1.TraitAccessors(JmcModLib.Reflection.MemberAccessor,JmcModLib.Reflection.MethodAccessor)">
+            <summary>
+            从 MemberAccessor 和 MethodAccessor 萃取出 getter、setter 和 change 方法，并检查合法性。
+            </summary>
+        </member>
+        <member name="M:JmcModLib.Config.Entry.ConfigEntry`1.SyncFromFile">
+            <summary>
+            同步某一个配置项
+            </summary>
+        </member>
+        <member name="M:JmcModLib.Config.Entry.ConfigEntry`1.SyncFromData">
+            <summary>
+            从getter获取当前值并保存到文件，一般用于Entry销毁时对比使用，以防子MOD内部直接修改了配置的值但未持久化
+            </summary>
+        </member>
+        <member name="T:JmcModLib.Config.Storage.IConfigStorage">
             <summary>
             配置存储接口
             </summary>
         </member>
-        <member name="M:JmcModLib.Config.IConfigStorage.GetFileName(System.Reflection.Assembly)">
+        <member name="M:JmcModLib.Config.Storage.IConfigStorage.GetFileName(System.Reflection.Assembly)">
             <summary>
             获取文件名
             </summary>
         </member>
-        <member name="M:JmcModLib.Config.IConfigStorage.Save(System.String,System.String,System.Object,System.Reflection.Assembly)">
+        <member name="M:JmcModLib.Config.Storage.IConfigStorage.Save(System.String,System.String,System.Object,System.Reflection.Assembly)">
             <summary>
             根据 key 和 group 保存配置值
             </summary>
         </member>
-        <member name="M:JmcModLib.Config.IConfigStorage.TryLoad(System.String,System.String,System.Type,System.Object@,System.Reflection.Assembly)">
+        <member name="M:JmcModLib.Config.Storage.IConfigStorage.TryLoad(System.String,System.String,System.Type,System.Object@,System.Reflection.Assembly)">
             <summary>
             保存配置值
             </summary>
@@ -356,45 +363,45 @@
             <param name="asm">相关的程序集</param>
             <returns>是否成功加载配置</returns>
         </member>
-        <member name="M:JmcModLib.Config.IConfigStorage.Exists(System.Reflection.Assembly)">
+        <member name="M:JmcModLib.Config.Storage.IConfigStorage.Exists(System.Reflection.Assembly)">
             <summary>
             是否存在assembly对应的配置文件
             </summary>
         </member>
-        <member name="M:JmcModLib.Config.IConfigStorage.Flush(System.Reflection.Assembly)">
+        <member name="M:JmcModLib.Config.Storage.IConfigStorage.Flush(System.Reflection.Assembly)">
             <summary>
             真实地将缓存写入存储介质
             </summary>
         </member>
-        <member name="T:JmcModLib.Config.NewtonsoftConfigStorage">
+        <member name="T:JmcModLib.Config.Storage.NewtonsoftConfigStorage">
             <summary>
             以 Newtonsoft.Json 作为序列化工具的配置存储实现
             </summary>
         </member>
-        <member name="M:JmcModLib.Config.NewtonsoftConfigStorage.#ctor(System.String)">
+        <member name="M:JmcModLib.Config.Storage.NewtonsoftConfigStorage.#ctor(System.String)">
             <summary>
             初始化一个 NewtonsoftConfigStorage 实例
             </summary>
             <param name="rootFolder">根目录</param>
         </member>
-        <member name="M:JmcModLib.Config.NewtonsoftConfigStorage.GetFileName(System.Reflection.Assembly)">
+        <member name="M:JmcModLib.Config.Storage.NewtonsoftConfigStorage.GetFileName(System.Reflection.Assembly)">
             <summary>
             获取文件名
             </summary>
         </member>
-        <member name="M:JmcModLib.Config.NewtonsoftConfigStorage.GetFilePath(System.Reflection.Assembly)">
+        <member name="M:JmcModLib.Config.Storage.NewtonsoftConfigStorage.GetFilePath(System.Reflection.Assembly)">
             <summary>
             获得指定程序集对应的配置文件路径
             </summary>
         </member>
-        <member name="M:JmcModLib.Config.NewtonsoftConfigStorage.Exists(System.Reflection.Assembly)">
+        <member name="M:JmcModLib.Config.Storage.NewtonsoftConfigStorage.Exists(System.Reflection.Assembly)">
             <summary>
             是否存在assembly对应的配置文件
             </summary>
             <param name="asm">默认则为调用者</param>
             <returns>返回结果对应的bool</returns>
         </member>
-        <member name="M:JmcModLib.Config.NewtonsoftConfigStorage.TryLoad(System.String,System.String,System.Type,System.Object@,System.Reflection.Assembly)">
+        <member name="M:JmcModLib.Config.Storage.NewtonsoftConfigStorage.TryLoad(System.String,System.String,System.Type,System.Object@,System.Reflection.Assembly)">
             <summary>
             尝试读取配置项
             </summary>
@@ -405,7 +412,7 @@
             <param name="asm">调用的程序集，默认是调用者</param>
             <returns>如果加载成功，则返回true</returns>
         </member>
-        <member name="M:JmcModLib.Config.NewtonsoftConfigStorage.Save(System.String,System.String,System.Object,System.Reflection.Assembly)">
+        <member name="M:JmcModLib.Config.Storage.NewtonsoftConfigStorage.Save(System.String,System.String,System.Object,System.Reflection.Assembly)">
             <summary>
             保存配置项到缓存
             </summary>
@@ -414,7 +421,7 @@
             <param name="value">返回的配置项值</param>
             <param name="asm">调用的程序集，默认是调用者</param>
         </member>
-        <member name="M:JmcModLib.Config.NewtonsoftConfigStorage.Flush(System.Reflection.Assembly)">
+        <member name="M:JmcModLib.Config.Storage.NewtonsoftConfigStorage.Flush(System.Reflection.Assembly)">
             <summary>
             真正将缓存写回文件
             </summary>
@@ -864,11 +871,6 @@
             <param name="assembly"></param>
             <returns> 若已注册或未阻塞（deferredCompletion的值为false）返回空，否则返回一个链式构造器，构造完成后调用Done即可 </returns>
         </member>
-        <member name="M:JmcModLib.Core.ModRegistry.IsRegistered">
-            <summary>
-            判断是否已注册
-            </summary>
-        </member>
         <member name="M:JmcModLib.Core.ModRegistry.IsRegistered(System.Reflection.Assembly)">
             <summary>
             判断是否已注册
@@ -878,15 +880,11 @@
             <summary>
             反注册程序集的MOD信息，留空则反注册调用者的程序集
             </summary>
+            <remarks> 原本的API，现已internal </remarks>
         </member>
         <member name="M:JmcModLib.Core.ModRegistry.GetModInfo(System.Reflection.Assembly)">
             <summary>
             获取程序集的MOD信息，留空则返回调用者的信息
-            </summary>
-        </member>
-        <member name="M:JmcModLib.Core.ModRegistry.SetLogLevel(JmcModLib.Utils.LogLevel,System.Reflection.Assembly)">
-            <summary>
-            设置程序集的打印等级，默认为调用者
             </summary>
         </member>
         <member name="M:JmcModLib.Core.ModRegistry.GetTag(System.Reflection.Assembly)">
@@ -1396,43 +1394,6 @@
             对引用类型执行 Castclass
             </summary>
         </member>
-        <member name="T:JmcModLib.Reflection.Generic.GenericAccessorBase">
-            <summary>
-            所有泛型访问器的基类
-            </summary>
-        </member>
-        <member name="T:JmcModLib.Reflection.Generic.GenericAccessorBase`2">
-            <summary>
-            泛型访问器基类（CRTP 模式）
-            </summary>
-        </member>
-        <member name="T:JmcModLib.Reflection.Generic.MemberAccessor`2">
-            <summary>
-            强类型成员访问器 - 零开销的字段/属性访问
-            </summary>
-            <typeparam name="TTarget">目标对象类型（静态成员使用 object）</typeparam>
-            <typeparam name="TValue">成员值类型</typeparam>
-        </member>
-        <member name="T:JmcModLib.Reflection.Generic.MethodAccessor`2">
-            <summary>
-            无参数方法访问器
-            </summary>
-        </member>
-        <member name="T:JmcModLib.Reflection.Generic.MethodAccessor`3">
-            <summary>
-            单参数方法访问器
-            </summary>
-        </member>
-        <member name="T:JmcModLib.Reflection.Generic.MethodAccessor`4">
-            <summary>
-            双参数方法访问器
-            </summary>
-        </member>
-        <member name="T:JmcModLib.Reflection.Generic.MethodAccessor`5">
-            <summary>
-            三参数方法访问器
-            </summary>
-        </member>
         <member name="T:JmcModLib.Reflection.ReflectionAccessorBase">
             <summary>
             所有访问器的基类
@@ -1637,11 +1598,6 @@
             翻译当前程序集的键值
             </summary>
         </member>
-        <member name="M:JmcModLib.Utils.L10n.Unregister(System.Reflection.Assembly)">
-            <summary>
-            卸载当前程序集的本地化
-            </summary>
-        </member>
         <member name="M:JmcModLib.Utils.L10n.OnLanguageChanged(UnityEngine.SystemLanguage)">
             <summary>
             当游戏语言切换时自动更新
@@ -1834,7 +1790,7 @@
             反注册 Assembly（供 ModRegistry 调用）
             </summary>
         </member>
-        <member name="M:JmcModLib.Utils.ModLogger.SetMinLevel(JmcModLib.Utils.LogLevel,System.Reflection.Assembly)">
+        <member name="M:JmcModLib.Utils.ModLogger.SetLogLevel(JmcModLib.Utils.LogLevel,System.Reflection.Assembly)">
             <summary>
             设置当前调用 Assembly 的最低日志等级
             </summary>

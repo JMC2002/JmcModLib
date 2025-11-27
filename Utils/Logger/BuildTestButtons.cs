@@ -9,7 +9,7 @@ namespace JmcModLib.Utils
         private static class BuildTestButtons
         {
             private const string ButtonText = "点击输出";
-            private const string GroupName  = "日志库测试";
+            private const string GroupName = "日志库测试";
 
             private static void TestDebug(Assembly asm) => ModLogger.Debug("测试Debug", asm);
             private static void TestTrace(Assembly asm) => ModLogger.Trace("测试Trace", asm);
@@ -32,8 +32,8 @@ namespace JmcModLib.Utils
             {
                 ConfigManager.RegisterButton("测试Trace输出", () => TestTrace(asm), ButtonText, GroupName, asm);
                 ConfigManager.RegisterButton("测试Debug输出", () => TestDebug(asm), ButtonText, GroupName, asm);
-                ConfigManager.RegisterButton("测试Info输出",  () => TestInfo(asm) , ButtonText, GroupName, asm);
-                ConfigManager.RegisterButton("测试Warn输出",  () => TestWarn(asm) , ButtonText, GroupName, asm);
+                ConfigManager.RegisterButton("测试Info输出", () => TestInfo(asm), ButtonText, GroupName, asm);
+                ConfigManager.RegisterButton("测试Warn输出", () => TestWarn(asm), ButtonText, GroupName, asm);
                 ConfigManager.RegisterButton("测试Error输出", () => TestError(asm), ButtonText, GroupName, asm);
                 ConfigManager.RegisterButton("测试Fatal输出", () => TestFatal(asm), ButtonText, GroupName, asm);
             }

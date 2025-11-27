@@ -1,9 +1,9 @@
-﻿using System;
+﻿using Duckov.Modding;
+using JmcModLib.Utils;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using Duckov.Modding;
-using JmcModLib.Utils;
 using UnityEngine;
 using Debug = UnityEngine.Debug;
 
@@ -320,10 +320,10 @@ namespace JmcModLib.Config.UI.ModSetting
                 return false;
             }
             MethodInfo? methodInfo = GetStaticPublicMethodInfo(SET_VALUE);
-            if (methodInfo == null) 
+            if (methodInfo == null)
             {
                 ModLogger.Error("获取SetValue方法失败，取消设置");
-                return false; 
+                return false;
             }
             MethodInfo genericMethod = methodInfo.MakeGenericMethod(typeof(T));
             genericMethod.Invoke(null, new object[] { modInfo, key, value!, callback! });

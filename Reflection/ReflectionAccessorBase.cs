@@ -89,7 +89,7 @@ namespace JmcModLib.Reflection
     /// </remarks>
     /// <param name="member">成员信息</param>
     /// <exception cref="ArgumentNullException"> 若 member 为 null </exception>
-    public abstract class ReflectionAccessorBase<TMemberInfo, TAccessor>(TMemberInfo member) 
+    public abstract class ReflectionAccessorBase<TMemberInfo, TAccessor>(TMemberInfo member)
         : ReflectionAccessorBase
         where TMemberInfo : MemberInfo
         where TAccessor : ReflectionAccessorBase<TMemberInfo, TAccessor>
@@ -125,7 +125,7 @@ namespace JmcModLib.Reflection
         /// <summary>
         /// 底层的 MemberInfo（FieldInfo/PropertyInfo/MethodInfo 等）
         /// </summary>
-        public TMemberInfo Member { get; } = member 
+        public TMemberInfo Member { get; } = member
                                           ?? throw new ArgumentNullException(nameof(member), "member 不能为 null");
 
         /// <summary>

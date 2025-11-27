@@ -1,6 +1,5 @@
 ﻿using JmcModLib.Config.Entry;
 using JmcModLib.Config.UI.ModSetting;
-using JmcModLib.Utils;
 using System;
 using System.Collections.Generic;
 using System.Reflection;
@@ -13,10 +12,10 @@ namespace JmcModLib.Config.UI
         private static readonly Dictionary<Assembly, Dictionary<string, List<PendingUIEntry<BaseEntry, UIBaseAttribute>>>> _pending
             = [];
 
-		// 扫描完成后基于程序集的广播
-		internal static event Action<Assembly>? OnRegistered;
-		// 每次注册单条 UI 时的广播
-		internal static event Action<PendingUIEntry<BaseEntry, UIBaseAttribute>>? OnEntryRegistered;
+        // 扫描完成后基于程序集的广播
+        internal static event Action<Assembly>? OnRegistered;
+        // 每次注册单条 UI 时的广播
+        internal static event Action<PendingUIEntry<BaseEntry, UIBaseAttribute>>? OnEntryRegistered;
 
         internal static void Init()
         {
@@ -48,10 +47,10 @@ namespace JmcModLib.Config.UI
                 groups.Add(group, list);
             }
 
-			var pending = new PendingUIEntry<BaseEntry, UIBaseAttribute>(entry, ui);
-			list.Add(pending);
-			// 每条 UI 注册都单独广播
-			OnEntryRegistered?.Invoke(pending);
+            var pending = new PendingUIEntry<BaseEntry, UIBaseAttribute>(entry, ui);
+            list.Add(pending);
+            // 每条 UI 注册都单独广播
+            OnEntryRegistered?.Invoke(pending);
         }
 
         private static bool IsRegistered(Assembly asm)

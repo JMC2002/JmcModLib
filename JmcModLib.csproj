@@ -50,6 +50,7 @@
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Config\UI\Linker\" />
+    <Folder Include="JmcModLib\Lang\" />
   </ItemGroup>
 
   <!-- 从版本文件提取版本信息并注入DLL -->

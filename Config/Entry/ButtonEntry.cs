@@ -15,7 +15,7 @@ namespace JmcModLib.Config.Entry
         public ButtonEntry(Assembly asm,
                            MethodAccessor method,
                            string group,
-                           string displayName) 
+                           string displayName)
             : base(asm, group, displayName)
         {
             if (!UIButtonAttribute.IsValidMethod(method.Member, out var lvl, out var errorMessage))
@@ -30,7 +30,7 @@ namespace JmcModLib.Config.Entry
         /// <summary>
         /// Action 版本用于手动构建按钮
         /// </summary>
-        public ButtonEntry(Assembly asm, 
+        public ButtonEntry(Assembly asm,
                            Action action,
                            string group,
                            string displayName)

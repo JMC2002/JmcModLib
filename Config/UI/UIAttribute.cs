@@ -147,9 +147,9 @@ namespace JmcModLib.Config.UI
     /// <param name="decimalPlaces">小数位数</param>
     /// <param name="characterLimit">输入字符限制</param>
     public sealed class UIFloatSliderAttribute(
-                            float min, 
-                            float max, 
-                            int decimalPlaces = 1, 
+                            float min,
+                            float max,
+                            int decimalPlaces = 1,
                             int characterLimit = 5) : UISliderAttribute<float>(min, max, characterLimit)
     {
 
@@ -171,8 +171,8 @@ namespace JmcModLib.Config.UI
     /// <param name="max">滑动上限</param>
     /// <param name="characterLimit">输入字符限制</param>
     public sealed class UIIntSliderAttribute(
-                            int min, 
-                            int max, 
+                            int min,
+                            int max,
                             int characterLimit = 5) : UISliderAttribute<int>(min, max, characterLimit)
     {
         internal override void BuildUI(ConfigEntry<int> entry)

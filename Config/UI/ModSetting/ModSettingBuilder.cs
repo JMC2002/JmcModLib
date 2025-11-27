@@ -84,7 +84,7 @@ namespace JmcModLib.Config.UI.ModSetting
             {
                 // 获取枚举所有值（按数值排序）转成名称列表
                 List<string> options = [.. Enum.GetValues(type)
-                                               .Cast<object>()           
+                                               .Cast<object>()
                                                .OrderBy(v => (IComparable)Convert.ChangeType(v, Enum.GetUnderlyingType(type)))
                                                .Select(v => v.ToString()!)];
 
@@ -173,7 +173,7 @@ namespace JmcModLib.Config.UI.ModSetting
             var asm = entry.Assembly;
             if (!TryGetModInfo(asm, out var info))
                 return;
-            
+
             ModSettingAPI.AddButton(info,
                                     entry.Key,
                                     L10n.Get(uiAttr.Description, asm),
@@ -223,7 +223,7 @@ namespace JmcModLib.Config.UI.ModSetting
                 pending.UIAttr.BuildUI(pending.Entry);
                 if (pending.Entry is ConfigEntry configEntry)
                     configEntry.RegisterUISync();
-                ModLogger.Debug($"构建 UI 条目 {pending.Entry.Key} 到 ModSetting. " );
+                ModLogger.Debug($"构建 UI 条目 {pending.Entry.Key} 到 ModSetting. ");
             }
             catch (Exception ex)
             {
@@ -234,7 +234,7 @@ namespace JmcModLib.Config.UI.ModSetting
         internal static void BuildEntries(Assembly asm)
         {
             ModLogger.Trace($"{ModRegistry.GetTag(asm)} 进入BuildEntries");
-            
+
             if (ConfigUIManager.GetGroups(asm) is not { } groups)
                 return;
 

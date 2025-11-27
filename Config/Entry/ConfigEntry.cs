@@ -12,7 +12,7 @@ namespace JmcModLib.Config.Entry
     /// <summary>
     /// 承载配置信息的类。
     /// </summary>
-    internal abstract class ConfigEntry(Assembly asm, string group, string displayName) 
+    internal abstract class ConfigEntry(Assembly asm, string group, string displayName)
         : BaseEntry(asm, group, displayName), IConfigAccessor
     {
         /// <summary>
@@ -98,11 +98,11 @@ namespace JmcModLib.Config.Entry
         /// <summary>
         /// 从 MemberAccessor 和 MethodAccessor 萃取出 getter、setter 和 change 方法，并检查合法性。
         /// </summary>
-        internal static (Func<T> getter, Action<T> setter, Action<T>? change) 
+        internal static (Func<T> getter, Action<T> setter, Action<T>? change)
             TraitAccessors(MemberAccessor member, MethodAccessor? method = null)
         {
-            Func<T> getter; 
-            Action<T> setter; 
+            Func<T> getter;
+            Action<T> setter;
             Action<T>? action = null;
             if (!member.IsStatic)
                 throw new ArgumentException(
@@ -162,7 +162,7 @@ namespace JmcModLib.Config.Entry
                 _uiSyncRegistered = true;
             }
         }
-        
+
         private void UnUISync()
         {
             if (_uiSyncRegistered)
@@ -209,7 +209,7 @@ namespace JmcModLib.Config.Entry
                             $"{ModRegistry.GetTag(Assembly)}: 从文件中读取到了 {Key} 的值为 {loaded}，并成功写入");
                     }
                 }
-                catch(Exception ex)
+                catch (Exception ex)
                 {
                     ModLogger.Warn(
                         $"{ModRegistry.GetTag(Assembly)}: 从文件中读取到了 {Key} 的值为 {loaded}，但是写入失败，尝试使用默认值覆盖", ex);

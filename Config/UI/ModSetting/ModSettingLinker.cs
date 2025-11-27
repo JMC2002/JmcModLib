@@ -68,7 +68,7 @@ namespace JmcModLib.Config.UI.ModSetting
             try
             {
                 var info = (ModInfo)ModRegistry.GetModInfo(entry.Assembly)?.Info!;
-                if (!ModSettingAPI.GetValue(info, entry.Key, (T savedValue) => 
+                if (!ModSettingAPI.GetValue(info, entry.Key, (T savedValue) =>
                 {
                     if (!Equals(savedValue, newVal))
                     {

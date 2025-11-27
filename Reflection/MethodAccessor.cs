@@ -480,9 +480,9 @@ namespace JmcModLib.Reflection
             return ret is null ? default! : (TResult)ret;
         }
 
-         /// <summary>
-         /// 单参特化强类型版本
-         /// </summary>
+        /// <summary>
+        /// 单参特化强类型版本
+        /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public TResult Invoke<TTarget, T1, TResult>(TTarget instance, T1 a1)
         {
@@ -927,7 +927,7 @@ namespace JmcModLib.Reflection
             // 加载实例
             if (!method.IsStatic)
             {
-                il.Emit(OpCodes.Ldarg_0); 
+                il.Emit(OpCodes.Ldarg_0);
                 if (isValueType)
                 {
                     // struct：必须 unbox 得到地址

@@ -1,6 +1,4 @@
-﻿using JmcModLib.Reflection;
-using System;
-using System.Collections.Generic;
+﻿using System;
 using System.Reflection;
 
 namespace JmcModLib.Config.Entry

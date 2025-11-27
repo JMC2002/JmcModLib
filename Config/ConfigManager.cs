@@ -308,8 +308,8 @@ namespace JmcModLib.Config
         {
             if (asm == null) throw new ArgumentNullException(nameof(asm));
 
-            if (_lookup.TryGetValue(asm, out var entries))  
-                foreach (var entry in entries.Values)       
+            if (_lookup.TryGetValue(asm, out var entries))
+                foreach (var entry in entries.Values)
                     entry.SyncFromData();   // 遍历所有entry，检查getter得到的值与文件内容是否一致
                                             // 不一致则写入文件，防止子MOD处修改了值但是未保存
             else
@@ -445,7 +445,7 @@ namespace JmcModLib.Config
                 ModLogger.Warn($"尝试读取 {key} 值失败，返回默认值");
                 return defaultValue;
             }
-            
+
             void setter(T v) { }    // 由于Set包装了Save语义，此处不再Save
 
             try
@@ -512,7 +512,7 @@ namespace JmcModLib.Config
         public static string RegisterConfig<TEnum>(UIDropdownAttribute uiAttr, string displayName, Func<TEnum> getter,
                                                    Action<TEnum> setter, string group = ConfigAttribute.DefaultGroup,
                                                    Action<TEnum>? action = null, Assembly? asm = null)
-            where TEnum : Enum 
+            where TEnum : Enum
             => RegisterConfigImpl(asm ?? Assembly.GetCallingAssembly(), displayName, getter(), getter, setter, uiAttr, group, action);
 
         /// <summary>
@@ -547,7 +547,7 @@ namespace JmcModLib.Config
                                                    Action<TEnum>? action = null, Assembly? asm = null)
                     where TEnum : Enum
                     => RegisterConfigImpl(asm ?? Assembly.GetCallingAssembly(), displayName, defaultValue, group, uiAttr, action);
-       
+
         /// <summary>
         /// 通过形如 `() => ClassName.StaticName / () => InstanceName.FieldName` 的表达式注册一个配置项，字段/属性/静态/实例均可。
         /// </summary>
@@ -572,7 +572,7 @@ namespace JmcModLib.Config
             }
             catch (Exception ex)
             {
-                throw new ArgumentException($"{ModRegistry.GetTag(asm)}: 注册条目 {displayName} 时出现问题", ex); 
+                throw new ArgumentException($"{ModRegistry.GetTag(asm)}: 注册条目 {displayName} 时出现问题", ex);
             }
         }
 
