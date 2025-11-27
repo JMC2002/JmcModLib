@@ -15,9 +15,9 @@ namespace JmcModLib.Utils
     /// </summary>
     public static class L10n
     {
-        private static readonly TableType _localizedTables = new();
-        private static readonly TableType _fallbackTables = new();
-        private static readonly Dictionary<Assembly, string> _basePaths = new();
+        private static readonly TableType _localizedTables = [];
+        private static readonly TableType _fallbackTables = [];
+        private static readonly Dictionary<Assembly, string> _basePaths = [];
 
         /// <summary>
         /// 当前语言
@@ -208,7 +208,7 @@ namespace JmcModLib.Utils
             if (!File.Exists(path))
             {
                 ModLogger.Warn($"未找到语言文件: {path}");
-                return new Dictionary<string, string>();
+                return [];
             }
 
             try
@@ -219,7 +219,7 @@ namespace JmcModLib.Utils
             catch (Exception ex)
             {
                 ModLogger.Error($"加载语言文件失败: {path}", ex);
-                return new Dictionary<string, string>();
+                return [];
             }
         }
 
