@@ -7,7 +7,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
 
-namespace JmcModLib.Config
+namespace JmcModLib.Config.Storage
 {
     /// <summary>
     /// 以 Newtonsoft.Json 作为序列化工具的配置存储实现

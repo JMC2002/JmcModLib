@@ -3,7 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Reflection;
 
-namespace JmcModLib.Config
+namespace JmcModLib.Config.Entry
 {
     /// <summary>
     /// 所有配置条目的基类

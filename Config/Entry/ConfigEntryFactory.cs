@@ -3,7 +3,7 @@ using JmcModLib.Reflection;
 using System;
 using System.Reflection;
 
-namespace JmcModLib.Config
+namespace JmcModLib.Config.Entry
 {
     static class ConfigEntryFactory
     {

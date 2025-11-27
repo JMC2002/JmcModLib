@@ -4,7 +4,7 @@ using JmcModLib.Utils;
 using System;
 using System.Reflection;
 
-namespace JmcModLib.Config
+namespace JmcModLib.Config.Entry
 {
     /// <summary>
     /// Button 类型的配置项条目

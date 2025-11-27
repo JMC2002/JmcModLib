@@ -1,5 +1,4 @@
-﻿using JmcModLib.Config.Entry;
-using JmcModLib.Config.UI;
+﻿using JmcModLib.Config.UI;
 using JmcModLib.Config.UI.ModSetting;
 using JmcModLib.Core;
 using JmcModLib.Reflection;
@@ -8,7 +7,7 @@ using System;
 using System.Collections.Generic;
 using System.Reflection;
 
-namespace JmcModLib.Config
+namespace JmcModLib.Config.Entry
 {
     /// <summary>
     /// 承载配置信息的类。

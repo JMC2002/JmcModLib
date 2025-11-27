@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Reflection;
 
-namespace JmcModLib.Config
+namespace JmcModLib.Config.Storage
 {
     /// <summary>
     /// 配置存储接口
