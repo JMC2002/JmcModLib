@@ -362,7 +362,7 @@ namespace JmcModLib.Config
         {
             asm ??= Assembly.GetCallingAssembly();
             var entry = GetEntry(key, asm);
-            return entry == null ? null : entry.GetValue();
+            return entry?.GetValue();
         }
 
         internal static void SetValue(ConfigEntry modEntry, object? value)
