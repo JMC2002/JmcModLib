@@ -1,4 +1,5 @@
-﻿using JmcModLib.Config.UI.ModSetting;
+﻿using JmcModLib.Config.Entry;
+using JmcModLib.Config.UI.ModSetting;
 using JmcModLib.Utils;
 using System;
 using System.Collections.Generic;

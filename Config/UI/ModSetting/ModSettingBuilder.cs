@@ -1,4 +1,5 @@
 ﻿using Duckov.Modding;
+using JmcModLib.Config.Entry;
 using JmcModLib.Core;
 using JmcModLib.Utils;
 using System;

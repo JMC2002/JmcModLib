@@ -1,4 +1,6 @@
-﻿using JmcModLib.Config.UI;
+﻿using JmcModLib.Config.Entry;
+using JmcModLib.Config.Storage;
+using JmcModLib.Config.UI;
 using JmcModLib.Core;
 using JmcModLib.Reflection;
 using JmcModLib.Utils;
@@ -21,8 +23,7 @@ namespace JmcModLib.Config
         // Config 文件根目录（默认）
         private static readonly string ConfigDir = Path.Combine(Application.persistentDataPath, "Saves/JmcModLibConfig");
 
-        [UIButton("复制配置文件夹路径到剪贴板", "复制")]
-        private static void CopyConfigPathToClipboard()
+        internal static void CopyConfigPathToClipboard()
         {
             GUIUtility.systemCopyBuffer = ConfigDir;
             ModLogger.Info($"已复制路径到剪贴板: {ConfigDir}");

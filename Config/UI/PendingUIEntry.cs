@@ -1,4 +1,6 @@
-﻿namespace JmcModLib.Config.UI
+﻿using JmcModLib.Config.Entry;
+
+namespace JmcModLib.Config.UI
 {
     /// <summary>
     /// 一个用于存储待处理 UI 配置项的类。
