@@ -256,5 +256,18 @@ namespace JmcModLib.Config.UI.ModSetting
                                     L10n.Get("重置"),
                                     () => ConfigUIManager.ResetAsm(asm));   // 只重置注册了UI的Config
         }
+
+        internal static void BuildCopy(Assembly asm)
+        {
+            var modinfo = ModRegistry.GetModInfo(asm);
+            if (!TryGetModInfo(asm, out var info))
+                return;
+
+            ModSettingAPI.AddButton(info,
+                                    $"JmcModLibGen.{modinfo!.Name}.Copy",
+                                    L10n.Get("复制所有选项到剪贴板"),
+                                    L10n.Get("复制"),
+                                    ConfigManager.CopyConfigPathToClipboard);
+        }
     }
 }

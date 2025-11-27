@@ -228,6 +228,7 @@ namespace JmcModLib.Config.UI.ModSetting
                 return;
             ModSettingBuilder.BuildGroup(asm);
             ModSettingBuilder.BuildReset(asm);
+            ModSettingBuilder.BuildCopy(asm);
             initialized[asm] = true;        // 触发BuildMeta时标记初始化完成
         }
 
