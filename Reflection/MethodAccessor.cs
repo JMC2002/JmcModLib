@@ -55,8 +55,8 @@ namespace JmcModLib.Reflection
                     {
                         // 泛型参数占位符统一 => 0
                         var t = types[i];
-                        int v = (t.IsGenericParameter ? 0 : t.TypeHandle.GetHashCode());
-                        h = h * 31 + v;
+                        int v = t.IsGenericParameter ? 0 : t.TypeHandle.GetHashCode();
+                        h = (h * 31) + v;
                     }
                     _hash = h;
                 }

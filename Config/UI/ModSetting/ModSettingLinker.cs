@@ -72,13 +72,13 @@ namespace JmcModLib.Config.UI.ModSetting
                 {
                     if (!Equals(savedValue, newVal))
                     {
-                        ModSettingAPI.SetValue(info, entry.Key, newVal, (flg =>
+                        ModSettingAPI.SetValue(info, entry.Key, newVal, flg =>
                         {
                             if (flg)
                                 ModLogger.Info($"向Setting 同步 {entry.Key} 的值成功：{savedValue} → {newVal}");
                             else
                                 ModLogger.Error($"向Setting 同步 {entry.Key} 的值失败");
-                        }));
+                        });
                     }
                 }))
                 {
