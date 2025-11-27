@@ -36,18 +36,16 @@ namespace JmcModLib.Reflection
         // 强类型委托（非索引器）：
         // 实例成员：Getter=Func<TTarget,TValue>  Setter=Action<TTarget,TValue>
         // 静态成员：Getter=Func<TValue>         Setter=Action<TValue>
-        private readonly Delegate? typedGetter;
-        private readonly Delegate? typedSetter;
 
         /// <summary>
         /// 强类型委托，当ref/ref-like/索引器/不可读时为空
         /// </summary>
-        public Delegate? TypedGetter => typedGetter;
+        public Delegate? TypedGetter { get; }
 
         /// <summary>
         /// 强类型委托，当ref/ref-like/索引器/不可写时为空
         /// </summary>
-        public Delegate? TypedSetter => typedSetter;
+        public Delegate? TypedSetter { get; }
 
         // 如果是索引器，这里会持有 index 参数
         private readonly ParameterInfo[]? indexParams;
@@ -71,8 +69,8 @@ namespace JmcModLib.Reflection
                         getter = CreateFieldGetter(f);
                         setter = null;
                         // readonly：仅生成 Getter
-                        typedGetter = CreateTypedFieldGetter(f);
-                        typedSetter = null;
+                        TypedGetter = CreateTypedFieldGetter(f);
+                        TypedSetter = null;
                     }
                     // 如果是 const 字段，直接使用 GetRawConstantValue 获取值
                     else if (f.IsLiteral && !f.IsInitOnly) // const 字段
@@ -80,16 +78,16 @@ namespace JmcModLib.Reflection
                         getter = _ => f.GetRawConstantValue();
                         setter = null; // const 字段没有 setter
                         // const 一定是静态字段：生成 Func<TValue>
-                        typedGetter = CreateTypedFieldGetter(f);
-                        typedSetter = null;
+                        TypedGetter = CreateTypedFieldGetter(f);
+                        TypedSetter = null;
                     }
                     else
                     {
                         getter = CreateFieldGetter(f);
                         setter = CreateFieldSetter(f);
                         // 普通字段：Getter/Setter 都生成
-                        typedGetter = CreateTypedFieldGetter(f);
-                        typedSetter = CreateTypedFieldSetter(f);
+                        TypedGetter = CreateTypedFieldGetter(f);
+                        TypedSetter = CreateTypedFieldSetter(f);
                     }
 
                     break;
@@ -118,8 +116,8 @@ namespace JmcModLib.Reflection
                         // 普通 getter/setter 清空
                         getter = null;
                         setter = null;
-                        typedGetter = null;
-                        typedSetter = null;
+                        TypedGetter = null;
+                        TypedSetter = null;
                     }
                     else
                     {
@@ -132,9 +130,9 @@ namespace JmcModLib.Reflection
 
                         // 生成强类型委托
                         if (p.CanRead)
-                            typedGetter = CreateTypedPropertyGetter(p);
+                            TypedGetter = CreateTypedPropertyGetter(p);
                         if (p.CanWrite)
-                            typedSetter = CreateTypedPropertySetter(p);
+                            TypedSetter = CreateTypedPropertySetter(p);
                     }
 
                     break;
@@ -371,9 +369,9 @@ namespace JmcModLib.Reflection
                 throw new ArgumentNullException(nameof(target), $"对于非静态成员 {Name}，target 不能为空");
             if (getter == null)
                 throw new InvalidOperationException($"成员 {Name} 不可读");
-            if (typedGetter is Func<TTarget, TValue> g)
+            if (TypedGetter is Func<TTarget, TValue> g)
                 return g(target);
-            if (IsStatic && typedGetter is Func<TValue> sg)
+            if (IsStatic && TypedGetter is Func<TValue> sg)
                 return sg();
 
             var raw = getter(target);
@@ -391,9 +389,9 @@ namespace JmcModLib.Reflection
                 throw new ArgumentNullException(nameof(target), $"对于非静态成员 {Name}，target 不能为空");
             if (setter == null)
                 throw new InvalidOperationException($"成员 {Name} 不可写");
-            if (typedSetter is Action<TTarget, TValue> s)
+            if (TypedSetter is Action<TTarget, TValue> s)
                 s(target, value);
-            else if (IsStatic && typedSetter is Action<TValue> ss)
+            else if (IsStatic && TypedSetter is Action<TValue> ss)
                 ss(value);
             else
                 setter(target, value);
@@ -408,7 +406,7 @@ namespace JmcModLib.Reflection
                 throw new InvalidOperationException($"成员 {Name} 不是静态成员，不能使用 GetValue<TValue>() 语法");
             if (getter == null)
                 throw new InvalidOperationException($"成员 {Name} 不可读");
-            if (typedGetter is Func<TValue> g)
+            if (TypedGetter is Func<TValue> g)
                 return g();
             var raw = getter(null);
             return raw is null ? default! : (TValue)raw;
@@ -423,7 +421,7 @@ namespace JmcModLib.Reflection
                 throw new InvalidOperationException($"成员 {Name} 不是静态成员，不能使用 SetValue<TValue>(...) 语法");
             if (setter == null)
                 throw new InvalidOperationException($"成员 {Name} 不可写");
-            if (typedSetter is Action<TValue> s)
+            if (TypedSetter is Action<TValue> s)
                 s(value);
             else
                 setter(null, value);

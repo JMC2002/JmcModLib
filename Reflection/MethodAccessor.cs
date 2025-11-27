@@ -85,12 +85,11 @@ namespace JmcModLib.Reflection
         [ThreadStatic] private static object?[]? _defaultArgBuffer;
 
         // 强类型委托 (Func<...>/Action<...>) ，ref/out或者泛型方法不可用
-        private readonly Delegate? _typedDelegate;
         /// <summary>
         /// 若可用，返回强类型委托 (Func/Action)。实例方法第一个参数是声明类型实例；静态方法不含实例参数。
         /// 不支持 ref/out/泛型定义/包含可变参数的方法。
         /// </summary>
-        public Delegate? TypedDelegate => _typedDelegate;
+        public Delegate? TypedDelegate { get; }
 
         private MethodAccessor(MethodInfo method, bool createInvoker = true)
             : base(method)
@@ -121,7 +120,7 @@ namespace JmcModLib.Reflection
                 bool typedOk = !method.IsGenericMethodDefinition && ps.All(p => !p.ParameterType.IsByRef) && ps.All(p => !p.IsOptional);
                 if (typedOk)
                 {
-                    try { _typedDelegate = CreateTypedDelegate(method); } catch { /* 忽略生成失败 */ }
+                    try { TypedDelegate = CreateTypedDelegate(method); } catch { /* 忽略生成失败 */ }
                 }
             }
         }
@@ -142,7 +141,7 @@ namespace JmcModLib.Reflection
         /// 获取强类型委托（若不存在抛异常）
         /// </summary>
         /// <exception cref="InvalidOperationException"></exception>
-        public Delegate GetTypedDelegate() => _typedDelegate ?? throw new InvalidOperationException($"方法 {Name} 没有可用的强类型委托");
+        public Delegate GetTypedDelegate() => TypedDelegate ?? throw new InvalidOperationException($"方法 {Name} 没有可用的强类型委托");
 
         // ============================================================
         //   获取类型的所有方法（含私有 / 实例 / 静态）
@@ -467,7 +466,7 @@ namespace JmcModLib.Reflection
         {
             if (!IsStatic && instance == null)
                 throw new ArgumentNullException(nameof(instance));
-            var td = _typedDelegate;
+            var td = TypedDelegate;
             if (td is Func<TTarget, TResult> f)
                 return f(instance);
             // Fast path 0-param instance method
@@ -488,7 +487,7 @@ namespace JmcModLib.Reflection
         {
             if (!IsStatic && instance == null)
                 throw new ArgumentNullException(nameof(instance));
-            var td = _typedDelegate;
+            var td = TypedDelegate;
             if (td is Func<TTarget, T1, TResult> f)
                 return f(instance, a1);
             if (_fastInvoker1 != null)
@@ -508,7 +507,7 @@ namespace JmcModLib.Reflection
         {
             if (!IsStatic && instance == null)
                 throw new ArgumentNullException(nameof(instance));
-            var td = _typedDelegate;
+            var td = TypedDelegate;
             if (td is Func<TTarget, T1, T2, TResult> f)
                 return f(instance, a1, a2);
             if (_fastInvoker2 != null)
@@ -528,7 +527,7 @@ namespace JmcModLib.Reflection
         {
             if (!IsStatic && instance == null)
                 throw new ArgumentNullException(nameof(instance));
-            var td = _typedDelegate;
+            var td = TypedDelegate;
             if (td is Func<TTarget, T1, T2, T3, TResult> f)
                 return f(instance, a1, a2, a3);
             if (_fastInvoker3 != null)
@@ -548,7 +547,7 @@ namespace JmcModLib.Reflection
         {
             if (!IsStatic && instance == null)
                 throw new ArgumentNullException(nameof(instance));
-            var td = _typedDelegate;
+            var td = TypedDelegate;
             if (td is Action<TTarget> a)
             {
                 a(instance);
@@ -570,7 +569,7 @@ namespace JmcModLib.Reflection
         {
             if (!IsStatic && instance == null)
                 throw new ArgumentNullException(nameof(instance));
-            var td = _typedDelegate;
+            var td = TypedDelegate;
             if (td is Action<TTarget, T1> a)
             {
                 a(instance, a1);
@@ -592,7 +591,7 @@ namespace JmcModLib.Reflection
         {
             if (!IsStatic && instance == null)
                 throw new ArgumentNullException(nameof(instance));
-            var td = _typedDelegate;
+            var td = TypedDelegate;
             if (td is Action<TTarget, T1, T2> a)
             {
                 a(instance, a1, a2);
@@ -614,7 +613,7 @@ namespace JmcModLib.Reflection
         {
             if (!IsStatic && instance == null)
                 throw new ArgumentNullException(nameof(instance));
-            var td = _typedDelegate;
+            var td = TypedDelegate;
             if (td is Action<TTarget, T1, T2, T3> a)
             {
                 a(instance, a1, a2, a3);
@@ -684,7 +683,7 @@ namespace JmcModLib.Reflection
         {
             if (!IsStatic)
                 throw new InvalidOperationException($"方法 {Name} 不是静态方法，不能使用 InvokeStaticVoid()");
-            var td = _typedDelegate;
+            var td = TypedDelegate;
             if (td is Action a)
             {
                 a();
@@ -706,7 +705,7 @@ namespace JmcModLib.Reflection
         {
             if (!IsStatic)
                 throw new InvalidOperationException($"方法 {Name} 不是静态方法，不能使用 InvokeStaticVoid<T1>(...)");
-            var td = _typedDelegate;
+            var td = TypedDelegate;
             if (td is Action<T1> a)
             {
                 a(a1);
@@ -728,7 +727,7 @@ namespace JmcModLib.Reflection
         {
             if (!IsStatic)
                 throw new InvalidOperationException($"方法 {Name} 不是静态方法，不能使用 InvokeStaticVoid<T1,T2>(...)");
-            var td = _typedDelegate;
+            var td = TypedDelegate;
             if (td is Action<T1, T2> a)
             {
                 a(a1, a2);
@@ -750,7 +749,7 @@ namespace JmcModLib.Reflection
         {
             if (!IsStatic)
                 throw new InvalidOperationException($"方法 {Name} 不是静态方法，不能使用 InvokeStaticVoid<T1,T2,T3>(...)");
-            var td = _typedDelegate;
+            var td = TypedDelegate;
             if (td is Action<T1, T2, T3> a)
             {
                 a(a1, a2, a3);
