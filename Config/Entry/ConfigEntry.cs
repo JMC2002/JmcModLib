@@ -120,22 +120,13 @@ namespace JmcModLib.Config.Entry
                 else
                 {
                     ModLogger.Log(lvl, error);
-                    if (method.TypedDelegate is Action<T> change)
-                        action = change;
-                    else
-                        action = v => method.InvokeStaticVoid();
+                    action = method.TypedDelegate is Action<T> change ? change : (v => method.InvokeStaticVoid());
                 }
             }
 
-            if (member.TypedGetter is Func<T> func)
-                getter = func;
-            else
-                getter = () => (T)member.GetValue(null)!;
+            getter = member.TypedGetter is Func<T> func ? func : (() => (T)member.GetValue(null)!);
 
-            if (member.TypedSetter is Action<T> act)
-                setter = act;
-            else
-                setter = value => member.SetValue(value);
+            setter = member.TypedSetter is Action<T> act ? act : (value => member.SetValue(value));
 
             return (getter, setter, action);
         }

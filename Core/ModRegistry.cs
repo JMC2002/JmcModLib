@@ -117,9 +117,7 @@ namespace JmcModLib.Core
             assembly ??= Assembly.GetCallingAssembly();
             if (deferredCompletion)
             {
-                if (RegisterImpl(assembly, info, name, version))
-                    return new RegistryBuilder(assembly);
-                return null;
+                return RegisterImpl(assembly, info, name, version) ? new RegistryBuilder(assembly) : null;
             }
             else
             {

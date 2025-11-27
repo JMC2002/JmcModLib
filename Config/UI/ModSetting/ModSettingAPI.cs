@@ -198,8 +198,7 @@ namespace JmcModLib.Config.UI.ModSetting
         public static bool AddKeybinding(ModInfo modInfo, string key, string description,
         KeyCode keyCode, Action<KeyCode> onValueChange)
         {
-            if (!Available(modInfo, key)) return false;
-            return InvokeMethod(ADD_KEYBINDING,
+            return Available(modInfo, key) && InvokeMethod(ADD_KEYBINDING,
                 ADD_KEYBINDING,
                 new object[] { modInfo, key, description, keyCode, onValueChange },
                 typeof(Action<ModInfo, string, string, KeyCode, Action<KeyCode>>));
@@ -218,8 +217,9 @@ namespace JmcModLib.Config.UI.ModSetting
         public static bool AddKeybinding(ModInfo modInfo, string key, string description,
         KeyCode keyCode, KeyCode defaultKeyCode, Action<KeyCode> onValueChange)
         {
-            if (!Available(modInfo, key)) return false;
-            return InvokeMethod(ADD_KEYBINDING_WITH_DEFAULT,
+            return !Available(modInfo, key)
+                ? false
+                : InvokeMethod(ADD_KEYBINDING_WITH_DEFAULT,
                 ADD_KEYBINDING_WITH_DEFAULT,
                 new object[] { modInfo, key, description, keyCode, defaultKeyCode, onValueChange },
                 typeof(Action<ModInfo, string, string, KeyCode, KeyCode, Action<KeyCode>>));
@@ -238,8 +238,9 @@ namespace JmcModLib.Config.UI.ModSetting
         public static bool AddInput(ModInfo modInfo, string key, string description,
         string defaultValue, int characterLimit = 40, Action<string>? onValueChange = null)
         {
-            if (!Available(modInfo, key)) return false;
-            return InvokeMethod(ADD_INPUT,
+            return !Available(modInfo, key)
+                ? false
+                : InvokeMethod(ADD_INPUT,
                 ADD_INPUT,
                 new object[] { modInfo, key, description, defaultValue, characterLimit, onValueChange! },
                 typeof(Action<ModInfo, string, string, string, int, Action<string>>));
@@ -257,8 +258,9 @@ namespace JmcModLib.Config.UI.ModSetting
         public static bool AddButton(ModInfo modInfo, string key, string description,
         string buttonText = "按钮", Action? onClickButton = null)
         {
-            if (!Available(modInfo, key)) return false;
-            return InvokeMethod(ADD_BUTTON,
+            return !Available(modInfo, key)
+                ? false
+                : InvokeMethod(ADD_BUTTON,
                 ADD_BUTTON,
                 new object[] { modInfo, key, description, buttonText, onClickButton! },
                 typeof(Action<ModInfo, string, string, string, Action>));
@@ -278,8 +280,9 @@ namespace JmcModLib.Config.UI.ModSetting
         public static bool AddGroup(ModInfo modInfo, string key, string description, List<string> keys,
         float scale = 0.7f, bool topInsert = false, bool open = false)
         {
-            if (!Available(modInfo, key)) return false;
-            return InvokeMethod(ADD_GROUP,
+            return !Available(modInfo, key)
+                ? false
+                : InvokeMethod(ADD_GROUP,
                 ADD_GROUP,
                 new object[] { modInfo, key, description, keys, scale, topInsert, open },
                 typeof(Action<ModInfo, string, string, List<string>, float, bool, bool>));
@@ -338,8 +341,7 @@ namespace JmcModLib.Config.UI.ModSetting
         {
             if (!Available(modInfo)) return false;
             MethodInfo? methodInfo = GetStaticPublicMethodInfo(HAS_CONFIG);
-            if (methodInfo == null) return false;
-            return (bool)methodInfo.Invoke(null, new object[] { modInfo });
+            return methodInfo == null ? false : (bool)methodInfo.Invoke(null, new object[] { modInfo });
         }
 
         /// <summary>
@@ -374,8 +376,9 @@ namespace JmcModLib.Config.UI.ModSetting
         /// <returns></returns>
         public static bool RemoveUI(ModInfo modInfo, string key, Action<bool>? callback = null)
         {
-            if (!Available(modInfo, key)) return false;
-            return InvokeMethod(REMOVE_UI,
+            return !Available(modInfo, key)
+                ? false
+                : InvokeMethod(REMOVE_UI,
                 REMOVE_UI,
                 new object[] { modInfo, key, callback! },
                 typeof(Action<ModInfo, string, Action<bool>>));
@@ -476,9 +479,7 @@ namespace JmcModLib.Config.UI.ModSetting
             if (parameterType.IsValueType && Nullable.GetUnderlyingType(parameterType) == providedType)
                 return true;
             // 处理继承关系
-            if (parameterType.IsAssignableFrom(providedType))
-                return true;
-            return false;
+            return parameterType.IsAssignableFrom(providedType);
         }
 
         private static bool InvokeMethod(string cacheKey, string methodName, object[] parameters, Type delegateType,

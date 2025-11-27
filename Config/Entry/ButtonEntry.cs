@@ -21,10 +21,7 @@ namespace JmcModLib.Config.Entry
             if (!UIButtonAttribute.IsValidMethod(method.Member, out var lvl, out var errorMessage))
                 throw new ArgumentException($"方法不符合 UIButtonAttribute 的要求: {errorMessage}");
             ModLogger.Log(lvl, errorMessage);
-            if (method.TypedDelegate is Action action)
-                action1 = action;
-            else
-                action1 = method.InvokeStaticVoid;
+            action1 = method.TypedDelegate is Action action ? action : method.InvokeStaticVoid;
         }
 
         /// <summary>
