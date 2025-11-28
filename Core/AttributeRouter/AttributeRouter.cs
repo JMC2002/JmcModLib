@@ -1,4 +1,5 @@
-﻿using JmcModLib.Reflection;
+﻿using JmcModLib.Dependency;
+using JmcModLib.Reflection;
 using JmcModLib.Utils;
 using System;
 using System.Collections.Concurrent;
@@ -27,6 +28,17 @@ namespace JmcModLib.Core.AttributeRouter
         // Assembly -> Handler -> accessors
         private static readonly ConcurrentDictionary<Assembly, ConcurrentDictionary<IAttributeHandler, List<ReflectionAccessorBase>>> _assemblyHandlerRecords
             = new ConcurrentDictionary<Assembly, ConcurrentDictionary<IAttributeHandler, List<ReflectionAccessorBase>>>();
+
+        /// <summary>
+        /// 当一个 MOD 完成注册后触发。
+        /// 参数：Assembly（唯一标识MOD）（该MOD元信息）
+        /// </summary>
+        internal static event Action<Assembly>? OnRegistered;
+
+        /// <summary>
+        /// 反注册 MOD 时触发。
+        /// </summary>
+        internal static event Action<Assembly>? OnUnRegistered;
 
         private static bool _initialized = false;
         // 初始化：默认和 ModRegistry 绑定（可在程序入口调用一次）
@@ -72,6 +84,7 @@ namespace JmcModLib.Core.AttributeRouter
             {
                 list.Add(handler);
             }
+            ModLogger.Debug($"已注册 handler {handler.GetType().Name} 用于处理 attribute {attrType.Name}");
         }
 
         /// <summary>
@@ -107,6 +120,7 @@ namespace JmcModLib.Core.AttributeRouter
             try
             {
                 ScanAssembly(asm);
+                OnRegistered?.Invoke(asm);
             }
             catch (Exception ex)
             {
@@ -119,6 +133,7 @@ namespace JmcModLib.Core.AttributeRouter
             try
             {
                 UnscanAssembly(asm);
+                OnUnRegistered?.Invoke(asm);
 
                 if (_scannedAssemblies.ContainsKey(asm))
                 {
@@ -155,7 +170,9 @@ namespace JmcModLib.Core.AttributeRouter
             // 1. 扫描类型本身（TypeAccessor）
             foreach (var t in asm.GetTypesSafe())
             {
-                if (!ReflectionAccessorBase.IsSaveOwner(t)) continue;
+                // 这里不应使用 IsSaveOwner（它会过滤掉 internal 类型），否则会导致标记在 internal 类型上的 Attribute 无法被扫描。
+                // 仅排除不支持的类型形态（接口、数组、指针、ByRef、未闭包泛型等），其余类型均应扫描。
+                if (!IsScannableType(t)) continue;
 
                 // Type 本身的 attribute
                 var tacc = TypeAccessor.Get(t);
@@ -250,6 +267,18 @@ namespace JmcModLib.Core.AttributeRouter
                     }
                 }
             }
+        }
+
+        // 仅用于扫描阶段的类型过滤：允许 internal/non-public 类型被扫描
+        private static bool IsScannableType(Type? t)
+        {
+            return t != null
+                   && !t.IsInterface
+                   && !t.IsArray
+                   && !t.IsPointer
+                   && !t.IsByRef
+                   && !t.IsByRefLike
+                   && !t.ContainsGenericParameters;
         }
     }
 

@@ -23,6 +23,7 @@
 using JmcModLib.Config;
 using JmcModLib.Core;
 using JmcModLib.Core.AttributeRouter;
+using JmcModLib.Dependency;
 using JmcModLib.Utils;
 
 namespace JmcModLib
@@ -36,12 +37,13 @@ namespace JmcModLib
         {
             AttributeRouter.Init();
             ModRegistry.Init();
-
+            ModLinker.Init();
             ModLogger.Info("模组已启用");
         }
 
         private void OnDisable()
         {
+            ModLinker.Dispose();
             AttributeRouter.Dispose();
             ModRegistry.Dispose();
             ModLogger.Info("Mod 已禁用，配置已保存");
@@ -54,7 +56,6 @@ namespace JmcModLib
         protected override void OnAfterSetup()
         {
             VersionInfo.modInfo = info;
-            ModRegistry.Init();
             ModRegistry.Register(true, VersionInfo.modInfo, VersionInfo.Name, VersionInfo.Version)?
                        .RegisterLogger(uIFlags: LogConfigUIFlags.All)
                        .RegisterL10n()

@@ -1,5 +1,6 @@
 ﻿using Duckov.Modding;
 using JmcModLib.Core;
+using JmcModLib.Core.AttributeRouter;
 using JmcModLib.Reflection;
 using JmcModLib.Utils;
 using System;
@@ -68,6 +69,8 @@ namespace JmcModLib.Dependency
                 };
                 if (method is null) return;
 
+                ModLogger.Trace($"为{info.name}执行分发");
+
                 object?[] args;
                 if (method.MemberInfo.GetParameters().Length == 2)
                 {
@@ -93,6 +96,8 @@ namespace JmcModLib.Dependency
                 ModLogger.Warn("ModLinker: 已经初始化，忽略重复 Init()");
                 return;
             }
+
+            AttributeRouter.RegisterHandler<ModLinkAttribute>(new ModLinkAttributeHandler());
 
             _onActivatedHandler = CheckerBuilder(ModLinkEvent.Activated);
             _onDeactivatedHandler = CheckerBuilder(ModLinkEvent.Deactivated);
@@ -224,10 +229,18 @@ namespace JmcModLib.Dependency
         private static void Checker(ModInfo info, Duckov.Modding.ModBehaviour behaviour, ModLinkEvent linkEvent)
         {
             var modName = info.name;
-            if (string.IsNullOrWhiteSpace(modName)) return;
+            if (string.IsNullOrWhiteSpace(modName))
+            {
+                return; 
+            }
 
             if (!_modActions.TryGetValue(modName, out var asmMap))
+            {
+                ModLogger.Trace($"没有找到{modName} 的注册事件");
                 return;
+            }
+
+            ModLogger.Trace($"ModLinker: 触发 MOD {modName} 的 {(linkEvent == ModLinkEvent.Activated ? "激活" : "停用")} 回调分发");
 
             // snapshot 当前 asmMap 的键值对，避免并发修改问题
             var snapshot = asmMap.ToArray();
