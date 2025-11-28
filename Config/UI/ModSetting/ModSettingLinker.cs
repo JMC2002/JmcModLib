@@ -1,6 +1,7 @@
 ﻿using Duckov.Modding;
 using JmcModLib.Config.Entry;
 using JmcModLib.Core;
+using JmcModLib.Dependency;
 using JmcModLib.Reflection;
 using JmcModLib.Utils;
 using System;
@@ -38,9 +39,9 @@ namespace JmcModLib.Config.UI.ModSetting
                 ModLogger.Info("未检测到ModSetting或者初始化失败，将会在ModSetting重新上线时尝试初始化");
 
             // 当任意 Mod 启用时尝试与 ModSetting 连接
-            ModManager.OnModActivated += TryInitModSetting;
+            // ModManager.OnModActivated += TryInitModSetting;
             // 当ModSetting离线，清除初始化状态以重新监听重建
-            ModManager.OnModWillBeDeactivated += TryUnInitModSetting;
+            // ModManager.OnModWillBeDeactivated += TryUnInitModSetting;
             ConfigUIManager.OnRegistered += Register;
             // 每当有一个Entry被注册，直接构建
             ConfigUIManager.OnEntryRegistered += BuildEntry;
@@ -57,8 +58,8 @@ namespace JmcModLib.Config.UI.ModSetting
             ConfigUIManager.OnRegistered -= BuildMeta;
             ConfigUIManager.OnEntryRegistered -= BuildEntry;
             ConfigUIManager.OnRegistered -= Register;
-            ModManager.OnModWillBeDeactivated -= TryUnInitModSetting;
-            ModManager.OnModActivated -= TryInitModSetting;
+            // ModManager.OnModWillBeDeactivated -= TryUnInitModSetting;
+            // ModManager.OnModActivated -= TryInitModSetting;
             RemoveAllMod();
             _initialized = false;
         }
@@ -185,6 +186,7 @@ namespace JmcModLib.Config.UI.ModSetting
             TryInitModSetting();
         }
 
+        [ModLink(ModSettingAPI.MOD_NAME, ModLinkEvent.Activated)]
         private static bool TryInitModSetting()
         {
             if (SettingInit // 只初始化一次
@@ -196,6 +198,7 @@ namespace JmcModLib.Config.UI.ModSetting
             return true;
         }
 
+        [ModLink(ModSettingAPI.MOD_NAME, ModLinkEvent.Deactivated)]
         private static void TryUnInitModSetting(ModInfo info, Duckov.Modding.ModBehaviour behaviour)
         {
             ModLogger.Trace($"检测到Mod {info.name}停用");
