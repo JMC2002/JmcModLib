@@ -20,7 +20,9 @@
 /// along with JmcModLib.
 /// If not, see <see href="https://www.gnu.org/licenses/lgpl-3.0.html" />.
 /// </remarks>
+using JmcModLib.Config;
 using JmcModLib.Core;
+using JmcModLib.Core.AttributeRouter;
 using JmcModLib.Utils;
 
 namespace JmcModLib
@@ -30,6 +32,22 @@ namespace JmcModLib
     /// </summary>
     public class ModBehaviour : Duckov.Modding.ModBehaviour
     {
+        private void OnEnable()
+        {
+            AttributeRouter.Init();
+            ModRegistry.Init();
+
+            ModLogger.Info("模组已启用");
+        }
+
+        private void OnDisable()
+        {
+            AttributeRouter.Dispose();
+            ModRegistry.Dispose();
+            ModLogger.Info("Mod 已禁用，配置已保存");
+        }
+
+
         /// <summary>
         /// 在模组设置完成后调用
         /// </summary>
@@ -44,15 +62,5 @@ namespace JmcModLib
             ModLogger.Info("模组已启用");
         }
 
-        private void OnDisable()
-        {
-            ModRegistry.Dispose();
-            ModLogger.Info("Mod 已禁用，配置已保存");
-        }
-
-        private void OnEnable()
-        {
-            ModLogger.Info("模组已启用");
-        }
     }
 }

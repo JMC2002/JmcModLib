@@ -73,12 +73,6 @@
             <param name="storage">继承自IConfigStorage的类</param>
             <param name="asm">默认为调用者asm</param>
         </member>
-        <member name="M:JmcModLib.Config.ConfigManager.RegisterAllInAssembly(System.Reflection.Assembly)">
-            <summary>
-            自动扫描当前 Assembly 内标记了 [Config] 的字段/属性
-            </summary>
-            <param name="asm">默认留空表示扫描当前 Assembly</param>
-        </member>
         <member name="M:JmcModLib.Config.ConfigManager.Unregister(System.Reflection.Assembly)">
             <summary>
             反注册当前 Assembly 内所有配置项，并保存当前值
@@ -430,6 +424,43 @@
         <member name="M:JmcModLib.Config.UI.ConfigUIManager.Register(System.Reflection.Assembly)">
             <summary>
             若ASM存在条目，广播此ASM
+            </summary>
+        </member>
+        <member name="M:JmcModLib.Config.UI.CustomHotkey.CustomHotkeyExample.CustomHotkeyHelper.TryInit">
+            <summary>
+            尝试初始化
+            </summary>
+            <remarks>该方法需要首先调用，用来缓存一些反射用的变量</remarks>
+        </member>
+        <member name="M:JmcModLib.Config.UI.CustomHotkey.CustomHotkeyExample.CustomHotkeyHelper.AddNewHotkey(System.String,UnityEngine.KeyCode,System.String)">
+            <summary>
+            添加新的自定义热键
+            </summary>
+            <param name="saveName">保存的热键名</param>
+            <param name="defaultHotkey">默认热键值</param>
+            <param name="showName">显示的热键名</param>
+        </member>
+        <member name="M:JmcModLib.Config.UI.CustomHotkey.CustomHotkeyExample.CustomHotkeyHelper.RemoveHotkey(System.String)">
+            <summary>
+            移除自定义热键
+            </summary>
+            <param name="saveName">保存的热键名</param>
+        </member>
+        <member name="M:JmcModLib.Config.UI.CustomHotkey.CustomHotkeyExample.CustomHotkeyHelper.GetHotkey(System.String)">
+            <summary>
+            获取自定义按键值
+            </summary>
+            <param name="saveName">保存的热键名</param>
+        </member>
+        <member name="M:JmcModLib.Config.UI.CustomHotkey.CustomHotkeyExample.CustomHotkeyHelper.TryAddEvent2OnCustomHotkeyChangedEvent(System.Action)">
+            <summary>
+            尝试添加当热键修改时的回调
+            </summary>
+            <remarks>多次调用并不会重复添加回调</remarks>
+        </member>
+        <member name="M:JmcModLib.Config.UI.CustomHotkey.CustomHotkeyExample.CustomHotkeyHelper.RemoveEvent2OnCustomHotkeyChangedEvent(System.Action)">
+            <summary>
+            移除当热键修改时的回调
             </summary>
         </member>
         <member name="M:JmcModLib.Config.UI.ModSetting.ModSettingAPI.Init(Duckov.Modding.ModInfo)">
@@ -813,6 +844,52 @@
             从UI层/存储层转回原始数据
             </summary>
         </member>
+        <member name="T:JmcModLib.Core.AttributeRouter.AttributeRouter">
+            <summary>
+            AttributeRouter: 按 Attribute 类型把扫描到的访问器分发到对应 Handler。
+            线程安全，支持按 Assembly 扫描与撤销（若 Handler 支持）。
+            </summary>
+        </member>
+        <member name="M:JmcModLib.Core.AttributeRouter.AttributeRouter.RegisterHandler``1(JmcModLib.Core.AttributeRouter.IAttributeHandler)">
+            <summary>
+            注册一个 handler 用于处理指定 Attribute 类型。重复注册会追加。
+            </summary>
+        </member>
+        <member name="M:JmcModLib.Core.AttributeRouter.AttributeRouter.RegisterHandler``1(System.Action{System.Reflection.Assembly,JmcModLib.Reflection.ReflectionAccessorBase,``0})">
+            <summary>
+            注册一个基于委托的简单 handler。会被包装成 SimpleAttributeHandler。
+            </summary>
+        </member>
+        <member name="M:JmcModLib.Core.AttributeRouter.AttributeRouter.UnregisterHandler(JmcModLib.Core.AttributeRouter.IAttributeHandler)">
+            <summary>
+            取消注册 handler（移除该 handler 对应的所有映射）
+            </summary>
+        </member>
+        <member name="M:JmcModLib.Core.AttributeRouter.AttributeRouter.ScanAssembly(System.Reflection.Assembly)">
+            <summary>
+            扫描 Assembly 中的所有 Type / Method / Member并分发 attribute。
+            如果已扫描过会跳过（幂等）。
+            </summary>
+        </member>
+        <member name="M:JmcModLib.Core.AttributeRouter.AttributeRouter.UnscanAssembly(System.Reflection.Assembly)">
+            <summary>
+            撤销某个 Assembly 的所有 Handler 注册效果（如果 Handler 实现了 IAttributeHandler.Unregister，则会调用）。
+            最后从已扫描集合中移除记录。
+            </summary>
+        </member>
+        <member name="T:JmcModLib.Core.AttributeRouter.SimpleAttributeHandler`1">
+            <summary>
+            简单的基于泛型 Attribute 的实现，使用委托包装 Handle，
+            并且默认不支持 Unregister。
+            </summary>
+        </member>
+        <member name="T:JmcModLib.Core.AttributeRouter.IAttributeHandler">
+            <summary>
+            Handler 的统一接口。
+            - Handle：当 Attribute 被发现时调用。
+            - Unregister：可选，若实现则在 Assembly Unscan 时被调用，参数为 asm 与被处理过的 accessor 列表。
+            </summary>
+        </member>
         <member name="T:JmcModLib.Core.ModRegistry">
             <summary>
             MOD 注册管理器。
@@ -1048,6 +1125,88 @@
             结束注册过程，触发注册完成事件（开始自动扫描配置、按默认值初始化未手动初始化的模块），返回void。
             </summary>
         </member>
+        <member name="T:JmcModLib.Dependency.ModLinkEvent">
+            <summary>
+            标记方法是MOD启用时还是禁用时的回调
+            </summary>
+        </member>
+        <member name="F:JmcModLib.Dependency.ModLinkEvent.Activated">
+            <summary>标记方法在MOD启用时调用 </summary>
+        </member>
+        <member name="F:JmcModLib.Dependency.ModLinkEvent.Deactivated">
+            <summary>标记方法在MOD禁用时调用 </summary>
+        </member>
+        <member name="T:JmcModLib.Dependency.ModLinkAttribute">
+            <summary>
+            标记一个方法在指定MOD启用或禁用时调用
+            </summary>
+        </member>
+        <member name="M:JmcModLib.Dependency.ModLinkAttribute.#ctor(System.String,JmcModLib.Dependency.ModLinkEvent)">
+            <summary>
+            标记一个方法在指定MOD启用或禁用时调用
+            </summary>
+        </member>
+        <member name="P:JmcModLib.Dependency.ModLinkAttribute.Name">
+            <summary>
+            查找的MOD名
+            </summary>
+        </member>
+        <member name="P:JmcModLib.Dependency.ModLinkAttribute.Event">
+            <summary>
+            方法调用的时机
+            </summary>
+        </member>
+        <member name="T:JmcModLib.Dependency.ModLinkAttributeHandler">
+            <summary>
+            负责解析并注册 [ModLink] 标记的方法，让 ModLinker 正确调度。
+            </summary>
+        </member>
+        <member name="P:JmcModLib.Dependency.ModLinkAttributeHandler.Unregister">
+            <summary>
+            当整个 Assembly 注销时，Router 会调用这里执行清理
+            </summary>
+        </member>
+        <member name="T:JmcModLib.Dependency.ModLinker">
+            <summary>
+            当某个 MOD 激活/停用时，执行相关联的操作。
+            现代化、线程安全实现。
+            </summary>
+            <remarks>
+            使用[ModLinker(MODNAME, ModLinkEvent.Activated)]等属性注册回调，回调函数必须是静态方法，参数可以是 (ModInfo info, ModBehaviour behaviour)、(ModInfo info) 或无参数，返回值将被忽略。
+            </remarks>
+        </member>
+        <member name="M:JmcModLib.Dependency.ModLinker.Unregister(System.String,System.Reflection.Assembly)">
+            <summary>
+            移除特定 (modName, asm) 注册。
+            </summary>
+        </member>
+        <member name="M:JmcModLib.Dependency.ModLinker.UnregisterAssembly(System.Reflection.Assembly)">
+            <summary>
+            卸载某个 Assembly（例如 MOD 卸载时调用），清理所有与该 Assembly 相关的注册。
+            </summary>
+        </member>
+        <member name="M:JmcModLib.Dependency.ModLinker.CheckerBuilder(JmcModLib.Dependency.ModLinkEvent)">
+            <summary>
+            构造事件回调（会返回缓存的委托实例供 Init/Dispose 使用）
+            </summary>
+        </member>
+        <member name="M:JmcModLib.Dependency.ModLinker.Checker(Duckov.Modding.ModInfo,Duckov.Modding.ModBehaviour,JmcModLib.Dependency.ModLinkEvent)">
+            <summary>
+            当 ModManager 触发激活/停用事件时调用。
+            注意：遍历时使用 snapshot 以保持线程安全与一致性。
+            </summary>
+        </member>
+        <member name="M:JmcModLib.Dependency.ModLinker.RebuildAssemblyModMap(System.Reflection.Assembly)">
+            <summary>
+            由于 ConcurrentBag 不支持移除单个元素，这里 rebuild 指定 assembly 的 modName 列表。
+            该方法会遍历 _modActions 重新生成该 assembly 的反向映射 Bag（保守重建）。
+            </summary>
+        </member>
+        <member name="M:JmcModLib.Dependency.ModLinker.DumpState">
+            <summary>
+            调试用：导出当前注册状态（小心调用，不要在高频路径使用）。
+            </summary>
+        </member>
         <member name="T:JmcModLib.ModBehaviour">
             <summary>
             入口类
@@ -1073,10 +1232,22 @@
             可写
             </summary>
         </member>
+        <member name="P:JmcModLib.Reflection.MemberAccessor.ValueType">
+            <summary>
+            成员的值类型（字段类型或属性类型）
+            </summary>
+            <remarks>
+            对于字段，返回字段的类型；对于属性，返回属性的类型。
+            不要与 <see cref="P:System.Reflection.MemberInfo.MemberType"/> 混淆，后者返回成员种类（Field/Property）。
+            </remarks>
+        </member>
         <member name="P:JmcModLib.Reflection.MemberAccessor.MemberType">
             <summary>
-            成员数据类型（不是MemberTypes）
+            成员种类（字段、属性或索引器）
             </summary>
+            <remarks>
+            等同于 <see cref="P:System.Reflection.MemberInfo.MemberType"/>，直接暴露以简化访问。
+            </remarks>
         </member>
         <member name="P:JmcModLib.Reflection.MemberAccessor.TypedGetter">
             <summary>
@@ -1204,7 +1375,7 @@
         </member>
         <member name="M:JmcModLib.Reflection.MemberAccessor.GetAll(System.Type,System.Reflection.BindingFlags)">
             <summary>
-            获取某类型的所有方法（可选择包含继承方法）
+            获取某类型的所有成员（可选择包含继承）
             </summary>
         </member>
         <member name="M:JmcModLib.Reflection.MemberAccessor.GetAll``1(System.Reflection.BindingFlags)">
@@ -1486,7 +1657,7 @@
             清空缓存（用于测试或内存管理）
             </summary>
         </member>
-        <member name="P:JmcModLib.Reflection.ReflectionAccessorBase`2.Member">
+        <member name="P:JmcModLib.Reflection.ReflectionAccessorBase`2.MemberInfo">
             <summary>
             底层的 MemberInfo（FieldInfo/PropertyInfo/MethodInfo 等）
             </summary>
@@ -1504,6 +1675,46 @@
         <member name="M:JmcModLib.Reflection.ReflectionAccessorBase`2.GetAttributes(System.Type)">
             <summary>
             获取指定类型的所有 Attribute。如果 type 为 null，返回所有 Attribute。
+            </summary>
+        </member>
+        <member name="T:JmcModLib.Reflection.TypeAccessor">
+            <summary>
+            类型访问器 - 提供对 Type 本身及其成员的统一访问
+            </summary>
+        </member>
+        <member name="P:JmcModLib.Reflection.TypeAccessor.Type">
+            <summary>
+            被访问的类型（等同于 MemberInfo）
+            </summary>
+        </member>
+        <member name="M:JmcModLib.Reflection.TypeAccessor.Get(System.Type)">
+            <summary>
+            获取或创建 TypeAccessor（会缓存）
+            </summary>
+        </member>
+        <member name="M:JmcModLib.Reflection.TypeAccessor.GetAll(System.Reflection.Assembly,System.Reflection.BindingFlags)">
+            <summary>
+            从Asmbly中获取所有TypeAccessor
+            </summary>
+        </member>
+        <member name="M:JmcModLib.Reflection.TypeAccessor.Get``1">
+            <summary>
+            泛型版本（会缓存）
+            </summary>
+        </member>
+        <member name="M:JmcModLib.Reflection.TypeAccessor.CreateInstance">
+            <summary>
+            创建实例（调用无参构造函数）
+            </summary>
+        </member>
+        <member name="M:JmcModLib.Reflection.TypeAccessor.CreateInstance(System.Object[])">
+            <summary>
+            创建实例（带参数）
+            </summary>
+        </member>
+        <member name="M:JmcModLib.Reflection.TypeAccessor.CreateInstance``1">
+            <summary>
+            泛型创建实例
             </summary>
         </member>
         <member name="T:JmcModLib.Utils.ComponentHelper">
@@ -1552,6 +1763,76 @@
             <param name="onComponentFound">待执行的函数</param>
             <param name="info">可选的参数，成功添加的日志信息，如果有传递，会打印到Debug日志中</param>
             <returns></returns>
+        </member>
+        <member name="T:JmcModLib.Utils.ModDependencyResult">
+            <summary>
+            MOD依赖检测结果
+            </summary>
+        </member>
+        <member name="T:JmcModLib.Utils.MethodSignature">
+            <summary>
+            方法签名定义
+            </summary>
+        </member>
+        <member name="T:JmcModLib.Utils.ModDependencyChecker">
+            <summary>
+            MOD依赖检测器 - 通用模块
+            </summary>
+        </member>
+        <member name="M:JmcModLib.Utils.ModDependencyChecker.RequireMethod(System.String,System.Type[],System.Boolean)">
+            <summary>
+            添加必需的方法签名
+            </summary>
+        </member>
+        <member name="M:JmcModLib.Utils.ModDependencyChecker.RequireMethods(JmcModLib.Utils.MethodSignature[])">
+            <summary>
+            批量添加必需的方法
+            </summary>
+        </member>
+        <member name="M:JmcModLib.Utils.ModDependencyChecker.Check">
+            <summary>
+            执行完整检测
+            </summary>
+        </member>
+        <member name="M:JmcModLib.Utils.ModDependencyChecker.IsAvailable">
+            <summary>
+            快速检查是否完全可用
+            </summary>
+        </member>
+        <member name="M:JmcModLib.Utils.ModDependencyChecker.GetMethod(System.String)">
+            <summary>
+            获取已缓存的方法访问器（需先调用Check）
+            </summary>
+        </member>
+        <member name="M:JmcModLib.Utils.ModDependencyChecker.TryInvoke(System.String,System.Object,System.Object@,System.Object[])">
+            <summary>
+            尝试调用方法（自动处理异常）
+            </summary>
+        </member>
+        <member name="M:JmcModLib.Utils.ModDependencyChecker.TryInvokeVoid(System.String,System.Object,System.Object[])">
+            <summary>
+            尝试调用void方法
+            </summary>
+        </member>
+        <member name="M:JmcModLib.Utils.ModDependencyChecker.ResetCache">
+            <summary>
+            重置缓存（用于MOD热重载等场景）
+            </summary>
+        </member>
+        <member name="T:JmcModLib.Utils.ModDependencyExtensions">
+            <summary>
+            使用示例与扩展方法
+            </summary>
+        </member>
+        <member name="M:JmcModLib.Utils.ModDependencyExtensions.CreateModSettingChecker(System.Version)">
+            <summary>
+            创建ModSetting的依赖检测器（预配置版本）
+            </summary>
+        </member>
+        <member name="M:JmcModLib.Utils.ModDependencyExtensions.ForMod(System.String,System.String,System.String)">
+            <summary>
+            创建通用检测器的快捷方法
+            </summary>
         </member>
         <member name="T:JmcModLib.Utils.L10n">
             <summary>

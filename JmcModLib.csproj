@@ -49,8 +49,9 @@
     <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
   </ItemGroup>
   <ItemGroup>
-    <Folder Include="Config\UI\Linker\" />
     <Folder Include="JmcModLib\Lang\" />
+    <Folder Include="FindMod\" />
+    <Folder Include="新文件夹\" />
   </ItemGroup>
 
   <!-- 从版本文件提取版本信息并注入DLL -->

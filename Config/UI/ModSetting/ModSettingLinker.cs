@@ -199,7 +199,7 @@ namespace JmcModLib.Config.UI.ModSetting
         }
 
         [ModLink(ModSettingAPI.MOD_NAME, ModLinkEvent.Deactivated)]
-        private static void TryUnInitModSetting(ModInfo info, Duckov.Modding.ModBehaviour behaviour)
+        private static void TryUnInitModSetting(ModInfo info)
         {
             ModLogger.Trace($"检测到Mod {info.name}停用");
             if (info.name != ModSettingAPI.MOD_NAME || !SettingInit)

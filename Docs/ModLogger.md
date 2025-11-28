@@ -25,7 +25,7 @@ builder.RegistLogger(level: LogLevel.Info,
 ModLogger.Trace("消息");
 ModLogger.Debug("调试信息");
 ModLogger.Info("提示");
-ModLogger.Warn("警告", exception: ex);
+ModLogger.Warn("警告", ex);
 ModLogger.Error("错误", ex);
 ModLogger.Fatal(ex, "致命错误");
 

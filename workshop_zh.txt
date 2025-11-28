@@ -2,7 +2,7 @@
 
 [h1]0. 前言[/h1]
 
-这是一个我个人做MOD时候用到的基础库，把他抽出来作为前置项目依赖方便个人维护，本来很早就动工了，结果越写越大越写越大。
+这是一个我个人做MOD时候用到的基础库，把他抽出来作为前置项目依赖方便个人维护，本来很早就动工了，结果越写越大越写越大。截止发布日，有210个Commit，五千多行代码（无空格）和一千六百多行注释。
 
 [h2]主要亮点[/h2]
 [list]
@@ -17,8 +17,7 @@
 
 [h1]1. 使用方法[/h1]
 
-开发上，在订阅此MOD后在项目 [b].csproj[/b] 添加引入  
-（目前还未上传到创意工坊）
+开发上，在订阅此MOD后在项目 [b].csproj[/b] 添加引入[b]SteamLibrary\steamapps\workshop\content\3167020\3613297900\JmcModLib.dll[/b] 的引用即可：
 
 不过更推荐直接使用模板 [b]csproj[/b] 内容，不仅包含了创意工坊的路径，还包含了一些比较实用的功能，比如：
 
@@ -34,9 +33,7 @@
 [h2]用法速览[/h2]
 
 [h3]注册[/h3]
-在 [b]OnAfterSetup[/b] 后一行  
-[b]ModRegistry.Register(info, name, version)[/b]  
-即可完成注册。
+在 [b]OnAfterSetup[/b] 后一行  [b]ModRegistry.Register(info, name, version)[/b] 即可完成注册。
 
 [h3]使用示例[/h3]
 
@@ -72,18 +69,18 @@ public static float v = 3.14f;
 [h2]2.2 日志工具库[/h2]
 
 [list]
-[*] 提供简单易用的日志系统，可指定等级与TAG  
-[*] 提供日志UI预制件，可在游戏中调节日志等级与格式  
+[*] 提供了一个简单的日志系统，可以方便地为每个打印指定等级，并调整打印等级与TAG格式，以免出现某些MOD那样开发时的调试信息在运行时疯狂刷屏、全删掉又不方便用户报BUG时排查
+[*] 提供了日志配置UI的预制件，默认可以生成一个简单的日志配置UI，可以让用户在游戏中调整日志等级与格式（比如选择是否需要输出时间、方法名之类的）
 [*] 保留以后更换打印后端的扩展能力  
 [/list]
 
 [h2]2.3 反射工具库[/h2]
 
 [list]
-[*] 大幅简化反射调用写法  
-[*] 自动缓存 + 强类型委托，高性能  
+[*] 提供了一些反射库API，极大简化了反射调用的代码量
+[*] 同时提供了更好的性能，Emit自动生成缓存，所有调用者都可以共享缓存，同时对于强类型会自动生成委托，经测试百万次双参数方法调用通用接口（93ms）较原始反射调用（581.37ms）耗时减少83.99%、强类型接口（2.13ms)耗时减少99.6%
 [*] 百万次双参数方法：通用接口 93ms、强类型接口 2.13ms（相较原始反射581ms）  
-[*] 功能齐全，测试覆盖各种边界情况  
+[*] 测试齐全，覆盖各种边界情况；功能齐全，标准库反射能做的都能做
 [/list]
 
 更详细的API说明可查看（需访问GitHub仓库）：
@@ -100,11 +97,11 @@ public static float v = 3.14f;
 
 [list]
 [*] 仅依赖 [b]Newtonsoft.Json 13.0.4[/b]（已内置）  
-[*] 不强依赖UI Mod，但推荐搭配 [b]ModSetting[/b] 获得UI  
-[*] 不修改游戏逻辑，不与MOD冲突  
-[*] 建议排序拉到最高以获得更好体验  
-[*] 观察到「谁偷了我的帧数」会显著拖慢反射性能测试  
-[*] 使用反射拿 API 不依赖加载顺序，但推荐直接依赖此 MOD  
+[*] 本MOD不直接强依赖于任何UI Mod，但是建议配合[url=https://steamcommunity.com/sharedfiles/filedetails/?id=3595729494] ModSetting [/url]使用以获得配置项UI支持
+[*] 本MOD不修改游戏任何代码逻辑，理论上不与任何MOD冲突
+[*] 为获得更好的使用体验，建议将本MOD的排序调到最高
+[*] 过观察，「谁偷了我的帧数」MOD加载的情况下会严重影响强类型委托外的反射调用的性能测试，百万次调用测试耗时达到1s（不过这个数量级应该不会在实际使用中出现）
+[*] 加载顺序上，如果使用反射拿到本MOD的API，可以不依赖加载顺序，不过建议直接强依赖本MOD，并保证本MOD在被依赖MOD之上，本MOD维护的其他Setting UI（暂时只有ModSetting，后续可能看反馈接入ModConfig）不需要处理加载顺序
 [/list]
 
 [h1]4. 其他[/h1]
@@ -125,10 +122,12 @@ public static float v = 3.14f;
 
 [h2]许可证[/h2]
 [list]
-[*] 本MOD采用 [b]LGPL-3.0[/b]  
+[*] 本MOD采用 [b]LGPL-2.1[/b]  
 [/list]
 
-如果有人使用此MOD，欢迎加入群交流反馈（暂未建立）。
+如果有人使用此MOD，欢迎加入群交流反馈：
+[url=http://qm.qq.com/cgi-bin/qm/qr?_wv=1027&k=Kii1sz9bmNmgEgnmsasbKn6h3etgSoQR&authKey=Hni0nbFlbd%2BfDZ1GoklCdtHw4r79SuEsHvz9Pi4qs020w1f8D2DHD8EEnNN1OXo6&noverify=0&group_code=617674584] 点击入群（617674584） [/url]
+
 
 [h1]5. FAQ[/h1]
 
@@ -138,6 +137,7 @@ public static float v = 3.14f;
 [/list]
 
 [h1]6. 最后[/h1]
-
 感谢阅读到这里！  
 如果你觉得本MOD有帮助，欢迎给个Star或提出建议，我会持续改进！  
+
+[url=https://github.com/JMC2002/JmcModLib/settings] 仓库链接 [/url]
