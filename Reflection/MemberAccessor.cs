@@ -26,9 +26,21 @@ namespace JmcModLib.Reflection
         public bool CanWrite => setter != null;
 
         /// <summary>
-        /// 成员数据类型（不是MemberTypes）
+        /// 成员的值类型（字段类型或属性类型）
         /// </summary>
-        public Type MemberType { get; }
+        /// <remarks>
+        /// 对于字段，返回字段的类型；对于属性，返回属性的类型。
+        /// 不要与 <see cref="MemberInfo.MemberType"/> 混淆，后者返回成员种类（Field/Property）。
+        /// </remarks>
+        public Type ValueType { get; }
+
+        /// <summary>
+        /// 成员种类（字段、属性或索引器）
+        /// </summary>
+        /// <remarks>
+        /// 等同于 <see cref="MemberInfo.MemberType"/>，直接暴露以简化访问。
+        /// </remarks>
+        public MemberTypes MemberType => MemberInfo.MemberType;
 
         private readonly Func<object?, object?>? getter;
         private readonly Action<object?, object?>? setter;
@@ -60,7 +72,7 @@ namespace JmcModLib.Reflection
             switch (member)
             {
                 case FieldInfo f:
-                    MemberType = f.FieldType;
+                    ValueType = f.FieldType;
                     IsStatic = f.IsStatic;
 
                     //readonly
@@ -96,7 +108,7 @@ namespace JmcModLib.Reflection
                     var indices = p.GetIndexParameters();
                     bool isIndexer = indices.Length > 0;
 
-                    MemberType = p.PropertyType;
+                    ValueType = p.PropertyType;
                     IsStatic = (p.GetGetMethod(true)?.IsStatic ?? false) ||
                                (p.GetSetMethod(true)?.IsStatic ?? false);
 
@@ -539,7 +551,7 @@ namespace JmcModLib.Reflection
         //   扫描所有成员
         // -------------------------
         /// <summary>
-        /// 获取某类型的所有方法（可选择包含继承方法）
+        /// 获取某类型的所有成员（可选择包含继承）
         /// </summary>
         public static IEnumerable<MemberAccessor> GetAll(Type type, BindingFlags flags = DefaultFlags)
         {

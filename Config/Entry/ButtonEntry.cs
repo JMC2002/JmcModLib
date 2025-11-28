@@ -18,7 +18,7 @@ namespace JmcModLib.Config.Entry
                            string displayName)
             : base(asm, group, displayName)
         {
-            if (!UIButtonAttribute.IsValidMethod(method.Member, out var lvl, out var errorMessage))
+            if (!UIButtonAttribute.IsValidMethod(method.MemberInfo, out var lvl, out var errorMessage))
                 throw new ArgumentException($"方法不符合 UIButtonAttribute 的要求: {errorMessage}");
             ModLogger.Log(lvl, errorMessage);
             action1 = method.TypedDelegate is Action action ? action : method.InvokeStaticVoid;

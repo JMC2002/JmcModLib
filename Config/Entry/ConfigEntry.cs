@@ -115,7 +115,7 @@ namespace JmcModLib.Config.Entry
 
             if (method != null)
             {
-                if (!ConfigAttribute.IsValidMethod(method.Member, typeof(T), out var lvl, out var error))
+                if (!ConfigAttribute.IsValidMethod(method.MemberInfo, typeof(T), out var lvl, out var error))
                     throw new ArgumentException($"构造{member.Name}出错: {error}");
                 else
                 {

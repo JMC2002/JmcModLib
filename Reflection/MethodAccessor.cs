@@ -70,7 +70,7 @@ namespace JmcModLib.Reflection
         /// <summary>
         /// 是否为静态
         /// </summary>
-        public override bool IsStatic => Member.IsStatic;
+        public override bool IsStatic => MemberInfo.IsStatic;
 
         // 允许为 null（当这是一个泛型定义尚未闭包时）
         private readonly Func<object?, object?[], object?>? _invoker;
@@ -334,10 +334,10 @@ namespace JmcModLib.Reflection
         /// </summary>
         public MethodAccessor MakeGeneric(params Type[] genericTypes)
         {
-            if (!Member.IsGenericMethodDefinition)
+            if (!MemberInfo.IsGenericMethodDefinition)
                 throw new InvalidOperationException("该方法不是泛型方法定义");
 
-            var constructed = Member.MakeGenericMethod(genericTypes);
+            var constructed = MemberInfo.MakeGenericMethod(genericTypes);
             return Get(constructed);
         }
 
@@ -360,7 +360,7 @@ namespace JmcModLib.Reflection
             // -------------------------
             // 补齐默认参数
             // -------------------------
-            var ps = Member.GetParameters();
+            var ps = MemberInfo.GetParameters();
 
             // 如果用户传入的参数不足，则自动补齐默认值
             if (args.Length < ps.Length)

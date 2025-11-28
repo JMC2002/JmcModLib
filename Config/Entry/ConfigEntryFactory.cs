@@ -111,13 +111,13 @@ namespace JmcModLib.Config.Entry
         {
             if (uiAttr is not null and UINeedCovertAttribute covAttr)
             {
-                var memberType = acc.MemberType;
+                var memberType = acc.ValueType;
                 var closed = CreateTypedWithConvertMethod.MakeGeneric(covAttr.UIType, memberType);
                 return (ConfigEntry)closed.Invoke(null, asm, acc, method, attr, covAttr)!;
             }
             else
             {
-                var memberType = acc.MemberType;
+                var memberType = acc.ValueType;
                 var closed = CreateTypedMethod.MakeGeneric(memberType);
                 return (ConfigEntry)closed.Invoke(null, asm, acc, method, attr, memberType, uiAttr)!;
             }

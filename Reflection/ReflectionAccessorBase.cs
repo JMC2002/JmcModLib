@@ -125,18 +125,18 @@ namespace JmcModLib.Reflection
         /// <summary>
         /// 底层的 MemberInfo（FieldInfo/PropertyInfo/MethodInfo 等）
         /// </summary>
-        public TMemberInfo Member { get; } = member
+        public TMemberInfo MemberInfo { get; } = member
                                           ?? throw new ArgumentNullException(nameof(member), "member 不能为 null");
 
         /// <summary>
         /// 成员名称
         /// </summary>
-        public override string Name => Member.Name;
+        public override string Name => MemberInfo.Name;
 
         /// <summary>
         /// 声明该成员的类型
         /// </summary>
-        public override Type DeclaringType => Member.DeclaringType!;
+        public override Type DeclaringType => MemberInfo.DeclaringType!;
 
 
         // =============================================
@@ -154,12 +154,12 @@ namespace JmcModLib.Reflection
                 if (t == typeof(object))
                 {
                     // 获取所有 attribute
-                    return [.. Member.GetCustomAttributes(inherit: true).Cast<Attribute>()];
+                    return [.. MemberInfo.GetCustomAttributes(inherit: true).Cast<Attribute>()];
                 }
                 else
                 {
                     // 获取特定类型
-                    return [.. Member.GetCustomAttributes(t, inherit: true).Cast<Attribute>()];
+                    return [.. MemberInfo.GetCustomAttributes(t, inherit: true).Cast<Attribute>()];
                 }
             });
         }
