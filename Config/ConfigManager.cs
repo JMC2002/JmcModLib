@@ -2,6 +2,7 @@
 using JmcModLib.Config.Storage;
 using JmcModLib.Config.UI;
 using JmcModLib.Core;
+using JmcModLib.Core.AttributeRouter;
 using JmcModLib.Reflection;
 using JmcModLib.Utils;
 using System;
@@ -72,73 +73,18 @@ namespace JmcModLib.Config
         internal static void Init()
         {
             ConfigUIManager.Init();
-            ModRegistry.OnRegistered += RegisterAllInAssembly; // 尝试自动注册ASM
+            // ModRegistry.OnRegistered += RegisterAllInAssembly; // 尝试自动注册ASM
             ModRegistry.OnUnRegistered += Unregister; // 尝试自动反注册ASM
+            AttributeRouter.RegisterHandler<ConfigAttribute>(new ConfigAttributeHandler());
+            AttributeRouter.RegisterHandler<UIButtonAttribute>(new UIButtonAttributeHandler());
         }
 
         internal static void Dispose()
         {
-            ModRegistry.OnRegistered -= RegisterAllInAssembly;
+            // ModRegistry.OnRegistered -= RegisterAllInAssembly;
             ModRegistry.OnUnRegistered -= Unregister;
             ConfigUIManager.Dispose();
             UnregisterAll();
-        }
-
-        /// <summary>
-        /// 自动扫描当前 Assembly 内标记了 [Config] 的字段/属性
-        /// </summary>
-        /// <param name="asm">默认留空表示扫描当前 Assembly</param>
-        public static void RegisterAllInAssembly(Assembly? asm = null)
-        {
-            asm ??= Assembly.GetCallingAssembly();
-            if (hadScan.Contains(asm))
-            {
-                ModLogger.Debug("跳过重复扫描程序集 " + ModRegistry.GetTag(asm) + " 的配置项。");
-                return;
-            }
-            hadScan.Add(asm);
-
-            foreach (var type in asm.GetTypes())
-            {
-                try
-                {
-                    if (type.ContainsGenericParameters)                                    // 跳过开放泛型类型
-                        continue;
-
-                    foreach (var acc in MethodAccessor.GetAll(type))
-                    {
-                        if (!acc.HasAttribute<UIButtonAttribute>())
-                            continue;
-
-                        // 使用 UIButtonAttribute 的验证函数
-                        var methodInfo = acc.Member;
-
-                        var attr = acc.GetAttribute<UIButtonAttribute>()!;
-                        var entry = new ButtonEntry(asm, acc, attr.Group, attr.Description);
-                        ConfigUIManager.RegisterEntry(entry, attr);
-                    }
-
-                    foreach (var acc in MemberAccessor.GetAll(type))
-                    {
-                        if (!acc.HasAttribute<ConfigAttribute>())   // 仅处理标记了 ConfigAttribute 的成员
-                            continue;
-
-                        var entry = BuildConfigEntry(asm, type, acc);
-                        if (entry == null!)  // 验证失败，跳过
-                            continue;
-
-                        ModLogger.Trace($"{ModRegistry.GetTag(asm)}发现配置项: {type.FullName}.{acc.Name}, key 为: {entry.Key}");
-                    }
-                }
-                catch (Exception ex)
-                {
-                    ModLogger.Error($"扫描类型 {type.FullName} 时发生异常", ex);
-                }
-            }
-
-            // 由于现在要给每个 ASM 注册元信息配置，就不判断是否扫出来配置项了
-            OnRegistered?.Invoke(asm);
-            ModLogger.Info($"{ModRegistry.GetTag(asm)}注册配置成功!");
         }
 
         internal static void RegisterEntry(ConfigEntry entry)
@@ -168,10 +114,8 @@ namespace JmcModLib.Config
             entry.SyncFromFile();
         }
 
-        private static ConfigEntry? BuildConfigEntry(Assembly asm, Type type, MemberAccessor acc)
+        internal static ConfigEntry? BuildConfigEntry(Assembly asm, Type type, MemberAccessor acc, ConfigAttribute attr)
         {
-            var attr = acc.GetAttribute<ConfigAttribute>()!;
-
             MethodAccessor? onChangedMethod = null;
             // OnChanged 方法验证
             if (!string.IsNullOrEmpty(attr.OnChanged))
@@ -189,7 +133,7 @@ namespace JmcModLib.Config
                     // 注册任务，等待后续生成
                     if (!uiAttr.IsValid(entry))
                     {
-                        ModLogger.Error($"字段/属性 {entry.Key} 类型为 {acc.MemberType} 与 UIAttribute {uiAttr.GetType().Name} 要求不匹配或值不合法");
+                        ModLogger.Error($"字段/属性 {entry.Key} 类型为 {acc.ValueType} 与 UIAttribute {uiAttr.GetType().Name} 要求不匹配或值不合法");
                     }
                     else
                     {
