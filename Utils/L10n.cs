@@ -191,6 +191,35 @@ namespace JmcModLib.Utils
         }
 
         /// <summary>
+        /// 获取带格式化占位符的本地化文本
+        /// 使用 string.Format(key, args)
+        /// </summary>
+        public static string GetFormat(string key, Assembly? assembly = null, params object[] args)
+        {
+            assembly ??= Assembly.GetCallingAssembly();
+
+            // 先拿到原始文本（已包含 fallback 机制）
+            string raw = Get(key, assembly);
+
+            // 格式化处理
+            try
+            {
+                return string.Format(raw, args);
+            }
+            catch (Exception ex)
+            {
+                ModLogger.Warn($"本地化格式化失败：key={key}, value=\"{raw}\"", ex);
+                return raw;    // 出错则返回未格式化版本
+            }
+        }
+
+        /// <summary>
+        /// 简写版（推荐）
+        /// </summary>
+        public static string GetF(string key, Assembly? assembly = null, params object[] args)
+            => GetFormat(key, assembly ?? Assembly.GetCallingAssembly(), args);
+
+        /// <summary>
         /// 当游戏语言切换时自动更新
         /// </summary>
         private static void OnLanguageChanged(SystemLanguage newLang)
