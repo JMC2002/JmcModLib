@@ -253,6 +253,7 @@ namespace JmcModLib.Core.AttributeRouter
                 {
                     try
                     {
+                        ModLogger.Trace($"尝试将 attribute {at.Name} 分发给 handler {h.GetType().Name} 处理");
                         // 执行 handler
                         h.Handle(asm, acc, attr);
 

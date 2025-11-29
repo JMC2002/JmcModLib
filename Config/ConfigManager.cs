@@ -419,11 +419,36 @@ namespace JmcModLib.Config
         /// <param name="setter"> 维护的值的setter，用户若需要在代码中改值，最好使用GetValue(key)，但直接修改自己的值也会在最后保存文件时同步保存，只是不能同步UI </param>
         /// <param name="group"> 值所在的组，若不需要分组则留空 </param>
         /// <param name="asm"> 注册的程序集，留空则为调用者本身 </param>
-        /// <param name="l10nAsm"> 本地化指定的程序集，留空则与主程序集相同 </param>
+        /// 
         /// <returns> 返回配置项的Key，可以通过GetValue/SetValue函数查询系统内的值 </returns>
         public static string RegisterConfig<T>(string displayName, Func<T> getter, Action<T> setter,
-                                               string group = ConfigAttribute.DefaultGroup, Assembly? asm = null, Assembly? l10nAsm = null)
-            => RegisterConfigImpl(asm ?? Assembly.GetCallingAssembly(), displayName, getter(), getter, setter, null, group, null, l10nAsm ?? Assembly.GetCallingAssembly());
+                                               string group = ConfigAttribute.DefaultGroup, Assembly? asm = null)
+            => RegisterConfigImpl(asm ?? Assembly.GetCallingAssembly(), displayName, getter(), getter, setter, null, group, null, asm ?? Assembly.GetCallingAssembly());
+
+        /// <summary>
+        /// 通过形如 `() => ClassName.StaticName / () => InstanceName.FieldName` 的表达式注册一个配置项，字段/属性/静态/实例均可。不绑定任何UI，仅用于持久化
+        /// </summary>
+        /// <remarks> 可为实例对象，但应当自行维护生命周期，保证自注册至MOD卸载期间不被销毁。 </remarks>
+        /// <typeparam name="T"> 注册的值的类型 </typeparam>
+        /// <param name="displayName"> 用作在持久化文本中的条目名称 </param>
+        /// <param name="expr"> 形如 `() => ClassName.StaticName / () => InstanceName.FieldName` 的表达式 </param>
+        /// <param name="group"> 值所在的组，若不需要分组则留空 </param>
+        /// <param name="asm"> 注册的程序集，留空则为调用者本身 </param>
+        /// <returns> 返回配置项的Key，可以通过GetValue/SetValue函数查询系统内的值 </returns>
+        public static string RegisterConfig<T>(string displayName, Expression<Func<T>> expr,
+                                               string group = ConfigAttribute.DefaultGroup, Assembly? asm = null)
+        {
+            try
+            {
+                asm ??= Assembly.GetCallingAssembly();
+                var (getter, setter) = ExprHelper.GetOrCreateAccessors(expr);
+                return RegisterConfigImpl(asm, displayName, getter(), getter, setter, null, group, null, asm);
+            }
+            catch (Exception ex)
+            {
+                throw new ArgumentException($"{ModRegistry.GetTag(asm)}: 注册条目 {displayName} 时出现问题", ex);
+            }
+        }
 
         /// <summary>
         /// 通过getter/setter 注册一个配置项。

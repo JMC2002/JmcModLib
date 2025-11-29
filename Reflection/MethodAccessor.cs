@@ -231,7 +231,7 @@ namespace JmcModLib.Reflection
         /// </summary>
         /// <param name="type"> 类类型 </param>
         /// <param name="methodName"> 方法名 </param>
-        /// <param name="parameterTypes"> 方法的参数列表类型，泛型位将跳过，不填则默认找第一个（在有多个重载的情况下） </param>
+        /// <param name="parameterTypes"> 方法的参数列表类型，泛型位将跳过（可以用typeof(object)或者别的什么占位，但不能填null），不填则默认找第一个（在有多个重载的情况下） </param>
         /// <returns> 返回一个MethodAccessor，若是泛型方法，需要进一步Make，否则可以直接invoke </returns>
         /// <exception cref="MissingMethodException"></exception>
         public static MethodAccessor Get(Type type, string methodName, Type[]? parameterTypes = null)

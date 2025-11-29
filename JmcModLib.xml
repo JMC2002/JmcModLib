@@ -153,7 +153,7 @@
             通过值注册单条配置信息的实现
             </summary>
         </member>
-        <member name="M:JmcModLib.Config.ConfigManager.RegisterConfig``1(System.String,System.Func{``0},System.Action{``0},System.String,System.Reflection.Assembly,System.Reflection.Assembly)">
+        <member name="M:JmcModLib.Config.ConfigManager.RegisterConfig``1(System.String,System.Func{``0},System.Action{``0},System.String,System.Reflection.Assembly)">
             <summary>
             仅注册配置项，不绑定任何UI，仅用于持久化
             </summary>
@@ -164,7 +164,19 @@
             <param name="setter"> 维护的值的setter，用户若需要在代码中改值，最好使用GetValue(key)，但直接修改自己的值也会在最后保存文件时同步保存，只是不能同步UI </param>
             <param name="group"> 值所在的组，若不需要分组则留空 </param>
             <param name="asm"> 注册的程序集，留空则为调用者本身 </param>
-            <param name="l10nAsm"> 本地化指定的程序集，留空则与主程序集相同 </param>
+            
+            <returns> 返回配置项的Key，可以通过GetValue/SetValue函数查询系统内的值 </returns>
+        </member>
+        <member name="M:JmcModLib.Config.ConfigManager.RegisterConfig``1(System.String,System.Linq.Expressions.Expression{System.Func{``0}},System.String,System.Reflection.Assembly)">
+            <summary>
+            通过形如 `() => ClassName.StaticName / () => InstanceName.FieldName` 的表达式注册一个配置项，字段/属性/静态/实例均可。不绑定任何UI，仅用于持久化
+            </summary>
+            <remarks> 可为实例对象，但应当自行维护生命周期，保证自注册至MOD卸载期间不被销毁。 </remarks>
+            <typeparam name="T"> 注册的值的类型 </typeparam>
+            <param name="displayName"> 用作在持久化文本中的条目名称 </param>
+            <param name="expr"> 形如 `() => ClassName.StaticName / () => InstanceName.FieldName` 的表达式 </param>
+            <param name="group"> 值所在的组，若不需要分组则留空 </param>
+            <param name="asm"> 注册的程序集，留空则为调用者本身 </param>
             <returns> 返回配置项的Key，可以通过GetValue/SetValue函数查询系统内的值 </returns>
         </member>
         <member name="M:JmcModLib.Config.ConfigManager.RegisterConfig``1(JmcModLib.Config.UI.UIConfigAttribute{``0},System.String,System.Func{``0},System.Action{``0},System.String,System.Action{``0},System.Reflection.Assembly,System.Reflection.Assembly)">
@@ -1481,7 +1493,7 @@
             </summary>
             <param name="type"> 类类型 </param>
             <param name="methodName"> 方法名 </param>
-            <param name="parameterTypes"> 方法的参数列表类型，泛型位将跳过，不填则默认找第一个（在有多个重载的情况下） </param>
+            <param name="parameterTypes"> 方法的参数列表类型，泛型位将跳过（可以用typeof(object)或者别的什么占位，但不能填null），不填则默认找第一个（在有多个重载的情况下） </param>
             <returns> 返回一个MethodAccessor，若是泛型方法，需要进一步Make，否则可以直接invoke </returns>
             <exception cref="T:System.MissingMethodException"></exception>
         </member>

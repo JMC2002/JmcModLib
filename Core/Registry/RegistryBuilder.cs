@@ -106,7 +106,7 @@ namespace JmcModLib.Core
                                                string group = ConfigAttribute.DefaultGroup,
                                                Assembly? l10nAsm = null)
         {
-            key = ConfigManager.RegisterConfig(displayName, getter, setter, group, _assembly, l10nAsm ?? Assembly.GetCallingAssembly());
+            key = ConfigManager.RegisterConfig(displayName, getter, setter, group, _assembly);
             return this;
         }
 
