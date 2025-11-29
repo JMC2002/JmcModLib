@@ -6,7 +6,6 @@ using JmcModLib.Utils;
 using System;
 using System.Collections.Concurrent;
 using System.Reflection;
-using UnityEngine.UIElements;
 
 namespace JmcModLib.Dependency
 {
@@ -231,7 +230,7 @@ namespace JmcModLib.Dependency
             var modName = info.name;
             if (string.IsNullOrWhiteSpace(modName))
             {
-                return; 
+                return;
             }
 
             if (!_modActions.TryGetValue(modName, out var asmMap))

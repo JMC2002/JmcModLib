@@ -272,7 +272,7 @@ namespace JmcModLib.Config.UI.ModSetting
                 RemoveUI(asm);
             }
         }
-        
+
         private static void RemoveAllMod()
         {
             foreach (var asm in initialized.Keys.ToList())  // ToList 存快照

@@ -1,14 +1,11 @@
 ﻿using Duckov.Modding;
-using JmcModLib.Config;
 using JmcModLib.Core;
 using JmcModLib.Core.AttributeRouter;
 using JmcModLib.Reflection;
 using JmcModLib.Utils;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Reflection;
-using System.Text;
 
 namespace JmcModLib.Dependency
 {
@@ -78,7 +75,7 @@ namespace JmcModLib.Dependency
             }
 
             var mi = method.MemberInfo;
-            
+
 
             Action call;
 

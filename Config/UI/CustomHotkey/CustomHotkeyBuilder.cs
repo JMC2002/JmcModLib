@@ -1,13 +1,9 @@
 ﻿using Duckov.Modding;
 using JmcModLib.Config.Entry;
-using JmcModLib.Config.UI.ModSetting;
 using JmcModLib.Core;
 using JmcModLib.Utils;
-using System;
-using System.Collections.Generic;
 using System.Reflection;
 using System.Runtime.CompilerServices;
-using System.Text;
 using UnityEngine;
 
 namespace JmcModLib.Config.UI.CustomHotkey
@@ -42,11 +38,7 @@ namespace JmcModLib.Config.UI.CustomHotkey
             //                            entry.GetTypedValue(),
             //                            entry.SetTypedValue);
             CustomHotkeyHelper.SetKey(info.name, entry.Key, entry.GetTypedValue());
-            CustomHotkeyHelper.TryAddEvent2OnCustomHotkeyChangedEvent(info.name, () =>
-            {
-
-                entry.SyncFromData();
-            });
+            CustomHotkeyHelper.TryAddEvent2OnCustomHotkeyChangedEvent(info.name, entry.SyncFromData);
         }
     }
 }

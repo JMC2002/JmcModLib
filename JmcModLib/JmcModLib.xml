@@ -131,7 +131,7 @@
             <param name="value">新的值</param>
             <param name="asm">指定程序集，留空则为调用者</param>
         </member>
-        <member name="M:JmcModLib.Config.ConfigManager.RegisterButton(System.String,System.Action,System.String,System.String,System.Reflection.Assembly)">
+        <member name="M:JmcModLib.Config.ConfigManager.RegisterButton(System.String,System.Action,System.String,System.String,System.Reflection.Assembly,System.Reflection.Assembly)">
             <summary>
             注册一个按钮，相关文本将自动调用本地化文件
             </summary>
@@ -140,19 +140,20 @@
             <param name="buttonText"> 按钮上的文本 </param>
             <param name="group"> 按钮所在的组，留空为默认 </param>
             <param name="asm"> 注册的Assembly集，留空为调用者 </param>
+            <param name="l10nAssembly"> 本地化指定的程序集，留空则与主程序集相同 </param>
             <returns> 返回按钮的Key </returns>
         </member>
-        <member name="M:JmcModLib.Config.ConfigManager.RegisterConfigImpl``1(System.Reflection.Assembly,System.String,``0,System.Func{``0},System.Action{``0},JmcModLib.Config.UI.UIConfigAttribute,System.String,System.Action{``0})">
+        <member name="M:JmcModLib.Config.ConfigManager.RegisterConfigImpl``1(System.Reflection.Assembly,System.String,``0,System.Func{``0},System.Action{``0},JmcModLib.Config.UI.UIConfigAttribute,System.String,System.Action{``0},System.Reflection.Assembly)">
             <summary>
             通过对象注册单条配置信息的实现
             </summary>
         </member>
-        <member name="M:JmcModLib.Config.ConfigManager.RegisterConfigImpl``1(System.Reflection.Assembly,System.String,``0,System.String,JmcModLib.Config.UI.UIConfigAttribute,System.Action{``0})">
+        <member name="M:JmcModLib.Config.ConfigManager.RegisterConfigImpl``1(System.Reflection.Assembly,System.String,``0,System.String,JmcModLib.Config.UI.UIConfigAttribute,System.Action{``0},System.Reflection.Assembly)">
             <summary>
             通过值注册单条配置信息的实现
             </summary>
         </member>
-        <member name="M:JmcModLib.Config.ConfigManager.RegisterConfig``1(System.String,System.Func{``0},System.Action{``0},System.String,System.Reflection.Assembly)">
+        <member name="M:JmcModLib.Config.ConfigManager.RegisterConfig``1(System.String,System.Func{``0},System.Action{``0},System.String,System.Reflection.Assembly,System.Reflection.Assembly)">
             <summary>
             仅注册配置项，不绑定任何UI，仅用于持久化
             </summary>
@@ -163,9 +164,10 @@
             <param name="setter"> 维护的值的setter，用户若需要在代码中改值，最好使用GetValue(key)，但直接修改自己的值也会在最后保存文件时同步保存，只是不能同步UI </param>
             <param name="group"> 值所在的组，若不需要分组则留空 </param>
             <param name="asm"> 注册的程序集，留空则为调用者本身 </param>
+            <param name="l10nAsm"> 本地化指定的程序集，留空则与主程序集相同 </param>
             <returns> 返回配置项的Key，可以通过GetValue/SetValue函数查询系统内的值 </returns>
         </member>
-        <member name="M:JmcModLib.Config.ConfigManager.RegisterConfig``1(JmcModLib.Config.UI.UIConfigAttribute{``0},System.String,System.Func{``0},System.Action{``0},System.String,System.Action{``0},System.Reflection.Assembly)">
+        <member name="M:JmcModLib.Config.ConfigManager.RegisterConfig``1(JmcModLib.Config.UI.UIConfigAttribute{``0},System.String,System.Func{``0},System.Action{``0},System.String,System.Action{``0},System.Reflection.Assembly,System.Reflection.Assembly)">
             <summary>
             通过getter/setter 注册一个配置项。
             </summary>
@@ -178,9 +180,10 @@
             <param name="group"> 值所在的组，若不需要分组则留空 </param>
             <param name="action"> 若需注册UI且需要额外的回调函数，则填入，若不需要则留空，此处禁止调用ConfigManager的SetVal </param>
             <param name="asm"> 注册的程序集，留空则为调用者本身 </param>
+            <param name="l10nAsm"> 本地化指定的程序集，留空则与主程序集相同 </param>
             <returns> 返回配置项的Key，可以通过GetValue/SetValue函数查询系统内的值 </returns>
         </member>
-        <member name="M:JmcModLib.Config.ConfigManager.RegisterConfig``1(JmcModLib.Config.UI.UIDropdownAttribute,System.String,System.Func{``0},System.Action{``0},System.String,System.Action{``0},System.Reflection.Assembly)">
+        <member name="M:JmcModLib.Config.ConfigManager.RegisterConfig``1(JmcModLib.Config.UI.UIDropdownAttribute,System.String,System.Func{``0},System.Action{``0},System.String,System.Action{``0},System.Reflection.Assembly,System.Reflection.Assembly)">
             <summary>
             通过枚举值注册一个下拉列表，将自动从枚举值生成下拉列表。
             </summary>
@@ -192,9 +195,10 @@
             <param name="group"> 值所在的组，若不需要分组则留空 </param>
             <param name="action"> 若需注册UI且需要额外的回调函数，则填入，若不需要则留空，此处禁止调用ConfigManager的SetVal </param>
             <param name="asm"> 注册的程序集，留空则为调用者本身 </param>
+            <param name="l10nAsm"> 本地化指定的程序集，留空则与主程序集相同 </param>
             <returns> 返回配置项的Key，可以通过GetValue/SetValue函数查询系统内的值 </returns>
         </member>
-        <member name="M:JmcModLib.Config.ConfigManager.RegisterConfig``1(JmcModLib.Config.UI.UIConfigAttribute{``0},System.String,``0,System.String,System.Action{``0},System.Reflection.Assembly)">
+        <member name="M:JmcModLib.Config.ConfigManager.RegisterConfig``1(JmcModLib.Config.UI.UIConfigAttribute{``0},System.String,``0,System.String,System.Action{``0},System.Reflection.Assembly,System.Reflection.Assembly)">
             <summary>
             直接通过非空值注册一个配置项，由此MOD自行维护该值的生命周期，可通过 GetValue/SetValue 查询修改。
             </summary>
@@ -205,9 +209,10 @@
             <param name="group"> 值所在的组，若不需要分组则留空 </param>
             <param name="action"> 若需注册UI且需要额外的回调函数，则填入，若不需要则留空，此处禁止调用ConfigManager的SetVal </param>
             <param name="asm"> 注册的程序集，留空则为调用者本身 </param>
+            <param name="l10nAsm"> 本地化指定的程序集，留空则与主程序集相同 </param>
             <returns> 返回配置项的Key，可以通过GetValue/SetValue函数查询系统内的值 </returns>
         </member>
-        <member name="M:JmcModLib.Config.ConfigManager.RegisterConfig``1(JmcModLib.Config.UI.UIDropdownAttribute,System.String,``0,System.String,System.Action{``0},System.Reflection.Assembly)">
+        <member name="M:JmcModLib.Config.ConfigManager.RegisterConfig``1(JmcModLib.Config.UI.UIDropdownAttribute,System.String,``0,System.String,System.Action{``0},System.Reflection.Assembly,System.Reflection.Assembly)">
             <summary>
             用一个非空枚举值生成下拉列表注册一个配置项，由此MOD自行维护该值的生命周期，可通过 GetValue/SetValue 查询修改。
             </summary>
@@ -218,9 +223,10 @@
             <param name="group"> 值所在的组，若不需要分组则留空 </param>
             <param name="action"> 若需注册UI且需要额外的回调函数，则填入，若不需要则留空，此处禁止调用ConfigManager的SetVal </param>
             <param name="asm"> 注册的程序集，留空则为调用者本身 </param>
+            <param name="l10nAsm"> 本地化指定的程序集，留空则与主程序集相同 </param>
             <returns> 返回配置项的Key，可以通过GetValue/SetValue函数查询系统内的值 </returns>
         </member>
-        <member name="M:JmcModLib.Config.ConfigManager.RegisterConfig``1(JmcModLib.Config.UI.UIConfigAttribute{``0},System.String,System.Linq.Expressions.Expression{System.Func{``0}},System.String,System.Action{``0},System.Reflection.Assembly)">
+        <member name="M:JmcModLib.Config.ConfigManager.RegisterConfig``1(JmcModLib.Config.UI.UIConfigAttribute{``0},System.String,System.Linq.Expressions.Expression{System.Func{``0}},System.String,System.Action{``0},System.Reflection.Assembly,System.Reflection.Assembly)">
             <summary>
             通过形如 `() => ClassName.StaticName / () => InstanceName.FieldName` 的表达式注册一个配置项，字段/属性/静态/实例均可。
             </summary>
@@ -232,10 +238,11 @@
             <param name="group"> 值所在的组，若不需要分组则留空 </param>
             <param name="action"> 若需注册UI且需要额外的回调函数，则填入，若不需要则留空，此处禁止调用ConfigManager的SetVal </param>
             <param name="asm"> 注册的程序集，留空则为调用者本身 </param>
+            <param name="l10nAsm"> 本地化指定的程序集，留空则与主程序集相同 </param>
             <returns> 返回配置项的Key，可以通过GetValue/SetValue函数查询系统内的值 </returns>
             <exception cref="T:System.ArgumentException"> 传递的表达式不合法 </exception>
         </member>
-        <member name="M:JmcModLib.Config.ConfigManager.RegisterConfig``1(JmcModLib.Config.UI.UIDropdownAttribute,System.String,System.Linq.Expressions.Expression{System.Func{``0}},System.String,System.Action{``0},System.Reflection.Assembly)">
+        <member name="M:JmcModLib.Config.ConfigManager.RegisterConfig``1(JmcModLib.Config.UI.UIDropdownAttribute,System.String,System.Linq.Expressions.Expression{System.Func{``0}},System.String,System.Action{``0},System.Reflection.Assembly,System.Reflection.Assembly)">
             <summary>
             通过形如 `() => ClassName.StaticName / () => InstanceName.FieldName` 的表达式注册一个下拉列表，字段/属性/静态/实例均可。
             </summary>
@@ -253,7 +260,7 @@
             所有配置条目的基类
             </summary>
         </member>
-        <member name="M:JmcModLib.Config.Entry.BaseEntry.#ctor(System.Reflection.Assembly,System.String,System.String)">
+        <member name="M:JmcModLib.Config.Entry.BaseEntry.#ctor(System.Reflection.Assembly,System.String,System.String,System.Reflection.Assembly)">
             <summary>
             所有配置条目的基类
             </summary>
@@ -271,7 +278,7 @@
             Button 类型的配置项条目
             </summary>
         </member>
-        <member name="M:JmcModLib.Config.Entry.ButtonEntry.#ctor(System.Reflection.Assembly,System.Action,System.String,System.String)">
+        <member name="M:JmcModLib.Config.Entry.ButtonEntry.#ctor(System.Reflection.Assembly,System.Action,System.String,System.String,System.Reflection.Assembly)">
             <summary>
             Action 版本用于手动构建按钮
             </summary>
@@ -281,7 +288,7 @@
             承载配置信息的类。
             </summary>
         </member>
-        <member name="M:JmcModLib.Config.Entry.ConfigEntry.#ctor(System.Reflection.Assembly,System.String,System.String)">
+        <member name="M:JmcModLib.Config.Entry.ConfigEntry.#ctor(System.Reflection.Assembly,System.String,System.String,System.Reflection.Assembly)">
             <summary>
             承载配置信息的类。
             </summary>
@@ -1053,7 +1060,7 @@
             <param name="uIFlags"> 默认的自动添加UI，默认添加日志最低打印等级列表与各个标签的开关并集成到一个组里 </param>
             <returns> 返回当前的RegsistryBuilder实例以支持链式调用 </returns>
         </member>
-        <member name="M:JmcModLib.Core.RegistryBuilder.RegisterButton(System.String@,System.String,System.Action,System.String,System.String)">
+        <member name="M:JmcModLib.Core.RegistryBuilder.RegisterButton(System.String@,System.String,System.Action,System.String,System.String,System.Reflection.Assembly)">
             <summary>
             注册一个按钮，相关文本将自动调用本地化文件
             </summary>
@@ -1062,8 +1069,9 @@
             <param name="action"> 按钮的行为 </param>
             <param name="buttonText"> 按钮上的文本 </param>
             <param name="group"> 按钮所在的组，留空为默认 </param>
+            <param name="l10nAsm"> 本地化指定的程序集，留空则与主程序集相同 </param>
         </member>
-        <member name="M:JmcModLib.Core.RegistryBuilder.RegisterConfig``1(System.String@,System.String,System.Func{``0},System.Action{``0},System.String)">
+        <member name="M:JmcModLib.Core.RegistryBuilder.RegisterConfig``1(System.String@,System.String,System.Func{``0},System.Action{``0},System.String,System.Reflection.Assembly)">
             <summary>
             仅注册配置项，不绑定任何UI，仅用于持久化
             </summary>
@@ -1074,8 +1082,9 @@
             <param name="getter"> 维护的值的getter，在设置初始值以及卸载阶段调用一次以同步文件 </param>
             <param name="setter"> 维护的值的setter，用户若需要在代码中改值，最好使用GetValue(key)，但直接修改自己的值也会在最后保存文件时同步保存，只是不能同步UI </param>
             <param name="group"> 值所在的组，若不需要分组则留空 </param>
+            <param name="l10nAsm"> 本地化指定的程序集，留空则与主程序集相同 </param>
         </member>
-        <member name="M:JmcModLib.Core.RegistryBuilder.RegisterConfig``1(System.String@,JmcModLib.Config.UI.UIConfigAttribute{``0},System.String,System.Func{``0},System.Action{``0},System.String,System.Action{``0})">
+        <member name="M:JmcModLib.Core.RegistryBuilder.RegisterConfig``1(System.String@,JmcModLib.Config.UI.UIConfigAttribute{``0},System.String,System.Func{``0},System.Action{``0},System.String,System.Action{``0},System.Reflection.Assembly)">
             <summary>
             通过getter/setter 注册一个配置项。
             </summary>
@@ -1088,8 +1097,9 @@
             <param name="setter"> 维护的值的setter，用户若需要在代码中改值，最好使用GetValue(key)，但直接修改自己的值也会在最后保存文件时同步保存，只是不能同步UI </param>
             <param name="group"> 值所在的组，若不需要分组则留空 </param>
             <param name="action"> 若需注册UI且需要额外的回调函数，则填入，若不需要则留空，此处禁止调用ConfigManager的SetVal </param>
+            <param name="l10nAsm"> 本地化指定的程序集，留空则与主程序集相同 </param>
         </member>
-        <member name="M:JmcModLib.Core.RegistryBuilder.RegisterConfig``1(System.String@,JmcModLib.Config.UI.UIDropdownAttribute,System.String,System.Func{``0},System.Action{``0},System.String,System.Action{``0})">
+        <member name="M:JmcModLib.Core.RegistryBuilder.RegisterConfig``1(System.String@,JmcModLib.Config.UI.UIDropdownAttribute,System.String,System.Func{``0},System.Action{``0},System.String,System.Action{``0},System.Reflection.Assembly)">
             <summary>
             通过枚举值注册一个下拉列表，将自动从枚举值生成下拉列表。
             </summary>
@@ -1101,8 +1111,9 @@
             <param name="setter"> 维护的值的setter，用户若需要在代码中改值，最好使用GetValue(key)，但直接修改自己的值也会在最后保存文件时同步保存，只是不能同步UI </param>
             <param name="group"> 值所在的组，若不需要分组则留空 </param>
             <param name="action"> 若需注册UI且需要额外的回调函数，则填入，若不需要则留空，此处禁止调用ConfigManager的SetVal </param>
+            <param name="l10nAsm"> 本地化指定的程序集，留空则与主程序集相同 </param>
         </member>
-        <member name="M:JmcModLib.Core.RegistryBuilder.RegisterConfig``1(System.String@,JmcModLib.Config.UI.UIConfigAttribute{``0},System.String,``0,System.String,System.Action{``0})">
+        <member name="M:JmcModLib.Core.RegistryBuilder.RegisterConfig``1(System.String@,JmcModLib.Config.UI.UIConfigAttribute{``0},System.String,``0,System.String,System.Action{``0},System.Reflection.Assembly)">
             <summary>
             直接通过非空值注册一个配置项，由此MOD自行维护该值的生命周期，可通过 GetValue/SetValue 查询修改。
             </summary>
@@ -1113,8 +1124,9 @@
             <param name="defaultValue"> 默认值 </param>
             <param name="group"> 值所在的组，若不需要分组则留空 </param>
             <param name="action"> 若需注册UI且需要额外的回调函数，则填入，若不需要则留空，此处禁止调用ConfigManager的SetVal </param>
+            <param name="l10nAsm"> 本地化指定的程序集，留空则与主程序集相同 </param>
         </member>
-        <member name="M:JmcModLib.Core.RegistryBuilder.RegisterConfig``1(System.String@,JmcModLib.Config.UI.UIDropdownAttribute,System.String,``0,System.String,System.Action{``0})">
+        <member name="M:JmcModLib.Core.RegistryBuilder.RegisterConfig``1(System.String@,JmcModLib.Config.UI.UIDropdownAttribute,System.String,``0,System.String,System.Action{``0},System.Reflection.Assembly)">
             <summary>
             用一个非空枚举值生成下拉列表注册一个配置项，由此MOD自行维护该值的生命周期，可通过 GetValue/SetValue 查询修改。
             </summary>
@@ -1125,8 +1137,9 @@
             <param name="defaultValue"> 默认枚举值 </param>
             <param name="group"> 值所在的组，若不需要分组则留空 </param>
             <param name="action"> 若需注册UI且需要额外的回调函数，则填入，若不需要则留空，此处禁止调用ConfigManager的SetVal </param>
+            <param name="l10nAsm"> 本地化指定的程序集，留空则与主程序集相同 </param>
         </member>
-        <member name="M:JmcModLib.Core.RegistryBuilder.RegisterConfig``1(System.String@,JmcModLib.Config.UI.UIConfigAttribute{``0},System.String,System.Linq.Expressions.Expression{System.Func{``0}},System.String,System.Action{``0})">
+        <member name="M:JmcModLib.Core.RegistryBuilder.RegisterConfig``1(System.String@,JmcModLib.Config.UI.UIConfigAttribute{``0},System.String,System.Linq.Expressions.Expression{System.Func{``0}},System.String,System.Action{``0},System.Reflection.Assembly)">
             <summary>
             通过形如 `() => ClassName.StaticName / () => InstanceName.FieldName` 的表达式注册一个配置项，字段/属性/静态/实例均可。
             </summary>
@@ -1138,9 +1151,10 @@
             <param name="expr"> 形如 `() => ClassName.StaticName / () => InstanceName.FieldName` 的表达式 </param>
             <param name="group"> 值所在的组，若不需要分组则留空 </param>
             <param name="action"> 若需注册UI且需要额外的回调函数，则填入，若不需要则留空，此处禁止调用ConfigManager的SetVal </param>
+            <param name="l10nAsm"> 本地化指定的程序集，留空则与主程序集相同 </param>
             <exception cref="T:System.ArgumentException"> 传递的表达式不合法 </exception>
         </member>
-        <member name="M:JmcModLib.Core.RegistryBuilder.RegisterConfig``1(System.String@,JmcModLib.Config.UI.UIDropdownAttribute,System.String,System.Linq.Expressions.Expression{System.Func{``0}},System.String,System.Action{``0})">
+        <member name="M:JmcModLib.Core.RegistryBuilder.RegisterConfig``1(System.String@,JmcModLib.Config.UI.UIDropdownAttribute,System.String,System.Linq.Expressions.Expression{System.Func{``0}},System.String,System.Action{``0},System.Reflection.Assembly)">
             <summary>
             通过形如 `() => ClassName.StaticName / () => InstanceName.FieldName` 的表达式注册一个下拉列表，字段/属性/静态/实例均可。
             </summary>
@@ -1151,6 +1165,7 @@
             <param name="expr"> 形如 `() => ClassName.StaticName / () => InstanceName.FieldName` 的表达式 </param>
             <param name="group"> 值所在的组，若不需要分组则留空 </param>
             <param name="action"> 若需注册UI且需要额外的回调函数，则填入，若不需要则留空，此处禁止调用ConfigManager的SetVal </param>
+            <param name="l10nAsm"> 本地化指定的程序集，留空则与主程序集相同 </param>
         </member>
         <member name="M:JmcModLib.Core.RegistryBuilder.Done">
             <summary>
@@ -1904,6 +1919,17 @@
         <member name="M:JmcModLib.Utils.L10n.Get(System.String,System.Reflection.Assembly)">
             <summary>
             翻译当前程序集的键值
+            </summary>
+        </member>
+        <member name="M:JmcModLib.Utils.L10n.GetFormat(System.String,System.Reflection.Assembly,System.Object[])">
+            <summary>
+            获取带格式化占位符的本地化文本
+            使用 string.Format(key, args)
+            </summary>
+        </member>
+        <member name="M:JmcModLib.Utils.L10n.GetF(System.String,System.Reflection.Assembly,System.Object[])">
+            <summary>
+            简写版（推荐）
             </summary>
         </member>
         <member name="M:JmcModLib.Utils.L10n.OnLanguageChanged(UnityEngine.SystemLanguage)">

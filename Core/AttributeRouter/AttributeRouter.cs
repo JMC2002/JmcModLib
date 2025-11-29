@@ -1,5 +1,4 @@
-﻿using JmcModLib.Dependency;
-using JmcModLib.Reflection;
+﻿using JmcModLib.Reflection;
 using JmcModLib.Utils;
 using System;
 using System.Collections.Concurrent;
@@ -22,12 +21,12 @@ namespace JmcModLib.Core.AttributeRouter
 
         // 已扫描的 Assembly 集合，防止重复扫描
         private static readonly ConcurrentDictionary<Assembly, byte> _scannedAssemblies
-            = new ConcurrentDictionary<Assembly, byte>();
+            = new();
 
         // 为每个 Assembly 记录被哪个 handler 处理了哪些 accessor，以便 Unscan 时撤销
         // Assembly -> Handler -> accessors
         private static readonly ConcurrentDictionary<Assembly, ConcurrentDictionary<IAttributeHandler, List<ReflectionAccessorBase>>> _assemblyHandlerRecords
-            = new ConcurrentDictionary<Assembly, ConcurrentDictionary<IAttributeHandler, List<ReflectionAccessorBase>>>();
+            = new();
 
         /// <summary>
         /// 当一个 MOD 完成注册后触发。

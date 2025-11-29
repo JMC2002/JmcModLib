@@ -90,9 +90,10 @@ MOD卸载不需要写任何卸载逻辑，系统会自动完成卸载，并在重连后也不会有问题（包括Set
 	- MOD图标由GPT生成
 
 - 许可证：
-	- 本MOD采用LGPL-3.0许可证
+	- 本MOD采用LGPL-2.1许可证
 
-如果有人用了这个MOD，可以加入群（TODO:还没建）交流反馈
+如果有人用了这个MOD，可以加入群（[点击入群(617674584)](=http://qm.qq.com/cgi-bin/qm/qr?_wv=1027&k=Kii1sz9bmNmgEgnmsasbKn6h3etgSoQR&authKey=Hni0nbFlbd%2BfDZ1GoklCdtHw4r79SuEsHvz9Pi4qs020w1f8D2DHD8EEnNN1OXo6&noverify=0&group_code=617674584)
+）交流反馈
 
 # 5. FAQ
 - Q：为什么叫这个名字？
@@ -100,3 +101,6 @@ MOD卸载不需要写任何卸载逻辑，系统会自动完成卸载，并在重连后也不会有问题（包括Set
 
 # 6. 最后
 感谢阅读到这里，如果你觉得这个MOD对你有帮助，欢迎给个Star鼓励一下，也欢迎提出任何建议和意见，我会尽量改进和完善这个MOD，谢谢！
+
+测试项目：
+[TemplateMod](https://github.com/JMC2002/Duckov-TemplateMod)

@@ -2,13 +2,11 @@
 using JmcModLib.Config.Entry;
 using JmcModLib.Config.UI.ModSetting;
 using JmcModLib.Core;
-using JmcModLib.Dependency;
 using JmcModLib.Utils;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using System.Text;
 using UnityEngine;
 
 namespace JmcModLib.Config.UI.CustomHotkey

@@ -9,7 +9,7 @@ namespace JmcModLib.Config.Entry
     internal abstract class BaseEntry(Assembly asm, string group, string displayName, Assembly? l10nAsm)
     {
         internal Assembly Assembly { get; } = asm;
-        internal Assembly L10nAssembly { get;  } = l10nAsm ?? asm;
+        internal Assembly L10nAssembly { get; } = l10nAsm ?? asm;
         internal virtual string Key { get; } = GetKey(displayName, group);
         internal string Group { get; } = group;
         internal string DisplayName { get; } = displayName;

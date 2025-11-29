@@ -1,0 +1,157 @@
+﻿[h1]JmcModLib[/h1]
+
+[h1]0. Introduction[/h1]
+
+This is a foundational library I use when developing my own mods. I extracted it as a standalone dependency project for easier maintenance. Originally it was meant to be small, but it kept growing…  
+As of the release date, it contains 210 commits, over 5000 lines of code (excluding whitespace), and over 1600 lines of comments.
+
+[h2]Highlights[/h2]
+[list]
+[*] Detailed documentation and complete XML comments; very IDE-friendly  
+[*] Informative error messages that make debugging easier, and automatic generation of log configuration entries for libraries that use the logging system  
+[*] Extensive test coverage, including many edge cases (the reflection library alone has nearly 2000 lines of tests)  
+[*] Extremely low learning curve for configuration; adding simple attributes on static fields/properties auto-generates persistent config entries and UI, with perfect handling of UI mod load order  
+[*] Lightweight reflection utility with good performance, API design close to the .NET standard library  
+[*] Localization auto-loads CSV files placed in your own folder—zero file-operation code required  
+[*] Highly extensible: for example, you can customize the storage backend simply by implementing an interface; the project is modular and internally well-structured  
+[/list]
+
+[h1]1. Usage[/h1]
+
+After subscribing to this mod, simply add a reference to  
+[b]SteamLibrary\steamapps\workshop\content\3167020\3613297900\JmcModLib.dll[/b]  
+in your project’s [b].csproj[/b] file.
+
+However, it is recommended to directly use the  
+[url=https://github.com/JMC2002/Duckov-TemplateMod/blob/master/TemplateMod/TemplateMod.csproj]template csproj[/url],  
+which not only includes the correct Workshop path but also provides several useful features such as:
+
+[list]
+[*] Automatically reading version info from [b]Core/VersionInfo.cs[/b] and writing it into the assembly  
+[*] Automatically copying the built DLL into a same-named mod folder in the project directory  
+[*] Syncing this folder with the game’s local mod directory  
+[*] Prompting you to open Duckov after build completion  
+[/list]
+
+This project includes extensive XML documentation; after referencing it, you’ll get IntelliSense hints in your IDE.
+
+[h2]Quick Start[/h2]
+
+[h3]Registration[/h3]  
+Call [b]ModRegistry.Register(info, name, version)[/b] right after [b]OnAfterSetup[/b] to complete registration.
+
+[h3]Usage Examples[/h3]
+
+[list]
+[*] Add [b][Config("Name", group: "Optional Group")][/b] on static fields/properties to generate persistent config entries  
+[*] Add [b][UIButton("Description")][/b] on static methods to generate button UI  
+[*] Add [b][UIAttribute][/b] on members marked with [b][Config][/b] to generate sliders, toggles, dropdowns, etc.  
+[*] Call [b]L10n.Get("key")[/b] to get localized text  
+[*] Use [b]ModLogger.Trace/Debug/Info/Warn/Error/Fatal[/b] for structured logging  
+[*] Use [b]MethodAccessor / MemberAccessor.Get + Invoke / GetValue / SetValue[/b] for high-performance reflection  
+[*] No unload logic required—unloading is handled automatically  
+[/list]
+
+[h1]2. Core Features[/h1]
+
+[h2]2.1 Configuration Manager[/h2]
+
+[list]
+[*] Automatically scans static fields/properties marked with [b][Config][/b] and generates/persists config entries  
+[*] Automatically generates UI for fields with [b][UIAttribute][/b] when a UI mod is detected  
+[*] Automatically handles UI mod load order  
+[*] Also supports creating config entries and buttons via API  
+[/list]
+
+Example (slider):
+
+[code]
+[UIFloatSlider(1, 100)]
+[Config("Test Float", group: "Group 2")]
+public static float v = 3.14f;
+[/code]
+
+[h2]2.2 Logging Library[/h2]
+
+[list]
+[*] Provides a simple logging system with per-message log level control and configurable TAG formatting—helping avoid situations where debug logs spam during gameplay  
+[*] Includes prefabs for log configuration UI, allowing in-game configuration of log level and output format (e.g., include timestamp, method name, etc.)  
+[*] Reserved extensibility for switching backend log writers in the future  
+[/list]
+
+[h2]2.3 Reflection Utility[/h2]
+
+[list]
+[*] Simplifies reflection API usage and greatly reduces boilerplate  
+[*] Offers significantly better performance thanks to Emit-generated caching shared across all callers; strong-typed delegates are automatically generated  
+[*] In performance tests, one million dual-parameter method calls show:  
+   – General interface: 93ms  
+   – Strong-typed interface: 2.13ms  
+   – Original reflection: 581ms  
+[*] Extensive test coverage for various edge cases; feature-complete—anything standard reflection can do, this library can too  
+[/list]
+
+For detailed API documentation (GitHub required):
+
+[list]
+[*] Registry Docs  
+[*] Config Docs  
+[*] Localization Docs  
+[*] Logging Docs  
+[*] Reflection Docs  
+[*] XML Comments  
+[/list]
+
+[h1]3. Dependencies & Compatibility[/h1]
+
+[list]
+[*] Only depends on [b]Newtonsoft.Json 13.0.4[/b] (included)  
+[*] Does not require any UI mod, but recommended to be used with  
+[url=https://steamcommunity.com/sharedfiles/filedetails/?id=3595729494]ModSetting[/url]  
+for configuration UI support  
+[*] Does not modify any game logic; theoretically compatible with any mod  
+[*] For best results, place this mod at the top of the load order  
+[*] Observation: “Who Stole My FPS” mod significantly slows reflection benchmarks—the strong-typed path remains fast, but generic reflection calls may take ~1s for one million calls (not a practical concern)  
+[*] If accessing this mod’s API via reflection, load order does not matter; however, it is recommended to hard-depend on this mod and keep it above dependent mods. Additional Setting UIs (currently only ModSetting, possibly ModConfig later) do not require load order handling.  
+[/list]
+
+[h1]4. Miscellaneous[/h1]
+
+[h2]API Conventions[/h2]
+[list]
+[*] All parameters involving Assembly are optional and default to [b]Assembly.GetCallingAssembly()[/b]  
+[/list]
+
+[h2]AI Assistance Statement[/h2]
+[list]
+[*] GPT-assisted development  
+[*] Documentation drafted by GPT and refined manually  
+[*] Most test code generated by GPT  
+[*] Translations generated by GPT  
+[*] Mod icon generated by GPT  
+[/list]
+
+[h2]License[/h2]
+[list]
+[*] This mod uses the [b]LGPL-2.1[/b] license  
+[/list]
+
+If you use this mod, feel free to join the group for feedback:
+[url=http://qm.qq.com/cgi-bin/qm/qr?_wv=1027&k=Kii1sz9bmNmgEgnmsasbKn6h3etgSoQR&authKey=Hni0nbFlbd%2BfDZ1GoklCdtHw4r79SuEsHvz9Pi4qs020w1f8D2DHD8EEnNN1OXo6&noverify=0&group_code=617674584]
+Click to Join (617674584)
+[/url]
+
+[h1]5. FAQ[/h1]
+
+[list]
+[*] Q: Why this name?  
+   A: I was too lazy to name it properly. “ModLib” might conflict with others, so adding my ID ensures uniqueness.  
+[/list]
+
+[h1]6. Final Words[/h1]
+
+Thanks for reading!  
+If this mod helps you, feel free to leave a star or suggestions. I will continue improving it!
+
+[url=https://github.com/JMC2002/JmcModLib]Repository Link[/url]  
+[url=https://github.com/JMC2002/Duckov-TemplateMod]Test Project[/url]

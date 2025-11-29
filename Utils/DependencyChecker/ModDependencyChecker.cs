@@ -16,7 +16,7 @@ namespace JmcModLib.Utils
         public bool VersionMatch { get; set; }
         public bool AllMethodsAvailable { get; set; }
         public Version? ActualVersion { get; set; }
-        public List<string> MissingMethods { get; set; } = new();
+        public List<string> MissingMethods { get; set; } = [];
         public Type? ModType { get; set; }
 
         public bool IsFullyAvailable => IsLoaded && VersionMatch && AllMethodsAvailable;
@@ -56,7 +56,7 @@ namespace JmcModLib.Utils
         private readonly string typeName;
         private readonly Version? requiredVersion;
         private readonly List<MethodSignature> requiredMethods;
-        private readonly Dictionary<string, MethodAccessor> methodCache = new();
+        private readonly Dictionary<string, MethodAccessor> methodCache = [];
 
         private Type? cachedType;
         private ModDependencyResult? cachedResult;
@@ -66,7 +66,7 @@ namespace JmcModLib.Utils
             this.modName = modName;
             this.typeName = typeName;
             this.requiredVersion = requiredVersion;
-            this.requiredMethods = new List<MethodSignature>();
+            this.requiredMethods = [];
         }
 
         /// <summary>

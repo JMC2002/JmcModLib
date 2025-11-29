@@ -2,6 +2,8 @@
 
 本文档介绍 `MemberAccessor` 与 `MethodAccessor` 的用法、最佳实践与注意事项（不包含泛型版本）。
 
+命名空间：`JmcModLib.Reflection`
+
 ## 1. 总览
 - `MemberAccessor`：统一访问字段与属性（含静态/实例、私有、索引器）。
 - `MethodAccessor`：调用方法（含静态/实例、重载、默认参数、泛型方法实例化）。
@@ -286,6 +288,7 @@ staticAddThree.InvokeStaticVoid<int, int, int>(1, 2, 3);
 
 ## 10. 代码示例（汇总）
 ```csharp
+using JmcModLib.Reflection;
 // 字段
 var f = MemberAccessor.Get(typeof(MyType), "Field");
 f.SetValue(obj, 10);
@@ -353,4 +356,4 @@ var r3 = echoStr.Invoke(obj, "hello");
 
 ---
 
-如需更多示例，请参考项目 `Template/Test/ReflectionTestSuite.cs` 中的测试与性能对比用例。
+如需更多示例，请参考项目 `Template/Test/ReflectionTestSuite.cs` 中的测试与性能对比用例（[仓库链接](https://github.com/JMC2002/Duckov-TemplateMod/blob/master/Test/ReflectionTestSuite.cs)）。

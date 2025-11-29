@@ -1,13 +1,9 @@
 ﻿using Duckov.Modding;
-using JmcModLib.Dependency;
 using JmcModLib.Reflection;
-using JmcModLib.Utils;
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Reflection;
 using UnityEngine;
-using UnityEngine.InputSystem;
 
 // * 改为你的命名空间
 namespace JmcModLib.Config.UI.CustomHotkey

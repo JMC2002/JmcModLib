@@ -19,7 +19,7 @@
 
 开发上，在订阅此MOD后在项目 [b].csproj[/b] 添加引入[b]SteamLibrary\steamapps\workshop\content\3167020\3613297900\JmcModLib.dll[/b] 的引用即可：
 
-不过更推荐直接使用模板 [b]csproj[/b] 内容，不仅包含了创意工坊的路径，还包含了一些比较实用的功能，比如：
+不过更推荐直接使用[url=https://github.com/JMC2002/Duckov-TemplateMod/blob/master/TemplateMod/TemplateMod.csproj] 模板 csproj [/url] 内容，不仅包含了创意工坊的路径，还包含了一些比较实用的功能，比如：
 
 [list]
 [*] 自动根据项目文件夹下的 [b]Core/VersionInfo.cs[/b] 获取版本号并写入程序集  
@@ -140,4 +140,5 @@ public static float v = 3.14f;
 感谢阅读到这里！  
 如果你觉得本MOD有帮助，欢迎给个Star或提出建议，我会持续改进！  
 
-[url=https://github.com/JMC2002/JmcModLib/settings] 仓库链接 [/url]
+[url=https://github.com/JMC2002/JmcModLib] 仓库链接 [/url]
+[url=https://github.com/JMC2002/Duckov-TemplateMod] 测试项目 [/url]

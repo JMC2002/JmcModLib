@@ -2,6 +2,8 @@
 
 本文档介绍 `ConfigManager` 的职责、API、生命周期、典型用法与注意事项，帮助 MOD 在 JmcModLib 中高效注册、持久化与展示配置项。
 
+命名空间：`JmcModLib.Config`（ConfigAttribute在这里）、`JmcModLib.Config.UI`（对应 UI 相关 Attribute）
+
 ## 1. 角色与职责
 - 统一管理配置项注册、缓存与持久化（按 Assembly 分隔）。
 - 自动在 `ModRegistry` 完成注册时扫描 `[Config]` 成员并生成 UI/存储条目。

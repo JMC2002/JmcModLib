@@ -20,7 +20,6 @@
 /// along with JmcModLib.
 /// If not, see <see href="https://www.gnu.org/licenses/lgpl-3.0.html" />.
 /// </remarks>
-using JmcModLib.Config;
 using JmcModLib.Core;
 using JmcModLib.Core.AttributeRouter;
 using JmcModLib.Dependency;
