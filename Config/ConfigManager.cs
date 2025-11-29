@@ -125,7 +125,7 @@ namespace JmcModLib.Config
             try
             {
                 var uiAttr = acc.GetAttribute<UIConfigAttribute>();
-                var entry = ConfigEntryFactory.Create(asm, acc, onChangedMethod, attr, uiAttr);
+                var entry = ConfigEntryFactory.Create(asm, acc, onChangedMethod, attr, uiAttr, null);
                 RegisterEntry(entry);
 
                 if (uiAttr != null)
@@ -343,12 +343,14 @@ namespace JmcModLib.Config
         /// <param name="buttonText"> 按钮上的文本 </param>
         /// <param name="group"> 按钮所在的组，留空为默认 </param>
         /// <param name="asm"> 注册的Assembly集，留空为调用者 </param>
+        /// <param name="l10nAssembly"> 本地化指定的程序集，留空则与主程序集相同 </param>
         /// <returns> 返回按钮的Key </returns>
         public static string RegisterButton(string description, Action action, string buttonText = "按钮",
-                                            string group = ConfigAttribute.DefaultGroup, Assembly? asm = null)
+                                            string group = ConfigAttribute.DefaultGroup, Assembly? asm = null,
+                                            Assembly? l10nAssembly = null)
         {
             asm ??= Assembly.GetCallingAssembly();
-            var buttonEntry = new ButtonEntry(asm, action, group, description);
+            var buttonEntry = new ButtonEntry(asm, action, group, description, l10nAssembly ?? Assembly.GetCallingAssembly());
             var uiAttr = new UIButtonAttribute(description, buttonText, group);
             ConfigUIManager.RegisterEntry(buttonEntry, uiAttr);
             return buttonEntry.Key;
@@ -359,9 +361,9 @@ namespace JmcModLib.Config
         /// </summary>
         private static string RegisterConfigImpl<T>(Assembly asm, string displayName, T defaultValue, Func<T> getter,
                                                     Action<T> setter, UIConfigAttribute? uiAttr, string group,
-                                                    Action<T>? action)
+                                                    Action<T>? action, Assembly? l10nAsm)
         {
-            var entry = ConfigEntryFactory.Create(asm, displayName, group, defaultValue, getter, setter, action, typeof(T), uiAttr);
+            var entry = ConfigEntryFactory.Create(asm, displayName, group, defaultValue, getter, setter, action, typeof(T), uiAttr, l10nAsm);
             RegisterEntry(entry);
             if (uiAttr != null)
                 ConfigUIManager.RegisterEntry(entry, uiAttr);
@@ -372,8 +374,8 @@ namespace JmcModLib.Config
         /// 通过值注册单条配置信息的实现
         /// </summary>
         private static string RegisterConfigImpl<T>(Assembly asm, string displayName, T defaultValue,
-                                                    string Group = ConfigAttribute.DefaultGroup,
-                                                    UIConfigAttribute? uiAttr = null, Action<T>? action = null)
+                                                    string Group,
+                                                    UIConfigAttribute? uiAttr, Action<T>? action, Assembly? l10nAsm)
         {
             var storage = GetStorage(asm);
             var key = BaseEntry.GetKey(displayName, Group);
@@ -398,7 +400,7 @@ namespace JmcModLib.Config
                 {
                     storage.Save(displayName, Group, nowValue, asm);
                 }
-                return RegisterConfigImpl(asm, displayName, defaultValue, getter, setter, uiAttr, Group, action);
+                return RegisterConfigImpl(asm, displayName, defaultValue, getter, setter, uiAttr, Group, action, l10nAsm);
             }
             catch (Exception ex)
             {
@@ -417,10 +419,11 @@ namespace JmcModLib.Config
         /// <param name="setter"> 维护的值的setter，用户若需要在代码中改值，最好使用GetValue(key)，但直接修改自己的值也会在最后保存文件时同步保存，只是不能同步UI </param>
         /// <param name="group"> 值所在的组，若不需要分组则留空 </param>
         /// <param name="asm"> 注册的程序集，留空则为调用者本身 </param>
+        /// <param name="l10nAsm"> 本地化指定的程序集，留空则与主程序集相同 </param>
         /// <returns> 返回配置项的Key，可以通过GetValue/SetValue函数查询系统内的值 </returns>
         public static string RegisterConfig<T>(string displayName, Func<T> getter, Action<T> setter,
-                                               string group = ConfigAttribute.DefaultGroup, Assembly? asm = null)
-            => RegisterConfigImpl(asm ?? Assembly.GetCallingAssembly(), displayName, getter(), getter, setter, null, group, null);
+                                               string group = ConfigAttribute.DefaultGroup, Assembly? asm = null, Assembly? l10nAsm = null)
+            => RegisterConfigImpl(asm ?? Assembly.GetCallingAssembly(), displayName, getter(), getter, setter, null, group, null, l10nAsm ?? Assembly.GetCallingAssembly());
 
         /// <summary>
         /// 通过getter/setter 注册一个配置项。
@@ -434,11 +437,12 @@ namespace JmcModLib.Config
         /// <param name="group"> 值所在的组，若不需要分组则留空 </param>
         /// <param name="action"> 若需注册UI且需要额外的回调函数，则填入，若不需要则留空，此处禁止调用ConfigManager的SetVal </param>
         /// <param name="asm"> 注册的程序集，留空则为调用者本身 </param>
+        /// <param name="l10nAsm"> 本地化指定的程序集，留空则与主程序集相同 </param>
         /// <returns> 返回配置项的Key，可以通过GetValue/SetValue函数查询系统内的值 </returns>
         public static string RegisterConfig<T>(UIConfigAttribute<T> uiAttr, string displayName, Func<T> getter,
                                                Action<T> setter, string group = ConfigAttribute.DefaultGroup,
-                                               Action<T>? action = null, Assembly? asm = null)
-            => RegisterConfigImpl(asm ?? Assembly.GetCallingAssembly(), displayName, getter(), getter, setter, uiAttr, group, action);
+                                               Action<T>? action = null, Assembly? asm = null, Assembly? l10nAsm = null)
+            => RegisterConfigImpl(asm ?? Assembly.GetCallingAssembly(), displayName, getter(), getter, setter, uiAttr, group, action, l10nAsm ?? Assembly.GetCallingAssembly());
 
         /// <summary>
         /// 通过枚举值注册一个下拉列表，将自动从枚举值生成下拉列表。
@@ -451,12 +455,13 @@ namespace JmcModLib.Config
         /// <param name="group"> 值所在的组，若不需要分组则留空 </param>
         /// <param name="action"> 若需注册UI且需要额外的回调函数，则填入，若不需要则留空，此处禁止调用ConfigManager的SetVal </param>
         /// <param name="asm"> 注册的程序集，留空则为调用者本身 </param>
+        /// <param name="l10nAsm"> 本地化指定的程序集，留空则与主程序集相同 </param>
         /// <returns> 返回配置项的Key，可以通过GetValue/SetValue函数查询系统内的值 </returns>
         public static string RegisterConfig<TEnum>(UIDropdownAttribute uiAttr, string displayName, Func<TEnum> getter,
                                                    Action<TEnum> setter, string group = ConfigAttribute.DefaultGroup,
-                                                   Action<TEnum>? action = null, Assembly? asm = null)
+                                                   Action<TEnum>? action = null, Assembly? asm = null, Assembly? l10nAsm = null)
             where TEnum : Enum
-            => RegisterConfigImpl(asm ?? Assembly.GetCallingAssembly(), displayName, getter(), getter, setter, uiAttr, group, action);
+            => RegisterConfigImpl(asm ?? Assembly.GetCallingAssembly(), displayName, getter(), getter, setter, uiAttr, group, action, l10nAsm ?? Assembly.GetCallingAssembly());
 
         /// <summary>
         /// 直接通过非空值注册一个配置项，由此MOD自行维护该值的生命周期，可通过 GetValue/SetValue 查询修改。
@@ -468,11 +473,12 @@ namespace JmcModLib.Config
         /// <param name="group"> 值所在的组，若不需要分组则留空 </param>
         /// <param name="action"> 若需注册UI且需要额外的回调函数，则填入，若不需要则留空，此处禁止调用ConfigManager的SetVal </param>
         /// <param name="asm"> 注册的程序集，留空则为调用者本身 </param>
+        /// <param name="l10nAsm"> 本地化指定的程序集，留空则与主程序集相同 </param>
         /// <returns> 返回配置项的Key，可以通过GetValue/SetValue函数查询系统内的值 </returns>
         public static string RegisterConfig<T>(UIConfigAttribute<T> uiAttr, string displayName, T defaultValue,
                                                string group = ConfigAttribute.DefaultGroup, Action<T>? action = null,
-                                               Assembly? asm = null)
-            => RegisterConfigImpl(asm ?? Assembly.GetCallingAssembly(), displayName, defaultValue, group, uiAttr, action);
+                                               Assembly? asm = null, Assembly? l10nAsm = null)
+            => RegisterConfigImpl(asm ?? Assembly.GetCallingAssembly(), displayName, defaultValue, group, uiAttr, action, l10nAsm ?? Assembly.GetCallingAssembly());
 
         /// <summary>
         /// 用一个非空枚举值生成下拉列表注册一个配置项，由此MOD自行维护该值的生命周期，可通过 GetValue/SetValue 查询修改。
@@ -484,12 +490,13 @@ namespace JmcModLib.Config
         /// <param name="group"> 值所在的组，若不需要分组则留空 </param>
         /// <param name="action"> 若需注册UI且需要额外的回调函数，则填入，若不需要则留空，此处禁止调用ConfigManager的SetVal </param>
         /// <param name="asm"> 注册的程序集，留空则为调用者本身 </param>
+        /// <param name="l10nAsm"> 本地化指定的程序集，留空则与主程序集相同 </param>
         /// <returns> 返回配置项的Key，可以通过GetValue/SetValue函数查询系统内的值 </returns>
         public static string RegisterConfig<TEnum>(UIDropdownAttribute uiAttr, string displayName, TEnum defaultValue,
                                                    string group = ConfigAttribute.DefaultGroup,
-                                                   Action<TEnum>? action = null, Assembly? asm = null)
+                                                   Action<TEnum>? action = null, Assembly? asm = null, Assembly? l10nAsm = null)
                     where TEnum : Enum
-                    => RegisterConfigImpl(asm ?? Assembly.GetCallingAssembly(), displayName, defaultValue, group, uiAttr, action);
+                    => RegisterConfigImpl(asm ?? Assembly.GetCallingAssembly(), displayName, defaultValue, group, uiAttr, action, l10nAsm ?? Assembly.GetCallingAssembly());
 
         /// <summary>
         /// 通过形如 `() => ClassName.StaticName / () => InstanceName.FieldName` 的表达式注册一个配置项，字段/属性/静态/实例均可。
@@ -502,16 +509,17 @@ namespace JmcModLib.Config
         /// <param name="group"> 值所在的组，若不需要分组则留空 </param>
         /// <param name="action"> 若需注册UI且需要额外的回调函数，则填入，若不需要则留空，此处禁止调用ConfigManager的SetVal </param>
         /// <param name="asm"> 注册的程序集，留空则为调用者本身 </param>
+        /// <param name="l10nAsm"> 本地化指定的程序集，留空则与主程序集相同 </param>
         /// <returns> 返回配置项的Key，可以通过GetValue/SetValue函数查询系统内的值 </returns>
         /// <exception cref="ArgumentException"> 传递的表达式不合法 </exception>
         public static string RegisterConfig<T>(UIConfigAttribute<T> uiAttr, string displayName, Expression<Func<T>> expr,
                                                string group = ConfigAttribute.DefaultGroup, Action<T>? action = null,
-                                               Assembly? asm = null)
+                                               Assembly? asm = null, Assembly? l10nAsm = null)
         {
             try
             {
                 var (getter, setter) = ExprHelper.GetOrCreateAccessors(expr);
-                return RegisterConfig(uiAttr, displayName, getter, setter, group, action, asm);
+                return RegisterConfig(uiAttr, displayName, getter, setter, group, action, asm, l10nAsm ?? Assembly.GetCallingAssembly());
             }
             catch (Exception ex)
             {
@@ -533,13 +541,13 @@ namespace JmcModLib.Config
         public static string RegisterConfig<TEnum>(UIDropdownAttribute uiAttr, string displayName,
                                                      Expression<Func<TEnum>> expr,
                                                      string group = ConfigAttribute.DefaultGroup,
-                                                     Action<TEnum>? action = null, Assembly? asm = null)
+                                                     Action<TEnum>? action = null, Assembly? asm = null, Assembly? l10nAsm = null)
             where TEnum : Enum
         {
             try
             {
                 var (getter, setter) = ExprHelper.GetOrCreateAccessors(expr);
-                return RegisterConfig(uiAttr, displayName, getter, setter, group, action, asm);
+                return RegisterConfig(uiAttr, displayName, getter, setter, group, action, asm, l10nAsm ?? Assembly.GetCallingAssembly());
             }
             catch (Exception ex)
             {

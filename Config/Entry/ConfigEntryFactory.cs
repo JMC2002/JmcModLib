@@ -20,9 +20,10 @@ namespace JmcModLib.Config.Entry
             MethodAccessor? method,
             ConfigAttribute attr,
             Type logicType,
-            UIConfigAttribute<T>? uiAttr)
+            UIConfigAttribute<T>? uiAttr,
+            Assembly? l10nAsm)
         {
-            return new ConfigEntry<T>(asm, acc, method, attr, logicType, uiAttr);
+            return new ConfigEntry<T>(asm, acc, method, attr, logicType, uiAttr, l10nAsm);
         }
 
         private static ConfigEntry<TUI> CreateTypedWithConvertAction<TUI, TLogical>(
@@ -33,7 +34,8 @@ namespace JmcModLib.Config.Entry
             Func<TLogical> getterOri,
             Action<TLogical> setterOri,
             Action<TLogical>? change,
-            UINeedCovertAttribute uiAttr)
+            UINeedCovertAttribute uiAttr,
+            Assembly? l10nAsm)
         {
             Type logicalType = typeof(TLogical);
             if (uiAttr is UIConverterAttribute<TUI> covAttr)
@@ -85,7 +87,7 @@ namespace JmcModLib.Config.Entry
                 }
 
                 return new ConfigEntry<TUI>(asm, displayName, group, defaultValue, getter, setter,
-                                            change == null ? null : action, logicalType, covAttr);
+                                            change == null ? null : action, logicalType, covAttr, l10nAsm);
             }
             else
                 throw new ArgumentException("UINeedCovertAttribute 类型不正确");
@@ -96,10 +98,11 @@ namespace JmcModLib.Config.Entry
             MemberAccessor member,
             MethodAccessor? method,
             ConfigAttribute attr,
-            UINeedCovertAttribute uiAttr)
+            UINeedCovertAttribute uiAttr,
+            Assembly? l10nAsm)
         {
             var (getter, setter, change) = ConfigEntry<TLogical>.TraitAccessors(member, method);
-            return CreateTypedWithConvertAction<TUI, TLogical>(asm, attr.DisplayName, attr.Group, getter(), getter, setter, change, uiAttr);
+            return CreateTypedWithConvertAction<TUI, TLogical>(asm, attr.DisplayName, attr.Group, getter(), getter, setter, change, uiAttr, l10nAsm);
         }
 
         public static ConfigEntry Create(
@@ -107,19 +110,20 @@ namespace JmcModLib.Config.Entry
             MemberAccessor acc,
             MethodAccessor? method,
             ConfigAttribute attr,
-            UIConfigAttribute? uiAttr)
+            UIConfigAttribute? uiAttr,
+            Assembly? l10nAsm)
         {
             if (uiAttr is not null and UINeedCovertAttribute covAttr)
             {
                 var memberType = acc.ValueType;
                 var closed = CreateTypedWithConvertMethod.MakeGeneric(covAttr.UIType, memberType);
-                return (ConfigEntry)closed.Invoke(null, asm, acc, method, attr, covAttr)!;
+                return (ConfigEntry)closed.Invoke(null, asm, acc, method, attr, covAttr, l10nAsm)!;
             }
             else
             {
                 var memberType = acc.ValueType;
                 var closed = CreateTypedMethod.MakeGeneric(memberType);
-                return (ConfigEntry)closed.Invoke(null, asm, acc, method, attr, memberType, uiAttr)!;
+                return (ConfigEntry)closed.Invoke(null, asm, acc, method, attr, memberType, uiAttr, l10nAsm)!;
             }
         }
 
@@ -131,16 +135,17 @@ namespace JmcModLib.Config.Entry
                            Action<T> setter,
                            Action<T>? action,
                            Type logicType,
-                           UIConfigAttribute? uiAttr)
+                           UIConfigAttribute? uiAttr,
+                           Assembly? l10nAsm)
         {
             if (uiAttr is not null and UINeedCovertAttribute covAttr)
             {
                 var closed = CreateTypedWithConvertActionMethod.MakeGeneric(covAttr.UIType, typeof(T));
-                return (ConfigEntry)closed.Invoke(null, asm, displayName, group, defaultValue, getter, setter, action, uiAttr)!;
+                return (ConfigEntry)closed.Invoke(null, asm, displayName, group, defaultValue, getter, setter, action, uiAttr, l10nAsm)!;
             }
             else
             {
-                return new ConfigEntry<T>(asm, displayName, group, defaultValue, getter, setter, action, logicType, uiAttr);
+                return new ConfigEntry<T>(asm, displayName, group, defaultValue, getter, setter, action, logicType, uiAttr, l10nAsm);
             }
         }
     }

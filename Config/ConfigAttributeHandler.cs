@@ -36,7 +36,7 @@ namespace JmcModLib.Config
         {
             if (accessor is MethodAccessor mac && attribute is UIButtonAttribute btn)
             {
-                var entry = new ButtonEntry(asm, mac, btn.Group, btn.Description);
+                var entry = new ButtonEntry(asm, mac, btn.Group, btn.Description, null);
                 ConfigUIManager.RegisterEntry(entry, btn);
             }
         }

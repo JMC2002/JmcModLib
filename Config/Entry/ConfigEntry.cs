@@ -12,8 +12,8 @@ namespace JmcModLib.Config.Entry
     /// <summary>
     /// 承载配置信息的类。
     /// </summary>
-    internal abstract class ConfigEntry(Assembly asm, string group, string displayName)
-        : BaseEntry(asm, group, displayName), IConfigAccessor
+    internal abstract class ConfigEntry(Assembly asm, string group, string displayName, Assembly? l10nAsm)
+        : BaseEntry(asm, group, displayName, l10nAsm), IConfigAccessor
     {
         /// <summary>
         /// 数据的原类型，比如传入enum -> string中的enum，若不会额外转换，直接返回TargetType。
@@ -67,8 +67,9 @@ namespace JmcModLib.Config.Entry
                            Action<T> setter,
                            Action<T>? action,
                            Type logicType,
-                           UIConfigAttribute? uiAttr)
-            : base(asm, group, displayName)
+                           UIConfigAttribute? uiAttr,
+                           Assembly? l10nAsm)
+            : base(asm, group, displayName, l10nAsm)
         {
             LogicalType = logicType;
             DefaultValue = defaultValue;
@@ -84,8 +85,9 @@ namespace JmcModLib.Config.Entry
                            MethodAccessor? method,
                            ConfigAttribute attr,
                            Type logicalType,
-                           UIConfigAttribute? uiAttr)
-            : base(asm, attr.Group, attr.DisplayName)
+                           UIConfigAttribute? uiAttr,
+                           Assembly? l10nAsm)
+            : base(asm, attr.Group, attr.DisplayName, l10nAsm)
         {
             (this.getter, this.setter, this.action) = TraitAccessors(member, method);
 

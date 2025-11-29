@@ -81,11 +81,13 @@ namespace JmcModLib.Core
         /// <param name="action"> 按钮的行为 </param>
         /// <param name="buttonText"> 按钮上的文本 </param>
         /// <param name="group"> 按钮所在的组，留空为默认 </param>
+        /// <param name="l10nAsm"> 本地化指定的程序集，留空则与主程序集相同 </param>
         public RegistryBuilder RegisterButton(out string key,
                                               string description, Action action, string buttonText = "按钮",
-                                              string group = ConfigAttribute.DefaultGroup)
+                                              string group = ConfigAttribute.DefaultGroup,
+                                              Assembly? l10nAsm = null)
         {
-            key = ConfigManager.RegisterButton(description, action, buttonText, group, _assembly);
+            key = ConfigManager.RegisterButton(description, action, buttonText, group, _assembly, l10nAsm ?? Assembly.GetCallingAssembly());
             return this;
         }
 
@@ -99,10 +101,12 @@ namespace JmcModLib.Core
         /// <param name="getter"> 维护的值的getter，在设置初始值以及卸载阶段调用一次以同步文件 </param>
         /// <param name="setter"> 维护的值的setter，用户若需要在代码中改值，最好使用GetValue(key)，但直接修改自己的值也会在最后保存文件时同步保存，只是不能同步UI </param>
         /// <param name="group"> 值所在的组，若不需要分组则留空 </param>
+        /// <param name="l10nAsm"> 本地化指定的程序集，留空则与主程序集相同 </param>
         public RegistryBuilder RegisterConfig<T>(out string key, string displayName, Func<T> getter, Action<T> setter,
-                                               string group = ConfigAttribute.DefaultGroup)
+                                               string group = ConfigAttribute.DefaultGroup,
+                                               Assembly? l10nAsm = null)
         {
-            key = ConfigManager.RegisterConfig(displayName, getter, setter, group, _assembly);
+            key = ConfigManager.RegisterConfig(displayName, getter, setter, group, _assembly, l10nAsm ?? Assembly.GetCallingAssembly());
             return this;
         }
 
@@ -118,11 +122,12 @@ namespace JmcModLib.Core
         /// <param name="setter"> 维护的值的setter，用户若需要在代码中改值，最好使用GetValue(key)，但直接修改自己的值也会在最后保存文件时同步保存，只是不能同步UI </param>
         /// <param name="group"> 值所在的组，若不需要分组则留空 </param>
         /// <param name="action"> 若需注册UI且需要额外的回调函数，则填入，若不需要则留空，此处禁止调用ConfigManager的SetVal </param>
+        /// <param name="l10nAsm"> 本地化指定的程序集，留空则与主程序集相同 </param>
         public RegistryBuilder RegisterConfig<T>(out string key, UIConfigAttribute<T> uiAttr, string displayName, Func<T> getter,
                                                Action<T> setter, string group = ConfigAttribute.DefaultGroup,
-                                               Action<T>? action = null)
+                                               Action<T>? action = null, Assembly? l10nAsm = null)
         {
-            key = ConfigManager.RegisterConfig(uiAttr, displayName, getter, setter, group, action, _assembly);
+            key = ConfigManager.RegisterConfig(uiAttr, displayName, getter, setter, group, action, _assembly, l10nAsm ?? Assembly.GetCallingAssembly());
             return this;
         }
 
@@ -137,13 +142,14 @@ namespace JmcModLib.Core
         /// <param name="setter"> 维护的值的setter，用户若需要在代码中改值，最好使用GetValue(key)，但直接修改自己的值也会在最后保存文件时同步保存，只是不能同步UI </param>
         /// <param name="group"> 值所在的组，若不需要分组则留空 </param>
         /// <param name="action"> 若需注册UI且需要额外的回调函数，则填入，若不需要则留空，此处禁止调用ConfigManager的SetVal </param>
+        /// <param name="l10nAsm"> 本地化指定的程序集，留空则与主程序集相同 </param>
         public RegistryBuilder RegisterConfig<TEnum>(out string key, UIDropdownAttribute uiAttr, string displayName,
                                                      Func<TEnum> getter, Action<TEnum> setter,
                                                      string group = ConfigAttribute.DefaultGroup,
-                                                     Action<TEnum>? action = null)
+                                                     Action<TEnum>? action = null, Assembly? l10nAsm = null)
             where TEnum : Enum
         {
-            key = ConfigManager.RegisterConfig(uiAttr, displayName, getter, setter, group, action, _assembly);
+            key = ConfigManager.RegisterConfig(uiAttr, displayName, getter, setter, group, action, _assembly, l10nAsm ?? Assembly.GetCallingAssembly());
             return this;
         }
 
@@ -157,11 +163,12 @@ namespace JmcModLib.Core
         /// <param name="defaultValue"> 默认值 </param>
         /// <param name="group"> 值所在的组，若不需要分组则留空 </param>
         /// <param name="action"> 若需注册UI且需要额外的回调函数，则填入，若不需要则留空，此处禁止调用ConfigManager的SetVal </param>
+        /// <param name="l10nAsm"> 本地化指定的程序集，留空则与主程序集相同 </param>
         public RegistryBuilder RegisterConfig<T>(out string key, UIConfigAttribute<T> uiAttr, string displayName,
                                                  T defaultValue, string group = ConfigAttribute.DefaultGroup,
-                                                 Action<T>? action = null)
+                                                 Action<T>? action = null, Assembly? l10nAsm = null)
         {
-            key = ConfigManager.RegisterConfig(uiAttr, displayName, defaultValue, group, action, _assembly);
+            key = ConfigManager.RegisterConfig(uiAttr, displayName, defaultValue, group, action, _assembly, l10nAsm ?? Assembly.GetCallingAssembly());
             return this;
         }
 
@@ -175,12 +182,13 @@ namespace JmcModLib.Core
         /// <param name="defaultValue"> 默认枚举值 </param>
         /// <param name="group"> 值所在的组，若不需要分组则留空 </param>
         /// <param name="action"> 若需注册UI且需要额外的回调函数，则填入，若不需要则留空，此处禁止调用ConfigManager的SetVal </param>
+        /// <param name="l10nAsm"> 本地化指定的程序集，留空则与主程序集相同 </param>
         public RegistryBuilder RegisterConfig<TEnum>(out string key, UIDropdownAttribute uiAttr, string displayName,
                                                      TEnum defaultValue, string group = ConfigAttribute.DefaultGroup,
-                                                     Action<TEnum>? action = null)
+                                                     Action<TEnum>? action = null, Assembly? l10nAsm = null)
                     where TEnum : Enum
         {
-            key = ConfigManager.RegisterConfig(uiAttr, displayName, defaultValue, group, action, _assembly);
+            key = ConfigManager.RegisterConfig(uiAttr, displayName, defaultValue, group, action, _assembly, l10nAsm ?? Assembly.GetCallingAssembly());
             return this;
         }
 
@@ -195,12 +203,13 @@ namespace JmcModLib.Core
         /// <param name="expr"> 形如 `() => ClassName.StaticName / () => InstanceName.FieldName` 的表达式 </param>
         /// <param name="group"> 值所在的组，若不需要分组则留空 </param>
         /// <param name="action"> 若需注册UI且需要额外的回调函数，则填入，若不需要则留空，此处禁止调用ConfigManager的SetVal </param>
+        /// <param name="l10nAsm"> 本地化指定的程序集，留空则与主程序集相同 </param>
         /// <exception cref="ArgumentException"> 传递的表达式不合法 </exception>
         public RegistryBuilder RegisterConfig<T>(out string key, UIConfigAttribute<T> uiAttr, string displayName,
                                                  Expression<Func<T>> expr, string group = ConfigAttribute.DefaultGroup,
-                                                 Action<T>? action = null)
+                                                 Action<T>? action = null, Assembly? l10nAsm = null)
         {
-            key = ConfigManager.RegisterConfig(uiAttr, displayName, expr, group, action, _assembly);
+            key = ConfigManager.RegisterConfig(uiAttr, displayName, expr, group, action, _assembly, l10nAsm ?? Assembly.GetCallingAssembly());
             return this;
         }
 
@@ -214,13 +223,14 @@ namespace JmcModLib.Core
         /// <param name="expr"> 形如 `() => ClassName.StaticName / () => InstanceName.FieldName` 的表达式 </param>
         /// <param name="group"> 值所在的组，若不需要分组则留空 </param>
         /// <param name="action"> 若需注册UI且需要额外的回调函数，则填入，若不需要则留空，此处禁止调用ConfigManager的SetVal </param>
+        /// <param name="l10nAsm"> 本地化指定的程序集，留空则与主程序集相同 </param>
         public RegistryBuilder RegisterConfig<TEnum>(out string key, UIDropdownAttribute uiAttr, string displayName,
                                                      Expression<Func<TEnum>> expr,
                                                      string group = ConfigAttribute.DefaultGroup,
-                                                     Action<TEnum>? action = null)
+                                                     Action<TEnum>? action = null, Assembly? l10nAsm = null)
                where TEnum : Enum
         {
-            key = ConfigManager.RegisterConfig(uiAttr, displayName, expr, group, action, _assembly);
+            key = ConfigManager.RegisterConfig(uiAttr, displayName, expr, group, action, _assembly, l10nAsm ?? Assembly.GetCallingAssembly());
             return this;
         }
 

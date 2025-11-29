@@ -15,8 +15,9 @@ namespace JmcModLib.Config.Entry
         public ButtonEntry(Assembly asm,
                            MethodAccessor method,
                            string group,
-                           string displayName)
-            : base(asm, group, displayName)
+                           string displayName,
+                           Assembly? l10nAssembly)
+            : base(asm, group, displayName, l10nAssembly)
         {
             if (!UIButtonAttribute.IsValidMethod(method.MemberInfo, out var lvl, out var errorMessage))
                 throw new ArgumentException($"方法不符合 UIButtonAttribute 的要求: {errorMessage}");
@@ -30,8 +31,9 @@ namespace JmcModLib.Config.Entry
         public ButtonEntry(Assembly asm,
                            Action action,
                            string group,
-                           string displayName)
-            : base(asm, group, displayName)
+                           string displayName,
+                           Assembly? l10nAssembly)
+            : base(asm, group, displayName, l10nAssembly)
         {
             action1 = action;
         }
