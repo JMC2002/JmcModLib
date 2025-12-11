@@ -5,7 +5,7 @@ namespace JmcModLib.Core
     internal static class VersionInfo
     {
         internal const string Name = "JmcModLib";
-        internal const string Version = "1.2.0";
+        internal const string Version = "1.3.0";
 
         internal static ModInfo modInfo;
         internal static string Tag => $"[{Name} v{Version}]";

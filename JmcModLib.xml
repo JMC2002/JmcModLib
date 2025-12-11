@@ -1777,24 +1777,24 @@
             </summary>
         </member>
         <member name="M:JmcModLib.Utils.ComponentHelper.AddComponentIfNeeded``1(UnityEngine.GameObject,System.Action{``0},System.String)">
-             <summary>
-             确保组件被添加并初始化
-             <example>
-             示例：
-             <code>
-             var ret = Utils.ComponentHelper.AddComponentIfNeeded&lt;UI.ModEntryDragHandler>(__instance.gameObject, handler => handler.Setup(__instance), "ModEntryDragHandler 已添加并初始化");
-             if (!ret)
-             {
-                 ModLogger.Debug("ModEntryDragHandler已经被添加过了");
-             }
-             </code>
-             </example>
-             </summary>
-             <typeparam name="T">组件类型</typeparam>
-             <param name="instance">目标 GameObject</param>
-             <param name="initializeMethod">初始化方法，接受该组件的实例作为参数</param>
-             <param name="info">可选的参数，成功添加的日志信息，如果有传递，会打印到Debug日志中</param>
-             <returns>如果组件已存在返回 false，成功添加返回 true</returns>
+            <summary>
+            确保组件被添加并初始化
+            <example>
+            示例：
+            <code>
+            var ret = Utils.ComponentHelper.AddComponentIfNeeded&lt;UI.ModEntryDragHandler>(__instance.gameObject, handler => handler.Setup(__instance), "ModEntryDragHandler 已添加并初始化");
+            if (!ret)
+            {
+                ModLogger.Debug("ModEntryDragHandler已经被添加过了");
+            }
+            </code>
+            </example>
+            </summary>
+            <typeparam name="T">组件类型</typeparam>
+            <param name="instance">目标 GameObject</param>
+            <param name="initializeMethod">初始化方法，接受该组件的实例作为参数</param>
+            <param name="info">可选的参数，成功添加的日志信息，如果有传递，会打印到Debug日志中</param>
+            <returns>如果组件已存在返回 false，成功添加返回 true</returns>
             
         </member>
         <member name="M:JmcModLib.Utils.ComponentHelper.AddComponentAlways``1(UnityEngine.GameObject,System.Action{``0},System.String)">
