@@ -50,39 +50,32 @@ namespace JmcModLib.UI
             Vector2? anchor = null)
             where TmpButton : MonoBehaviour
         {
-            GameObject? btnObj;
+            GameObject? templateObj = null;
 
-            // 3. 寻找模板
+            // 1. 寻找模板
             var templates = Resources.FindObjectsOfTypeAll<TmpButton>();
             if (templates == null || templates.Length == 0)
                 templates = FindObjectsOfType<TmpButton>(true);
 
-            if (templates == null || templates.Length == 0)
+            if (templates != null && templates.Length > 0)
             {
-                ModLogger.Info($"未找到模板 {typeof(TmpButton).Name}，使用默认样式");
-                btnObj = new GameObject($"Btn_{text}");
-                btnObj.transform.SetParent(parent.transform, false);
-                var img = btnObj.AddComponent<Image>();
-                img.color = new Color(0.2f, 0.2f, 0.2f, 1f);
-
-                btnObj.AddComponent<Button>();
-
-                // 清理布局组件
-                foreach (var layout in btnObj.GetComponentsInChildren<LayoutElement>(true)) if (layout) DestroyImmediate(layout);
-                foreach (var fitter in btnObj.GetComponentsInChildren<ContentSizeFitter>(true)) if (fitter) DestroyImmediate(fitter);
-                foreach (var group in btnObj.GetComponentsInChildren<LayoutGroup>(true)) if (group) DestroyImmediate(group);
+                templateObj = templates[0].gameObject;
             }
             else
             {
-                // 4. 实例化
-                btnObj = UnityEngine.Object.Instantiate(templates[0].gameObject, parent.transform);
-                btnObj.name = $"Btn_{text}";
-                DestroyImmediate(btnObj.GetComponent<TmpButton>());
+                ModLogger.Info($"未找到模板 {typeof(TmpButton).Name}，将使用默认样式");
             }
 
-            // 2. 挂载脚本并初始化
-            var instance = btnObj.AddComponent<SimpleButton>();
-            instance.Initialize(text, onClick, font, width, height, anchor ?? new Vector2(0.5f, 0.5f));
+            // 调用核心 Create 方法
+            var instance = Create(parent, text, onClick, templateObj, font, width, height, anchor);
+
+            // 泛型版本的特殊逻辑：移除 TmpButton 脚本
+            // (因为是根据逻辑脚本找的模板，通常不希望保留那个逻辑脚本)
+            if (templateObj != null)
+            {
+                var logicComp = instance.GetComponent<TmpButton>();
+                if (logicComp != null) DestroyImmediate(logicComp);
+            }
 
             return instance;
         }
@@ -118,6 +111,49 @@ namespace JmcModLib.UI
             {
                 ButtonComp.onClick.AddListener(() => onClick());
             }
+        }
+
+        /// <summary>
+        /// 创建按钮 (指定 GameObject 模板或默认)
+        /// </summary>
+        public static SimpleButton Create(
+            GameObject parent,
+            string? text,
+            Action? onClick,
+            GameObject? template = null,
+            TMP_FontAsset? font = null,
+            float width = 220f,
+            float height = 60f,
+            Vector2? anchor = null)
+        {
+            GameObject btnObj;
+
+            if (template != null)
+            {
+                // 实例化传入的模板
+                btnObj = UnityEngine.Object.Instantiate(template, parent.transform);
+                btnObj.name = string.IsNullOrEmpty(text) ? "Btn_Custom" : $"Btn_{text}";
+
+                // 清理布局组件 (防止自动排版干扰)
+                foreach (var layout in btnObj.GetComponentsInChildren<LayoutElement>(true)) if (layout) DestroyImmediate(layout);
+                foreach (var fitter in btnObj.GetComponentsInChildren<ContentSizeFitter>(true)) if (fitter) DestroyImmediate(fitter);
+                foreach (var group in btnObj.GetComponentsInChildren<LayoutGroup>(true)) if (group) DestroyImmediate(group);
+            }
+            else
+            {
+                // 兜底逻辑
+                btnObj = new GameObject(string.IsNullOrEmpty(text) ? "Btn_Custom" : $"Btn_{text}");
+                btnObj.transform.SetParent(parent.transform, false);
+                var img = btnObj.AddComponent<Image>();
+                img.color = new Color(0.2f, 0.2f, 0.2f, 1f);
+                btnObj.AddComponent<Button>();
+            }
+
+            // 挂载脚本并初始化
+            var instance = btnObj.AddComponent<SimpleButton>();
+            instance.Initialize(text, onClick, font, width, height, anchor ?? new Vector2(0.5f, 0.5f));
+
+            return instance;
         }
 
         private void FixIconLayout()

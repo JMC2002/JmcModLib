@@ -1771,6 +1771,16 @@
             泛型创建实例
             </summary>
         </member>
+        <member name="T:JmcModLib.UI.Icon.IconGenerator">
+            <summary>
+            一些图标的生成器工具
+            </summary>
+        </member>
+        <member name="M:JmcModLib.UI.Icon.IconGenerator.GenerateRestartIcon">
+            <summary>
+            生成一个重启图标
+            </summary>
+        </member>
         <member name="T:JmcModLib.UI.SimpleButton">
             <summary>
             通用按钮组件，支持从模板克隆并自动修复布局/图标问题
@@ -1809,6 +1819,11 @@
             <param name="anchor">锚点位置 (默认居中)</param>
             <returns>返回挂载了 SimpleButton 的组件</returns>
         </member>
+        <member name="M:JmcModLib.UI.SimpleButton.Create(UnityEngine.GameObject,System.String,System.Action,UnityEngine.GameObject,TMPro.TMP_FontAsset,System.Single,System.Single,System.Nullable{UnityEngine.Vector2})">
+            <summary>
+            创建按钮 (指定 GameObject 模板或默认)
+            </summary>
+        </member>
         <member name="M:JmcModLib.UI.SimpleButton.SetTextColor(UnityEngine.Color)">
             <summary>
             链式调用：设置文字颜色
@@ -1818,6 +1833,23 @@
             <summary>
             链式调用：设置背景颜色
             </summary>
+        </member>
+        <member name="M:JmcModLib.UI.SimpleButton.ClearIcons">
+            <summary>
+            清理按钮上除背景外的所有图片（移除模板自带的图标）
+            </summary>
+        </member>
+        <member name="M:JmcModLib.UI.SimpleButton.ClearText">
+            <summary>
+            清空文字（隐藏或设置为空）
+            </summary>
+        </member>
+        <member name="M:JmcModLib.UI.SimpleButton.SetIcon(UnityEngine.Sprite,System.Nullable{UnityEngine.Vector2})">
+            <summary>
+            设置为一个居中的纯图标按钮
+            </summary>
+            <param name="sprite">图标资源</param>
+            <param name="size">图标大小，默认 32x32</param>
         </member>
         <member name="T:JmcModLib.UI.SimpleConfirmUI">
             <summary>
