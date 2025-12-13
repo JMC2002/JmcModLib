@@ -1771,6 +1771,96 @@
             泛型创建实例
             </summary>
         </member>
+        <member name="T:JmcModLib.UI.SimpleButton">
+            <summary>
+            通用按钮组件，支持从模板克隆并自动修复布局/图标问题
+            </summary>
+        </member>
+        <member name="P:JmcModLib.UI.SimpleButton.ButtonComp">
+            <summary>
+            绑定的按钮组件。可能为 null（初始化前或模板不含按钮时会创建）。
+            </summary>
+        </member>
+        <member name="P:JmcModLib.UI.SimpleButton.TextComp">
+            <summary>
+            按钮的文本组件。可能为 null（初始化前），创建后指向 `TextMeshProUGUI`。
+            </summary>
+        </member>
+        <member name="P:JmcModLib.UI.SimpleButton.BackgroundComp">
+            <summary>
+            背景图组件。优先使用 `Button.targetGraphic`，否则回退到自身 `Image`。
+            </summary>
+        </member>
+        <member name="P:JmcModLib.UI.SimpleButton.Rect">
+            <summary>
+            按钮的 `RectTransform`。初始化时确保存在。
+            </summary>
+        </member>
+        <member name="M:JmcModLib.UI.SimpleButton.Create(UnityEngine.GameObject,System.String,System.Action,UnityEngine.GameObject,TMPro.TMP_FontAsset,System.Single,System.Single,System.Nullable{UnityEngine.Vector2})">
+            <summary>
+            创建一个按钮实例
+            </summary>
+            <param name="parent">父物体</param>
+            <param name="text">按钮文字</param>
+            <param name="onClick">点击回调</param>
+            <param name="template">可选的模板物体 (GameObject)</param>
+            <param name="font">可选字体</param>
+            <param name="width">宽度</param>
+            <param name="height">高度</param>
+            <param name="anchor">锚点位置 (默认居中)</param>
+            <returns>返回挂载了 SimpleButton 的组件</returns>
+        </member>
+        <member name="M:JmcModLib.UI.SimpleButton.SetTextColor(UnityEngine.Color)">
+            <summary>
+            链式调用：设置文字颜色
+            </summary>
+        </member>
+        <member name="M:JmcModLib.UI.SimpleButton.SetBackgroundColor(UnityEngine.Color)">
+            <summary>
+            链式调用：设置背景颜色
+            </summary>
+        </member>
+        <member name="T:JmcModLib.UI.SimpleConfirmUI">
+            <summary>
+            一个通用的简易确认弹窗组件，用于在 Canvas 上显示带有遮罩的模态对话框（包含确认/取消按钮）。
+            </summary>
+        </member>
+        <member name="P:JmcModLib.UI.SimpleConfirmUI.IsActive">
+            <summary>
+            是否active
+            </summary>
+        </member>
+        <member name="M:JmcModLib.UI.SimpleConfirmUI.Show(UnityEngine.Transform,System.String,System.Action,UnityEngine.Component,System.Action,System.String,System.String,System.Nullable{UnityEngine.Color})">
+            <summary>
+            显示确认弹窗，并尝试从指定的 UI 组件模板中提取字体样式（推荐使用此重载以保持游戏风格一致）。
+            </summary>
+            <param name="contextObject">上下文对象，系统将从该对象的父级中查找 Canvas 以决定弹窗挂载位置。若找不到则会在场景中全局查找。</param>
+            <param name="message">弹窗中间显示的提示消息内容。</param>
+            <param name="onConfirm">点击“确认”按钮时的回调操作。</param>
+            <param name="styleTemplate">样式模板组件。弹窗将尝试从该组件（或其子物体）上的 TextMeshProUGUI 中提取字体，以便让弹窗字体与游戏原生 UI 保持一致。</param>
+            <param name="onCancel">点击“取消”按钮或按下 ESC 键时的回调操作。默认为 null。</param>
+            <param name="confirmText">确认按钮显示的文本。默认为 "Confirm"。</param>
+            <param name="cancelText">取消按钮显示的文本。默认为 "Cancel"。</param>
+            <param name="confirmColor">确认按钮的文本颜色。默认为红色（警示色），若传 null 则使用默认样式。</param>
+        </member>
+        <member name="M:JmcModLib.UI.SimpleConfirmUI.Show(UnityEngine.Transform,System.String,System.Action,System.Action,TMPro.TMP_FontAsset,System.String,System.String,System.Nullable{UnityEngine.Color})">
+            <summary>
+            显示确认弹窗，允许直接指定字体资源（核心实现方法）。
+            </summary>
+            <param name="contextObject">上下文对象，系统将从该对象的父级中查找 Canvas 以决定弹窗挂载位置。若找不到则会在场景中全局查找。</param>
+            <param name="message">弹窗中间显示的提示消息内容。</param>
+            <param name="onConfirm">点击“确认”按钮时的回调操作。</param>
+            <param name="onCancel">点击“取消”按钮或按下 ESC 键时的回调操作。默认为 null。</param>
+            <param name="font">指定的 TextMeshPro 字体资源。如果为 null，将使用 TMP 的默认字体。</param>
+            <param name="confirmText">确认按钮显示的文本。默认为 "Confirm"。</param>
+            <param name="cancelText">取消按钮显示的文本。默认为 "Cancel"。</param>
+            <param name="confirmColor">确认按钮的文本颜色。默认为红色（警示色），若传 null 则使用默认样式。</param>
+        </member>
+        <member name="M:JmcModLib.UI.SimpleConfirmUI.Close">
+            <summary>
+            强制关闭并销毁当前显示的确认弹窗。
+            </summary>
+        </member>
         <member name="T:JmcModLib.Utils.ComponentHelper">
             <summary>
             一些用来往GameObject里加Component的方法
