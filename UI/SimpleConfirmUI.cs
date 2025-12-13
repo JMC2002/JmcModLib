@@ -174,11 +174,10 @@ namespace JmcModLib.UI
 
                 // --- 创建按钮 ---
                 // 创建确认按钮
-                SimpleButton.Create(
+                SimpleButton.Create<ContinueButton>(
                     parent: btnContainer,
                     text: confirmText ?? "Confirm",
                     onClick: () => { Close(); onConfirm?.Invoke(); },
-                    template: btnTemplate,
                     font: font,
                     width: 220,
                     height: 60,
@@ -187,11 +186,10 @@ namespace JmcModLib.UI
                 .SetTextColor(confirmColor ?? Color.red); // 链式设置颜色
 
                 // 创建取消按钮
-                SimpleButton.Create(
+                SimpleButton.Create<ContinueButton>(
                     parent: btnContainer,
                     text: cancelText ?? "Cancel",
                     onClick: () => { Close(); onCancel?.Invoke(); },
-                    template: btnTemplate,
                     font: font,
                     width: 220,
                     height: 60,

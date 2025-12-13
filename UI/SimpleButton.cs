@@ -1,4 +1,5 @@
-﻿using System;
+﻿using JmcModLib.Utils;
+using System;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -26,7 +27,7 @@ namespace JmcModLib.UI
         /// <summary>
         /// 按钮的 `RectTransform`。初始化时确保存在。
         /// </summary>
-        public RectTransform? Rect { get; private set; }
+        public RectTransform Rect { get; private set; } = default!;
 
         /// <summary>
         /// 创建一个按钮实例
@@ -34,49 +35,49 @@ namespace JmcModLib.UI
         /// <param name="parent">父物体</param>
         /// <param name="text">按钮文字</param>
         /// <param name="onClick">点击回调</param>
-        /// <param name="template">可选的模板物体 (GameObject)</param>
         /// <param name="font">可选字体</param>
         /// <param name="width">宽度</param>
         /// <param name="height">高度</param>
         /// <param name="anchor">锚点位置 (默认居中)</param>
         /// <returns>返回挂载了 SimpleButton 的组件</returns>
-        public static SimpleButton Create(
+        public static SimpleButton Create<TmpButton>(
             GameObject parent,
             string? text,
             Action? onClick,
-            GameObject? template = null,
             TMP_FontAsset? font = null,
             float width = 220f,
             float height = 60f,
             Vector2? anchor = null)
+            where TmpButton : MonoBehaviour
         {
             GameObject? btnObj;
 
-            // 1. 实例化或创建基础物体
-            if (template != null)
+            // 3. 寻找模板
+            var templates = Resources.FindObjectsOfTypeAll<TmpButton>();
+            if (templates == null || templates.Length == 0)
+                templates = FindObjectsOfType<TmpButton>(true);
+
+            if (templates == null || templates.Length == 0)
             {
-                btnObj = Instantiate(template, parent.transform);
-                btnObj.name = $"Btn_{text}";
+                ModLogger.Info($"未找到模板 {typeof(TmpButton).Name}，使用默认样式");
+                btnObj = new GameObject($"Btn_{text}");
+                btnObj.transform.SetParent(parent.transform, false);
+                var img = btnObj.AddComponent<Image>();
+                img.color = new Color(0.2f, 0.2f, 0.2f, 1f);
 
-                // 清理不必要的组件
-                var comps = btnObj.GetComponents<MonoBehaviour>();
-                foreach (var c in comps)
-                {
-                    if (c is not null and not Image and not Button) DestroyImmediate(c);
-                }
+                btnObj.AddComponent<Button>();
 
-                // 清理布局组件 (防止自动排版干扰)
+                // 清理布局组件
                 foreach (var layout in btnObj.GetComponentsInChildren<LayoutElement>(true)) if (layout) DestroyImmediate(layout);
                 foreach (var fitter in btnObj.GetComponentsInChildren<ContentSizeFitter>(true)) if (fitter) DestroyImmediate(fitter);
                 foreach (var group in btnObj.GetComponentsInChildren<LayoutGroup>(true)) if (group) DestroyImmediate(group);
             }
             else
             {
-                btnObj = new GameObject($"Btn_{text}");
-                btnObj.transform.SetParent(parent.transform, false);
-                var img = btnObj.AddComponent<Image>();
-                img.color = new Color(0.2f, 0.2f, 0.2f, 1f);
-                btnObj.AddComponent<Button>();
+                // 4. 实例化
+                btnObj = UnityEngine.Object.Instantiate(templates[0].gameObject, parent.transform);
+                btnObj.name = $"Btn_{text}";
+                DestroyImmediate(btnObj.GetComponent<TmpButton>());
             }
 
             // 2. 挂载脚本并初始化
@@ -201,6 +202,70 @@ namespace JmcModLib.UI
         public SimpleButton SetBackgroundColor(Color color)
         {
             BackgroundComp?.color = color;
+            return this;
+        }
+
+        /// <summary>
+        /// 清理按钮上除背景外的所有图片（移除模板自带的图标）
+        /// </summary>
+        public SimpleButton ClearIcons()
+        {
+            // 获取所有 Image
+            var images = GetComponentsInChildren<Image>(true);
+            foreach (var img in images)
+            {
+                // 如果不是背景图，且不是按钮自身的 Image 组件
+                if (img != BackgroundComp && img.gameObject != gameObject)
+                {
+                    Destroy(img.gameObject);
+                }
+            }
+            return this; // 支持链式调用
+        }
+
+        /// <summary>
+        /// 清空文字（隐藏或设置为空）
+        /// </summary>
+        public SimpleButton ClearText()
+        {
+            if (TextComp != null)
+            {
+                TextComp.text = "";
+                TextComp.gameObject.SetActive(false);
+            }
+            return this;
+        }
+
+        /// <summary>
+        /// 设置为一个居中的纯图标按钮
+        /// </summary>
+        /// <param name="sprite">图标资源</param>
+        /// <param name="size">图标大小，默认 32x32</param>
+        public SimpleButton SetIcon(Sprite sprite, Vector2? size = null)
+        {
+            // 1. 先清理旧图标和文字
+            ClearIcons();
+            ClearText();
+
+            // 2. 创建新图标对象
+            GameObject iconObj = new GameObject("Icon");
+            iconObj.transform.SetParent(transform, false);
+
+            // 3. 设置 Image
+            Image img = iconObj.AddComponent<Image>();
+            img.sprite = sprite;
+            img.raycastTarget = false; // 图标不阻挡点击
+            // 如果原来的文字是白色的，图标通常也设为白色
+            img.color = Color.white;
+
+            // 4. 居中布局
+            RectTransform rt = iconObj.GetComponent<RectTransform>();
+            rt.anchorMin = new Vector2(0.5f, 0.5f);
+            rt.anchorMax = new Vector2(0.5f, 0.5f);
+            rt.pivot = new Vector2(0.5f, 0.5f);
+            rt.anchoredPosition = Vector2.zero;
+            rt.sizeDelta = size ?? new Vector2(32, 32);
+
             return this;
         }
     }

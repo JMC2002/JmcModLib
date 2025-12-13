@@ -1796,14 +1796,13 @@
             按钮的 `RectTransform`。初始化时确保存在。
             </summary>
         </member>
-        <member name="M:JmcModLib.UI.SimpleButton.Create(UnityEngine.GameObject,System.String,System.Action,UnityEngine.GameObject,TMPro.TMP_FontAsset,System.Single,System.Single,System.Nullable{UnityEngine.Vector2})">
+        <member name="M:JmcModLib.UI.SimpleButton.Create``1(UnityEngine.GameObject,System.String,System.Action,TMPro.TMP_FontAsset,System.Single,System.Single,System.Nullable{UnityEngine.Vector2})">
             <summary>
             创建一个按钮实例
             </summary>
             <param name="parent">父物体</param>
             <param name="text">按钮文字</param>
             <param name="onClick">点击回调</param>
-            <param name="template">可选的模板物体 (GameObject)</param>
             <param name="font">可选字体</param>
             <param name="width">宽度</param>
             <param name="height">高度</param>
