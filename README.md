@@ -16,10 +16,12 @@
 # 1. 使用方法
 开发上，在订阅此MOD后在项目`.csproj`添加引入
 ```xml
-// TODO: 现在还没上传到创意工坊，没有发布ID，等上传后补上
+    <Reference Include="JmcModLib">
+      <HintPath>$(SteamWorkShop)3613297900\JmcModLib.dll</HintPath>
+    </Reference>
 ```
-不过更推荐直接使用模板`csproj`内容，不仅包含了创意工坊的地点，还包含了一些比较实用的功能，比如自动根据项目文件夹下的`Core/VersionInfo.cs`获取版本号，写入到程序集、每次生成自动将构建的dll复制到项目文件夹下的MOD同名文件夹中，并将这个文件夹的内容与游戏本地MOD文件夹的内容同步，在生成完成后，还会自动跳出弹窗询问是否打开鸭科夫。
-// TODO: 等待补充模板文件
+不过更推荐直接使用[ModTemplate](https://github.com/JMC2002/ModTemplate)模板`csproj`内容，不仅包含了创意工坊的地点，还包含了一些比较实用的功能，比如自动根据项目文件夹下的`Core/VersionInfo.cs`获取版本号，写入到程序集、每次生成自动将构建的dll复制到项目文件夹下的MOD同名文件夹中，并将这个文件夹的内容与游戏本地MOD文件夹的内容同步，在生成完成后，还会自动跳出弹窗询问是否打开鸭科夫。
+此外，这个模板项目还可以自动处理与JmcModLib以及其他前置的依赖顺序，避免手动调整加载顺序的麻烦，并在需要的时候弹窗提示。
 
 本项目有详尽的XML文档注释，引入依赖后在IDE中会有相应的提示。
 
@@ -76,7 +78,7 @@ MOD卸载不需要写任何卸载逻辑，系统会自动完成卸载，并在重连后也不会有问题（包括Set
 - 本MOD不修改游戏任何代码逻辑，理论上不与任何MOD冲突
 - 为获得更好的使用体验，建议将本MOD的排序调到最高
 - 通过观察，`谁偷了我的帧数`MOD加载的情况下会严重影响强类型委托外的反射调用的性能测试，百万次调用测试耗时达到1s（不过这个数量级应该不会在实际使用中出现）
-- 加载顺序上，如果使用反射拿到本MOD的API，可以不依赖加载顺序，不过建议直接强依赖本MOD，并保证本MOD在被依赖MOD之上，本MOD维护的其他Setting UI（暂时只有ModSetting）不需要处理加载顺序
+- 加载顺序上，如果直接引用dll不做任何处理，需要保证本MOD在子MOD顺序之上，不过建议使用[ModTemplate](https://github.com/JMC2002/ModTemplate)的相关方法无序依赖；本MOD维护的其他Setting UI（暂时只有ModSetting）不需要处理加载顺序
 
 # 4. 其他
 - API约定：
@@ -103,4 +105,7 @@ MOD卸载不需要写任何卸载逻辑，系统会自动完成卸载，并在重连后也不会有问题（包括Set
 感谢阅读到这里，如果你觉得这个MOD对你有帮助，欢迎给个Star鼓励一下，也欢迎提出任何建议和意见，我会尽量改进和完善这个MOD，谢谢！
 
 测试项目：
-[TemplateMod](https://github.com/JMC2002/Duckov-TemplateMod)
+[TestMod](https://github.com/JMC2002/Duckov-TemplateMod)
+
+模板项目：
+[ModTemplate](https://github.com/JMC2002/ModTemplate)
