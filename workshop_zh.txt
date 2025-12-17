@@ -19,7 +19,7 @@
 
 开发上，在订阅此MOD后在项目 [b].csproj[/b] 添加引入[b]SteamLibrary\steamapps\workshop\content\3167020\3613297900\JmcModLib.dll[/b] 的引用即可：
 
-不过更推荐直接使用[url=https://github.com/JMC2002/Duckov-TemplateMod/blob/master/TemplateMod/TemplateMod.csproj] 模板 csproj [/url] 内容，不仅包含了创意工坊的路径，还包含了一些比较实用的功能，比如：
+不过更推荐直接使用[url=https://github.com/JMC2002/ModTemplate/blob/8b07a5a4af8686fe4b83c884ba7934fcdf25667c/ModTemplate.csproj] 模板 csproj [/url] 内容，不仅包含了创意工坊的路径，还包含了一些比较实用的功能，比如：
 
 [list]
 [*] 自动根据项目文件夹下的 [b]Core/VersionInfo.cs[/b] 获取版本号并写入程序集  
@@ -96,12 +96,13 @@ public static float v = 3.14f;
 [h1]3. 环境依赖与兼容性[/h1]
 
 [list]
-[*] 仅依赖 [b]Newtonsoft.Json 13.0.4[/b]（已内置）  
+[*] 仅依赖 [b]Newtonsoft.Json 13.0.4[/b]（已内置），同时内置了一份Harmony2.4.1
 [*] 本MOD不直接强依赖于任何UI Mod，但是建议配合[url=https://steamcommunity.com/sharedfiles/filedetails/?id=3595729494] ModSetting [/url]使用以获得配置项UI支持
 [*] 本MOD不修改游戏任何代码逻辑，理论上不与任何MOD冲突
 [*] 为获得更好的使用体验，建议将本MOD的排序调到最高
 [*] 过观察，「谁偷了我的帧数」MOD加载的情况下会严重影响强类型委托外的反射调用的性能测试，百万次调用测试耗时达到1s（不过这个数量级应该不会在实际使用中出现）
-[*] 加载顺序上，如果使用反射拿到本MOD的API，可以不依赖加载顺序，不过建议直接强依赖本MOD，并保证本MOD在被依赖MOD之上，本MOD维护的其他Setting UI（暂时只有ModSetting，后续可能看反馈接入ModConfig）不需要处理加载顺序
+[*] 如果直接引用本MOD，需要保证加载顺序，建议使用[url=https://steamcommunity.com/sharedfiles/filedetails/?id=3624342813] 模板项目 [/url]取消顺序依赖，同时还可以自动检测前置是否已勾选、是否已订阅
+[*] 本MOD维护的其他Setting UI（暂时只有ModSetting，后续可能看反馈接入ModConfig）不需要处理加载顺序
 [/list]
 
 [h1]4. 其他[/h1]

@@ -112,7 +112,8 @@ for configuration UI support
 [*] Does not modify any game logic; theoretically compatible with any mod  
 [*] For best results, place this mod at the top of the load order  
 [*] Observation: “Who Stole My FPS” mod significantly slows reflection benchmarks—the strong-typed path remains fast, but generic reflection calls may take ~1s for one million calls (not a practical concern)  
-[*] If accessing this mod’s API via reflection, load order does not matter; however, it is recommended to hard-depend on this mod and keep it above dependent mods. Additional Setting UIs (currently only ModSetting, possibly ModConfig later) do not require load order handling.  
+[*] If you reference this mod directly, you must ensure the correct load order. It is recommended to use the [url=https://github.com/JMC2002/ModTemplate/blob/8b07a5a4af8686fe4b83c884ba7934fcdf25667c/ModTemplate.csproj]template project[/url] to remove load-order dependencies, while also automatically checking whether required dependencies are enabled and subscribed.
+[*] Additional Setting UIs (currently only ModSetting, possibly ModConfig later) do not require load order handling.  
 [/list]
 
 [h1]4. Miscellaneous[/h1]
