@@ -15,7 +15,7 @@
 
     
     <!-- 鸭科夫安装路径 -->
-    <DuckovPath>U:\SteamLibrary\steamapps\common\Escape from Duckov</DuckovPath>
+    <DuckovPath>D:\SteamLibrary\steamapps\common\Escape from Duckov</DuckovPath>
 
     <!-- Managed DLL目录 -->
     <DuckovManagedPath>$(DuckovPath)\Duckov_Data\Managed</DuckovManagedPath>
@@ -44,9 +44,8 @@
     <Reference Include="$(DuckovManagedPath)\ItemStatsSystem.dll" />
     <Reference Include="$(DuckovManagedPath)\SodaLocalization.dll" />
     <Reference Include="$(DuckovManagedPath)\Unity*" />
-  </ItemGroup>
-  <ItemGroup>
-    <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
+    <Reference Include="$(DuckovManagedPath)\EasySave3.dll" />
+    <Reference Include="$(DuckovManagedPath)\Newtonsoft.Json.dll" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="JmcModLib\Lang\" />
