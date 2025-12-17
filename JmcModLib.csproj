@@ -15,7 +15,7 @@
 
     
     <!-- 鸭科夫安装路径 -->
-    <DuckovPath>D:\SteamLibrary\steamapps\common\Escape from Duckov</DuckovPath>
+    <DuckovPath>U:\SteamLibrary\steamapps\common\Escape from Duckov</DuckovPath>
 
     <!-- Managed DLL目录 -->
     <DuckovManagedPath>$(DuckovPath)\Duckov_Data\Managed</DuckovManagedPath>

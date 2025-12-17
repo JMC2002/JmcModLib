@@ -1276,6 +1276,11 @@
             在模组设置完成后调用
             </summary>
         </member>
+        <member name="M:JmcModLib.ModBehaviour.PreloadDependencies">
+            <summary>
+            遍历列表，将依赖项强行载入内存
+            </summary>
+        </member>
         <member name="T:JmcModLib.Reflection.MemberAccessor">
             <summary>
             字段 / 属性 的统一高性能访问器。
