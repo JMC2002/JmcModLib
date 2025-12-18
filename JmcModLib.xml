@@ -1982,13 +1982,13 @@
         </member>
         <member name="M:JmcModLib.Utils.ComponentHelper.AddComponentAlways``1(UnityEngine.GameObject,System.Action{``0},System.String)">
             <summary>
-            若GameObject中已存在component，删除后再添加，否则直接添加
+            若GameObject中已存在component，初始化，否则添加并初始化
             </summary>
             <typeparam name="T">组件类型</typeparam>
             <param name="instance">目标 GameObject</param>
             <param name="initializeMethod">初始化方法，接受该组件的实例作为参数</param>
             <param name="info">可选的参数，成功添加的日志信息，如果有传递，会打印到Debug日志中</param>
-            <returns>如果是新增的，返回true，否则返回false</returns>
+            <returns> 返回组件 </returns>
         </member>
         <member name="M:JmcModLib.Utils.ComponentHelper.AddComponentOr``1(UnityEngine.GameObject,System.Action{``0},System.Action{``0},System.String)">
             <summary>

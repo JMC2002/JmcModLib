@@ -40,10 +40,7 @@ namespace JmcModLib.Utils
             }
 
             var tmp = instance.AddComponent<T>();
-            if (initializeMethod != null)
-            {
-                initializeMethod(tmp);
-            }
+            initializeMethod?.Invoke(tmp);
             if (info != null)
             {
                 ModLogger.Debug(info);
@@ -52,29 +49,27 @@ namespace JmcModLib.Utils
         }
 
         /// <summary>
-        /// 若GameObject中已存在component，删除后再添加，否则直接添加
+        /// 若GameObject中已存在component，初始化，否则添加并初始化
         /// </summary>
         /// <typeparam name="T">组件类型</typeparam>
         /// <param name="instance">目标 GameObject</param>
         /// <param name="initializeMethod">初始化方法，接受该组件的实例作为参数</param>
         /// <param name="info">可选的参数，成功添加的日志信息，如果有传递，会打印到Debug日志中</param>
-        /// <returns>如果是新增的，返回true，否则返回false</returns>
-        public static bool AddComponentAlways<T>(GameObject instance, Action<T> initializeMethod, string? info = null) where T : Component
+        /// <returns> 返回组件 </returns>
+        public static T AddComponentAlways<T>(GameObject instance, Action<T>? initializeMethod = null, string? info = null) where T : Component
         {
-            bool flg = true;
-            if (instance.GetComponent<T>() != null)
-            {
-                UnityEngine.Object.Destroy(instance.GetComponent<T>());
-                flg = false;
-            }
+            if (instance == null) throw new ArgumentNullException(nameof(instance));
 
-            initializeMethod(instance.AddComponent<T>());
+            T component = instance.GetComponent<T>() ?? instance.AddComponent<T>();
+
+            initializeMethod?.Invoke(component);
+
             if (info != null)
             {
                 ModLogger.Debug(info);
             }
 
-            return flg;
+            return component;
         }
 
         /// <summary>
