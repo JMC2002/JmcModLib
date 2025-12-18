@@ -4,7 +4,8 @@
     <TargetFramework>netstandard2.1</TargetFramework>
     <LangVersion>14.0</LangVersion>
     <Nullable>enable</Nullable>
-    <Deterministic>false</Deterministic> <!--启用通配符版本号-->
+    <Deterministic>false</Deterministic>
+    <!--启用通配符版本号-->
     <OutputType>Library</OutputType>
     <ModAuthor>JMC</ModAuthor>
 
@@ -13,9 +14,11 @@
     <!-- 自定义构建参数，默认不开启全量复制 -->
     <ForceCopy>false</ForceCopy>
 
-    
+    <!-- Steam库安装路径 -->
+    <SteamAppPath>D:\SteamLibrary\steamapps\</SteamAppPath>
+
     <!-- 鸭科夫安装路径 -->
-    <DuckovPath>U:\SteamLibrary\steamapps\common\Escape from Duckov</DuckovPath>
+    <DuckovPath>$(SteamAppPath)common\Escape from Duckov</DuckovPath>
 
     <!-- Managed DLL目录 -->
     <DuckovManagedPath>$(DuckovPath)\Duckov_Data\Managed</DuckovManagedPath>
@@ -27,17 +30,17 @@
     <!-- 游戏 Mods 文件夹 -->
     <ModGameDir>$(DuckovModPath)$(ModName)</ModGameDir>
     <!-- 创意工坊文件夹 -->
-    <SteamWorkShop>U:\SteamLibrary\steamapps\workshop\content\3167020</SteamWorkShop>
+    <SteamWorkShop>$(SteamAppPath)workshop\content\3167020\</SteamWorkShop>
     <!-- 存放版本信息的文件，提取形如Version = x.x.x的信息 -->
     <ModVersionFile>$(ProjectDir)Core\VersionInfo.cs</ModVersionFile>
     <Configurations>Debug;Release</Configurations>
-    
+
     <!--生成XML注释-->
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <DocumentationFile>$(OutputPath)$(AssemblyName).xml</DocumentationFile>
   </PropertyGroup>
-  
-  
+
+
   <!-- 依赖引用 -->
   <ItemGroup>
     <Reference Include="$(DuckovManagedPath)\TeamSoda.*" />
@@ -61,7 +64,7 @@
     </PropertyGroup>
 
     <!-- 读取文件 -->
-    <ReadLinesFromFile File="$(ProjectDir)Core\VersionInfo.cs">
+    <ReadLinesFromFile File="$(ModVersionFile)">
       <Output TaskParameter="Lines" ItemName="VersionLinesRaw" />
     </ReadLinesFromFile>
 
@@ -75,23 +78,29 @@
       <ExtractedVersion>$([System.Text.RegularExpressions.Regex]::Match('$(VersionFileContent)', 'Version\s*=\s*\"([0-9\.]+)\"').Groups[1].Value.Trim())</ExtractedVersion>
     </PropertyGroup>
 
-    <Message Text="📌 提取到的版本号: $(ExtractedVersion)" Importance="High" />
+    <!-- 提取 Name (查找 public const string Name = "xxx") -->
+    <PropertyGroup>
+      <ExtractedModName>$([System.Text.RegularExpressions.Regex]::Match('$(VersionFileContent)', 'Name\s*=\s*\"([^\"]+)\"').Groups[1].Value.Trim())</ExtractedModName>
+    </PropertyGroup>
+
+    <Message Text="📌 提取到的版本号: $(ExtractedVersion) | 名称: $(ExtractedModName)" Importance="High" />
 
     <Error Condition="'$(ExtractedVersion)' == ''" Text="❌ 无法从 VersionInfo.cs 中提取版本号。" />
+    <Error Condition="'$(ExtractedModName)' == ''" Text="❌ 无法从 VersionInfo.cs 中提取名称。" />
 
     <!-- ⭐ 用 Property 拼出全部代码，不使用 ItemGroup -->
     <PropertyGroup>
       <AutoAssemblyInfoText>
-[assembly: System.Reflection.AssemblyVersion("$(ExtractedVersion).*")]
-[assembly: System.Reflection.AssemblyFileVersion("$(ExtractedVersion).0")]
-[assembly: System.Reflection.AssemblyInformationalVersion("$(ExtractedVersion)")]
+        [assembly: System.Reflection.AssemblyVersion("$(ExtractedVersion).*")]
+        [assembly: System.Reflection.AssemblyFileVersion("$(ExtractedVersion).0")]
+        [assembly: System.Reflection.AssemblyInformationalVersion("$(ExtractedVersion)")]
 
-[assembly: System.Reflection.AssemblyTitle("Duckov mod $(ModName) by $(ModAuthor)")]
-[assembly: System.Reflection.AssemblyDescription("Duckov mod $(ModName) by $(ModAuthor)")]
-[assembly: System.Reflection.AssemblyProduct("$(ModName)")]
-[assembly: System.Reflection.AssemblyCompany("$(ModAuthor)")]
-[assembly: System.Reflection.AssemblyMetadata("ModAuthor", "$(ModAuthor)")]
-[assembly: System.Reflection.AssemblyMetadata("ModName", "$(ModName)")]
+        [assembly: System.Reflection.AssemblyTitle("Duckov mod $(ModName) by $(ModAuthor)")]
+        [assembly: System.Reflection.AssemblyDescription("Duckov mod $(ModName) by $(ModAuthor)")]
+        [assembly: System.Reflection.AssemblyProduct("$(ModName)")]
+        [assembly: System.Reflection.AssemblyCompany("$(ModAuthor)")]
+        [assembly: System.Reflection.AssemblyMetadata("ModAuthor", "$(ModAuthor)")]
+        [assembly: System.Reflection.AssemblyMetadata("ModName", "$(ModName)")]
       </AutoAssemblyInfoText>
     </PropertyGroup>
 
@@ -116,6 +125,9 @@
     <!-- 复制刚编译的 DLL -->
     <Copy SourceFiles="$(TargetPath)" DestinationFolder="$(ModLocalDir)" />
     <Copy SourceFiles="$(DocumentationFile)" DestinationFolder="$(ModLocalDir)" />
+    <!-- ✅ 使用 PowerShell 修改 info.ini (核心逻辑) -->
+    <Message Text="📝 正在更新 info.ini 元数据..." Importance="High" />
+    <Exec Command="powershell -NoProfile -ExecutionPolicy Bypass -Command ^&#xD;&#xA;      $path = '$(ModLocalDir)\info.ini'; ^&#xD;&#xA;      $name = '$(ExtractedModName)'; ^&#xD;&#xA;      $ver = '$(ExtractedVersion)'; ^&#xD;&#xA;      if (Test-Path $path) { ^&#xD;&#xA;          $lines = [System.Collections.Generic.List[string]](Get-Content $path -Encoding UTF8); ^&#xD;&#xA;          $hasName = $false; ^&#xD;&#xA;          $hasVer = $false; ^&#xD;&#xA;          for($i=0; $i -lt $lines.Count; $i++) { ^&#xD;&#xA;              if($lines[$i] -match '^^\s*name\s*=') { ^&#xD;&#xA;                  $lines[$i] = 'name = ' + $name; ^&#xD;&#xA;                  $hasName = $true; ^&#xD;&#xA;              } ^&#xD;&#xA;              elseif($lines[$i] -match '^^\s*version\s*=') { ^&#xD;&#xA;                  $lines[$i] = 'version = ' + $ver; ^&#xD;&#xA;                  $hasVer = $true; ^&#xD;&#xA;              } ^&#xD;&#xA;          } ^&#xD;&#xA;          if(-not $hasName) { $lines.Insert(0, 'name = ' + $name); } ^&#xD;&#xA;          if(-not $hasVer) { $lines.Add('version = ' + $ver); } ^&#xD;&#xA;          Set-Content -Path $path -Value $lines -Encoding UTF8; ^&#xD;&#xA;          Write-Host '   -> info.ini 更新完成'; ^&#xD;&#xA;      } else { ^&#xD;&#xA;          Write-Warning '   -> 未找到 info.ini'; ^&#xD;&#xA;      }" />
 
     <!-- 根据 ForceCopy 决定 robocopy 参数 -->
     <PropertyGroup>
