@@ -1835,12 +1835,49 @@
         </member>
         <member name="T:JmcModLib.UI.Icon.IconGenerator">
             <summary>
-            一些图标的生成器工具
+            图标生成器核心入口。
+            利用分部类 (partial) 将不同图标的绘制逻辑拆分到不同文件。
+            利用 Lazy&lt;T&gt; 实现惰性加载和缓存。
             </summary>
         </member>
-        <member name="M:JmcModLib.UI.Icon.IconGenerator.GenerateRestartIcon">
+        <member name="P:JmcModLib.UI.Icon.IconGenerator.Restart">
             <summary>
-            生成一个重启图标
+            获取重启图标 (128x128, 平滑)
+            </summary>
+        </member>
+        <member name="P:JmcModLib.UI.Icon.IconGenerator.PinUpright">
+            <summary>
+            获取直立图钉图标 (16x16, 像素风)
+            </summary>
+        </member>
+        <member name="P:JmcModLib.UI.Icon.IconGenerator.PinAngled">
+            <summary>
+            获取倾斜图钉图标 (16x16, 像素风)
+            </summary>
+        </member>
+        <member name="P:JmcModLib.UI.Icon.IconGenerator.LockClosed">
+            <summary>
+            获取闭合的锁图标 (16x16, 像素风)
+            </summary>
+        </member>
+        <member name="P:JmcModLib.UI.Icon.IconGenerator.LockOpen">
+            <summary>
+            获取打开的锁图标 (16x16, 像素风)
+            </summary>
+        </member>
+        <member name="P:JmcModLib.UI.Icon.IconGenerator.StickTop">
+            <summary>
+            获取置顶图标 (16x16, 箭头指向上方横线)
+            </summary>
+        </member>
+        <member name="P:JmcModLib.UI.Icon.IconGenerator.StickBottom">
+            <summary>
+            获取置底图标 (16x16, 箭头指向下方横线)
+            </summary>
+        </member>
+        <member name="M:JmcModLib.UI.Icon.IconGenerator.CreateLockSprite(System.Boolean)">
+            <summary>
+            内部共享的锁图标生成逻辑
             </summary>
         </member>
         <member name="T:JmcModLib.UI.SimpleButton">
