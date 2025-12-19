@@ -84,7 +84,7 @@ MOD卸载不需要写任何卸载逻辑，系统会自动完成卸载，并在重连后也不会有问题（包括Set
 - 可以把文档喂给AI让他帮你用这个库，参考：[prompt](https://github.com/JMC2002/Duckov-AnalyzeCsClass?tab=readme-ov-file#%E5%96%82%E7%BB%99ai)
 
 - API约定：
-	- 所有API中涉及Assembly的参数均可选，默认使用`Assembly.GetCallingAssembly()`返回调用方的程序集性
+	- 所有API中涉及Assembly的参数均可选，默认使用`Assembly.GetCallingAssembly()`返回调用方的程序集
 
 - AI辅助声明：
 	- 开发过程中使用GPT辅助开发
