@@ -1,4 +1,5 @@
 ﻿using JmcModLib.Config.Entry;
+using JmcModLib.Config.UI.ModConfig;
 using JmcModLib.Config.UI.ModSetting;
 using JmcModLib.Core.AttributeRouter;
 using System;
@@ -22,6 +23,7 @@ namespace JmcModLib.Config.UI
         {
             AttributeRouter.OnRegistered += Register; // 单个MOD扫描完后再决定是否广播
             ModSettingLinker.Init();
+            // ModConfigLinker.Init();
         }
 
         internal static void Dispose()
