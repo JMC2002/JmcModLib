@@ -503,6 +503,41 @@
             将指定程序集的 ModSetting 注册到 ModSetting UI。
             </summary>
         </member>
+        <member name="M:JmcModLib.Config.UI.ModConfig.ModConfigAPI.Init">
+            <summary>
+            初始化反射访问器
+            </summary>
+        </member>
+        <member name="M:JmcModLib.Config.UI.ModConfig.ModConfigAPI.Load``1(System.String,``0)">
+            <summary>
+            从 ModConfig 的存储中加载值
+            </summary>
+        </member>
+        <member name="M:JmcModLib.Config.UI.ModConfig.ModConfigAPI.Save``1(System.String,``0)">
+            <summary>
+            向 ModConfig 的存储中写入值 (实现 Jmc -> ModConfig 的同步)
+            </summary>
+            <remarks>
+            注意：ModConfig 内部的 key 是 "ModName_Key"。
+            如果你传入的是原始 Key，需要自己拼接。但这里的 Save 对应 OptionsManager_Mod.Save(key, val)，
+            该方法直接存 ES3，不会自动加前缀。所以调用此方法时必须传入 "ModName_Key"。
+            </remarks>
+        </member>
+        <member name="M:JmcModLib.Config.UI.ModConfig.ModConfigLinker.RegisterEntrySync(JmcModLib.Config.Entry.ConfigEntry)">
+            <summary>
+            供 Builder 调用：注册单条 Entry 的双向同步
+            </summary>
+        </member>
+        <member name="M:JmcModLib.Config.UI.ModConfig.ModConfigLinker.OnModConfigValueChanged(System.String)">
+            <summary>
+            路径 A: ModConfig UI 变更 -> JmcModLib
+            </summary>
+        </member>
+        <member name="M:JmcModLib.Config.UI.ModConfig.ModConfigLinker.SyncToModConfig``1(JmcModLib.Config.Entry.ConfigEntry{``0},``0)">
+            <summary>
+            路径 B: JmcModLib 代码变更 -> ModConfig Storage
+            </summary>
+        </member>
         <member name="M:JmcModLib.Config.UI.ModSetting.ModSettingAPI.Init(Duckov.Modding.ModInfo)">
             <summary>
             初始化API
