@@ -28,10 +28,10 @@ jobs:
           CS_FILE=$(find . -name "VersionInfo.cs" -print -quit)
           if [ -z "$CS_FILE" ]; then echo "VersionInfo.cs not found"; exit 1; fi
 
-          RAW_NAME=$(grep 'public const string Name' "$CS_FILE" | sed -E 's/.*Name\s*=\s*"(.*)";.*/\1/')
+          RAW_NAME=$(grep 'const string Name' "$CS_FILE" | sed -E 's/.*Name\s*=\s*"(.*)";.*/\1/')
           MOD_NAME=$(echo "$RAW_NAME" | xargs)
           
-          RAW_VERSION=$(grep 'public const string Version' "$CS_FILE" | sed -E 's/.*Version\s*=\s*"(.*)";.*/\1/')
+          RAW_VERSION=$(grep 'const string Version' "$CS_FILE" | sed -E 's/.*Version\s*=\s*"(.*)";.*/\1/')
           MOD_VERSION=$(echo "$RAW_VERSION" | xargs)
 
           # 自动寻找文件夹
