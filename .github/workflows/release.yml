@@ -120,13 +120,45 @@ jobs:
           VERSION: ${{ env.VERSION }}
           PREV_TAG: ${{ env.PREV_TAG }}
 
-      # === 压缩 ===
-      - name: Zip Mod Folder
+      - name: Prepare and Zip
         run: |
-          parent_dir=$(dirname "${{ env.MOD_PATH }}")
-          folder_name=$(basename "${{ env.MOD_PATH }}")
-          cd "$parent_dir"
-          zip -r "${{ github.workspace }}/${{ env.ZIP_FILENAME }}" "$folder_name" -x "*.git*" "*.vscode*" "*/bin/*" "*/obj/*"
+          STAGING_DIR="temp_staging"
+          mkdir -p "$STAGING_DIR"
+          
+          FOLDER_NAME=$(basename "${{ env.MOD_PATH }}")
+          
+          echo "🔨 Creating staging area..."
+
+          # 把 MOD 文件夹复制到临时目录中
+          cp -r "${{ env.MOD_PATH }}" "$STAGING_DIR/"
+
+          # 把根目录的文档复制进 临时目录下的 MOD 文件夹
+          DOC_FILES=("README.md" "CHANGELOG.md" "LICENSE.txt" "LICENSE")
+          
+          echo "📄 Injecting documents into package..."
+          for file in "${DOC_FILES[@]}"; do
+            if [ -f "$file" ]; then
+              cp "$file" "$STAGING_DIR/$FOLDER_NAME/"
+              echo "   ✅ Included: $file"
+            fi
+          done
+
+          # 进入临时目录进行压缩
+          cd "$STAGING_DIR"
+          
+          echo "📦 Zipping..."
+          zip -r "${{ github.workspace }}/${{ env.ZIP_FILENAME }}" "$FOLDER_NAME" \
+            -x "*.git*" "*.vscode*" "*/bin/*" "*/obj/*" "*/Thumbs.db" "*.DS_Store"
+
+          echo "🎉 Zip created: ${{ env.ZIP_FILENAME }}"
+
+      # === 压缩 ===
+      # - name: Zip Mod Folder
+      #   run: |
+      #     parent_dir=$(dirname "${{ env.MOD_PATH }}")
+      #     folder_name=$(basename "${{ env.MOD_PATH }}")
+      #     cd "$parent_dir"
+      #     zip -r "${{ github.workspace }}/${{ env.ZIP_FILENAME }}" "$folder_name" -x "*.git*" "*.vscode*" "*/bin/*" "*/obj/*"
 
       # === 发布 ===
       - name: Create Release
