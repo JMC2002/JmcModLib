@@ -133,7 +133,7 @@ jobs:
           cp -r "${{ env.MOD_PATH }}" "$STAGING_DIR/"
 
           # 把根目录的文档复制进 临时目录下的 MOD 文件夹
-          DOC_FILES=("README.md" "CHANGELOG.md" "LICENSE.txt" "LICENSE")
+          DOC_FILES=("README.md" "README_en.md" "CHANGELOG.md" "LICENSE.txt" "LICENSE")
           
           echo "📄 Injecting documents into package..."
           for file in "${DOC_FILES[@]}"; do
