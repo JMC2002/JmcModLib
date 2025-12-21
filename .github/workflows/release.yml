@@ -152,14 +152,6 @@ jobs:
 
           echo "🎉 Zip created: ${{ env.ZIP_FILENAME }}"
 
-      # === 压缩 ===
-      # - name: Zip Mod Folder
-      #   run: |
-      #     parent_dir=$(dirname "${{ env.MOD_PATH }}")
-      #     folder_name=$(basename "${{ env.MOD_PATH }}")
-      #     cd "$parent_dir"
-      #     zip -r "${{ github.workspace }}/${{ env.ZIP_FILENAME }}" "$folder_name" -x "*.git*" "*.vscode*" "*/bin/*" "*/obj/*"
-
       # === 发布 ===
       - name: Create Release
         uses: softprops/action-gh-release@v1
